@@ -421,10 +421,24 @@ function login(){
   };
   tryLogin(1);
 }
-function logout(){TK='';ME={};localStorage.removeItem('hc_tk');localStorage.removeItem('hc_me');location.reload()}
-function showApp(){document.getElementById('lp').style.display='none';document.getElementById('app').classList.add('active');const n=ME.name||'User',i=n.split(' ').map(x=>x[0]).join('').substring(0,2).toUpperCase();document.getElementById('unn').textContent=n;document.getElementById('url').textContent=ME.role||'';['uav','tav'].forEach(id=>document.getElementById(id).textContent=i);lDash()}
-if(TK)showApp();
-document.getElementById('lp2').addEventListener('keypress',e=>{if(e.key==='Enter')login()});
+function showApp(){document.getElementById('lp').style.display='none';document.getElementById('app').classList.add('active');const n=ME.name||'User',i=n.split(' ').map(x=>x[0]).join('').substring(0,2).toUpperCase();document.getElementById('unn').textContent=n;document.getElementById('url').textContent=ME.role||'';['uav','tav'].forEach(id=>document.getElementById(id).textContent=i);lDash();startAutoRefresh();}
+
+// ===== AUTO REFRESH — প্রতি ৩০ সেকেন্ডে Dashboard আপডেট =====
+let autoRefreshTimer=null;
+function startAutoRefresh(){
+  if(autoRefreshTimer)clearInterval(autoRefreshTimer);
+  autoRefreshTimer=setInterval(()=>{
+    // শুধু Dashboard active থাকলে refresh করবে
+    if(document.getElementById('pg-dash')?.classList.contains('active')){
+      lDash();
+    }
+  },15000); // ১৫ সেকেন্ড
+}
+function stopAutoRefresh(){
+  if(autoRefreshTimer){clearInterval(autoRefreshTimer);autoRefreshTimer=null;}
+}
+// Logout করলে timer বন্ধ করুন
+function logout(){stopAutoRefresh();TK='';ME={};localStorage.removeItem('hc_tk');localStorage.removeItem('hc_me');location.reload()}
 
 // NAV
 const tls={dash:'ড্যাশবোর্ড',seed:'চারা তালিকা',prod:'উৎপাদন রেজিস্টার',moth:'মাদার প্ল্যান্ট',batch:'ব্যাচ ম্যানেজমেন্ট',stk:'স্টক রেজিস্টার',dmg:'ক্ষতি / নষ্ট',sale:'বিক্রয় ও চালান',cust:'গ্রাহক তালিকা',rep:'রিপোর্ট ও বিশ্লেষণ',usr:'ব্যবহারকারী',cfg:'সেটিংস'};
