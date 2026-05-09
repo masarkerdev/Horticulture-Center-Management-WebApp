@@ -896,20 +896,29 @@
                 <div class="cdt">বিক্রয় - ক্যাটাগরি অনুযায়ী</div>
                 <div style="display: flex; align-items: center; gap: 20px">
                   <svg id="catSvg" width="100" height="100" viewBox="0 0 36 36">
+                    <circle
+                      cx="18"
+                      cy="18"
+                      r="15.9"
+                      fill="none"
+                      stroke="var(--gr100,#ddd)"
+                      stroke-width="3.8"
+                    />
                     <text
                       x="18"
                       y="21"
                       text-anchor="middle"
-                      font-size="5"
-                      fill="var(--tp)"
+                      font-size="4"
+                      fill="var(--tm)"
                       font-family="Noto Sans Bengali"
-                      font-weight="600"
                     >
-                      লোড...
+                      বিক্রয়
                     </text>
                   </svg>
                   <div class="dl" id="catLegend">
-                    <div class="lt" style="padding: 5px">লোড হচ্ছে...</div>
+                    <div style="font-size: 12px; color: var(--tm)">
+                      বিক্রয় ডেটা নেই
+                    </div>
                   </div>
                 </div>
               </div>
@@ -2456,7 +2465,7 @@
     </div>
 
     <script>
-      const API = "https://horticulturecenterasambasti.vercel.app/api";
+      const API = "http://localhost:5000/api";
       let TK = localStorage.getItem("hc_tk") || "";
       let ME = JSON.parse(localStorage.getItem("hc_me") || "{}");
       let sPage = 1,
@@ -2741,37 +2750,38 @@
           ];
           const svgEl = document.getElementById("catSvg");
           const dlEl = document.getElementById("catLegend");
-          if (catRes.success && catRes.data && dlEl) {
-            const hasSales = catRes.data.some(
-              (c) => parseFloat(c.total_sales) > 0,
-            );
-            if (hasSales) {
-              const active = catRes.data.filter(
+          try {
+            if (catRes && catRes.success && catRes.data) {
+              const hasSales = catRes.data.some(
                 (c) => parseFloat(c.total_sales) > 0,
               );
-              let offset = 25,
-                svgCircles = "";
-              active.forEach((c, i) => {
-                const pct = parseFloat(c.percent) || 0;
-                svgCircles += `<circle cx="18" cy="18" r="15.9" fill="none" stroke="${catColors[i % catColors.length]}" stroke-width="3.8" stroke-dasharray="${pct} ${100 - pct}" stroke-dashoffset="${-offset + 25}"/>`;
-                offset += pct;
-              });
-              if (svgEl)
-                svgEl.innerHTML =
-                  svgCircles +
-                  `<text x="18" y="21" text-anchor="middle" font-size="5" fill="var(--tp)" font-family="Noto Sans Bengali" font-weight="600">বিক্রয়</text>`;
-              dlEl.innerHTML = active
-                .map(
-                  (c, i) =>
-                    `<div class="dli"><div class="dld" style="background:${catColors[i % catColors.length]}"></div>${c.category} — ${c.percent}%</div>`,
-                )
-                .join("");
-            } else {
-              if (svgEl)
-                svgEl.innerHTML = `<text x="18" y="21" text-anchor="middle" font-size="4" fill="var(--tm)" font-family="Noto Sans Bengali">ডেটা নেই</text>`;
-              dlEl.innerHTML =
-                '<div style="font-size:12px;color:var(--tm)">এখনো বিক্রয় ডেটা নেই</div>';
+              if (hasSales) {
+                const active = catRes.data.filter(
+                  (c) => parseFloat(c.total_sales) > 0,
+                );
+                let offset = 25,
+                  svgCircles = "";
+                active.forEach((c, i) => {
+                  const pct = parseFloat(c.percent) || 0;
+                  svgCircles += `<circle cx="18" cy="18" r="15.9" fill="none" stroke="${catColors[i % catColors.length]}" stroke-width="3.8" stroke-dasharray="${pct} ${100 - pct}" stroke-dashoffset="${-offset + 25}"/>`;
+                  offset += pct;
+                });
+                if (svgEl)
+                  svgEl.innerHTML =
+                    svgCircles +
+                    `<text x="18" y="21" text-anchor="middle" font-size="5" fill="var(--tp)" font-family="Noto Sans Bengali" font-weight="600">বিক্রয়</text>`;
+                if (dlEl)
+                  dlEl.innerHTML = active
+                    .map(
+                      (c, i) =>
+                        `<div class="dli"><div class="dld" style="background:${catColors[i % catColors.length]}"></div>${c.category} — ${c.percent}%</div>`,
+                    )
+                    .join("");
+              }
+              // বিক্রয় না থাকলে default "বিক্রয় ডেটা নেই" দেখাবে
             }
+          } catch (ce) {
+            // Error হলেও "বিক্রয় ডেটা নেই" দেখাবে — কোনো সমস্যা নেই
           }
           // Success rates
           let rH = "";
