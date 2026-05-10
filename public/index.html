@@ -2048,23 +2048,20 @@
             margin-bottom: 14px;
           "
         >
-          <div style="font-size: 12px; font-weight: 600; margin-bottom: 10px">
-            আইটেম সমূহ
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 10px;
+            "
+          >
+            <div style="font-size: 12px; font-weight: 600">আইটেম সমূহ</div>
+            <button class="btn btns btnp" type="button" onclick="addSaleItem()">
+              <i class="ti ti-plus"></i> আইটেম যোগ
+            </button>
           </div>
-          <div class="f3" style="margin-bottom: 8px">
-            <div class="fg" style="margin: 0">
-              <label>চারা</label
-              ><select class="fc" id="slSd"></select>
-            </div>
-            <div class="fg" style="margin: 0">
-              <label>পরিমাণ</label
-              ><input class="fc" type="number" id="slQt" value="1" />
-            </div>
-            <div class="fg" style="margin: 0">
-              <label>দর (৳)</label
-              ><input class="fc" type="number" id="slRt" value="0" />
-            </div>
-          </div>
+          <div id="saleItemsList"></div>
         </div>
         <div class="fr">
           <div class="fg">
@@ -3370,47 +3367,97 @@
       }
 
       // Calc total
-      function calcSale() {
-        const q = +document.getElementById("slQt").value || 0,
-          r = +document.getElementById("slRt").value || 0,
-          d = +document.getElementById("slDi").value || 0,
-          t = q * r;
-        document.getElementById("slTotal").textContent =
-          "৳" + t.toLocaleString();
-        document.getElementById("slTotalD").textContent =
-          "− ৳" + d.toLocaleString();
-        document.getElementById("slNet").textContent =
-          "৳" + (t - d).toLocaleString();
+      // ===== বহু আইটেম বিক্রয় =====
+      let saleItemCount = 0;
+      let saleOptionsHTML = ""; // সব চারার options cache
+
+      function addSaleItem() {
+        const idx = saleItemCount++;
+        const div = document.createElement("div");
+        div.id = "saleItem_" + idx;
+        div.style.cssText =
+          "display:grid;grid-template-columns:1fr auto auto auto;gap:8px;align-items:end;margin-bottom:8px;padding-bottom:8px;border-bottom:1px dashed var(--bd)";
+        div.innerHTML = `
+    <div class="fg" style="margin:0"><label style="font-size:11px">চারা</label>
+      <select class="fc" id="slSd_${idx}" onchange="onSeedChange(${idx})">${saleOptionsHTML}</select></div>
+    <div class="fg" style="margin:0;width:80px"><label style="font-size:11px">পরিমাণ</label>
+      <input class="fc" type="number" id="slQt_${idx}" value="1" oninput="calcAllItems()"></div>
+    <div class="fg" style="margin:0;width:100px"><label style="font-size:11px">দর (৳)</label>
+      <input class="fc" type="number" id="slRt_${idx}" value="0" oninput="calcAllItems()"></div>
+    <div style="padding-bottom:2px">${idx > 0 ? `<button class="btn btns btnr" onclick="removeSaleItem(${idx})" title="মুছুন"><i class="ti ti-trash"></i></button>` : ""}</div>`;
+        document.getElementById("saleItemsList").appendChild(div);
+        calcAllItems();
       }
-      ["slQt", "slRt", "slDi"].forEach((id) => {
-        const el = document.getElementById(id);
-        if (el) el.addEventListener("input", calcSale);
-      });
+
+      function removeSaleItem(idx) {
+        const el = document.getElementById("saleItem_" + idx);
+        if (el) {
+          el.remove();
+          calcAllItems();
+        }
+      }
+
+      function onSeedChange(idx) {
+        const sel = document.getElementById("slSd_" + idx);
+        const price = sel?.options[sel.selectedIndex]?.dataset?.price || 0;
+        document.getElementById("slRt_" + idx).value = price;
+        calcAllItems();
+      }
+
+      function calcAllItems() {
+        let total = 0;
+        document.querySelectorAll('[id^="saleItem_"]').forEach((row) => {
+          const idx = row.id.split("_")[1];
+          const q = +document.getElementById("slQt_" + idx)?.value || 0;
+          const r = +document.getElementById("slRt_" + idx)?.value || 0;
+          total += q * r;
+        });
+        const disc = +document.getElementById("slDi")?.value || 0;
+        document.getElementById("slTotal").textContent =
+          "৳" + total.toLocaleString();
+        document.getElementById("slTotalD").textContent =
+          "− ৳" + disc.toLocaleString();
+        document.getElementById("slNet").textContent =
+          "৳" + (total - disc).toLocaleString();
+      }
+
+      function resetSaleModal() {
+        saleItemCount = 0;
+        document.getElementById("saleItemsList").innerHTML = "";
+        addSaleItem(); // প্রথম item যোগ করুন
+        document.getElementById("slDi").value = 0;
+        calcAllItems();
+      }
+      document.getElementById("slDi").addEventListener("input", calcAllItems);
       document.getElementById("saleDate").value = new Date()
         .toISOString()
         .split("T")[0];
 
       async function saveSale() {
         const editId = document.getElementById("mSale").dataset.editId || "";
+        // সব items collect করুন
+        const items = [];
+        document.querySelectorAll('[id^="saleItem_"]').forEach((row) => {
+          const idx = row.id.split("_")[1];
+          const sid = +document.getElementById("slSd_" + idx)?.value || 0;
+          const qty = +document.getElementById("slQt_" + idx)?.value || 0;
+          const rate = +document.getElementById("slRt_" + idx)?.value || 0;
+          if (sid && qty && rate)
+            items.push({ seedling_id: sid, quantity: qty, unit_price: rate });
+        });
         const b = {
           customer_name: document.getElementById("slC").value,
           customer_phone: document.getElementById("slPh").value,
           customer_address: document.getElementById("slAd").value,
           discount: +document.getElementById("slDi").value || 0,
           payment_method: document.getElementById("slPm").value,
-          items: [
-            {
-              seedling_id: +document.getElementById("slSd").value,
-              quantity: +document.getElementById("slQt").value || 1,
-              unit_price: +document.getElementById("slRt").value || 0,
-            },
-          ],
+          items,
         };
         if (!b.customer_name) return toast("গ্রাহকের নাম দিন", 1);
+        if (!items.length) return toast("কমপক্ষে একটি আইটেম দিন", 1);
         try {
           let d;
           if (editId) {
-            // ✅ EDIT MODE — নতুন তৈরি না করে আপডেট করুন
             d = await api("/sales/" + editId, {
               method: "PUT",
               body: JSON.stringify({
@@ -3430,8 +3477,6 @@
               lSale();
             } else toast(d.error || d.message || "সমস্যা", 1);
           } else {
-            // ✅ NEW MODE — নতুন বিক্রয় তৈরি করুন
-            if (!b.items[0].unit_price) return toast("দর দিন", 1);
             d = await api("/sales", {
               method: "POST",
               body: JSON.stringify(b),
@@ -3439,6 +3484,7 @@
             if (d.success) {
               toast("বিক্রয় সম্পন্ন ✅ চালান: " + (d.data?.invoice_no || ""));
               cM("mSale");
+              resetSaleModal();
               lSale();
             } else toast(d.error || d.message || "সমস্যা", 1);
           }
@@ -3643,19 +3689,14 @@
                   `<option value="${s.id}" data-price="${s.unit_price}">${s.name_bn}${s.variety ? " (" + s.variety + ")" : ""}</option>`,
               )
               .join("");
-            ["pSd", "slSd", "dSd", "mSd"].forEach((id) => {
+            saleOptionsHTML = o;
+            ["pSd", "dSd", "mSd"].forEach((id) => {
               const el = document.getElementById(id);
               if (el) {
                 el.innerHTML = o;
               }
             });
-            const sl = document.getElementById("slSd");
-            if (sl)
-              sl.onchange = function () {
-                const pr = sl.options[sl.selectedIndex]?.dataset?.price || 0;
-                document.getElementById("slRt").value = pr;
-                calcSale();
-              };
+            resetSaleModal();
           }
           const m = await api("/mother-plants");
           if (m.success)
@@ -3772,7 +3813,6 @@
 
       // EDIT SALE
       async function editSale(s) {
-        // Customer info সেট করুন
         document.getElementById("slC").value = s.customer_name || "";
         document.getElementById("slPh").value = s.customer_phone || "";
         document.getElementById("slAd").value = s.customer_address || "";
@@ -3781,8 +3821,6 @@
         document.getElementById("mSale").dataset.editId = s.id;
         document.querySelector("#mSale .mh h3").textContent =
           `বিক্রয় সম্পাদনা — ${s.invoice_no}`;
-
-        // ✅ আইটেম সমূহ API থেকে লোড করুন
         try {
           const detail = await api("/sales/" + s.id);
           if (
@@ -3790,24 +3828,27 @@
             detail.data.items &&
             detail.data.items.length > 0
           ) {
-            const item = detail.data.items[0];
-            // চারা dropdown-এ সঠিক চারা সিলেক্ট করুন
-            const seedSel = document.getElementById("slSd");
-            if (seedSel) {
-              for (let i = 0; i < seedSel.options.length; i++) {
-                if (parseInt(seedSel.options[i].value) === item.seedling_id) {
-                  seedSel.selectedIndex = i;
-                  break;
+            saleItemCount = 0;
+            document.getElementById("saleItemsList").innerHTML = "";
+            detail.data.items.forEach((item) => {
+              addSaleItem();
+              const idx = saleItemCount - 1;
+              const sel = document.getElementById("slSd_" + idx);
+              if (sel) {
+                for (let i = 0; i < sel.options.length; i++) {
+                  if (parseInt(sel.options[i].value) === item.seedling_id) {
+                    sel.selectedIndex = i;
+                    break;
+                  }
                 }
               }
-            }
-            document.getElementById("slQt").value = item.quantity || 1;
-            document.getElementById("slRt").value = item.unit_price || 0;
-            // মোট হিসাব আপডেট করুন
-            if (typeof calcSale === "function") calcSale();
+              document.getElementById("slQt_" + idx).value = item.quantity || 1;
+              document.getElementById("slRt_" + idx).value =
+                item.unit_price || 0;
+            });
+            calcAllItems();
           }
         } catch (e) {}
-
         oM("mSale");
       }
 
