@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>উদ্যানতত্ত্ববিদের কার্যালয় — Horticulture Center, Asambasti</title>
+    <title>উদ্যানতত্ত্ব কেন্দ্র — Horticulture Center, Asambasti</title>
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css"
@@ -738,7 +738,7 @@
     <div class="lp" id="lp">
       <div class="lb">
         <div style="font-size: 48px; margin-bottom: 12px">🌿</div>
-        <h1>উদ্যানতত্ত্ববিদের কার্যালয়</h1>
+        <h1>উদ্যানতত্ত্ব কেন্দ্র</h1>
         <div class="su">Horticulture Center</div>
         <div class="lc">আসামবস্তি, রাঙামাটি</div>
         <div class="lf">
@@ -750,17 +750,6 @@
         </div>
         <button class="lbtn" onclick="login()">লগইন করুন</button>
         <div class="le" id="lerr"></div>
-        <p
-          style="
-            font-size: 13px;
-            color: var(--tm);
-            text-align: center;
-            margin-top: 20px;
-          "
-        >
-          The HortiCore ERP (SNMS) software has developed by Mahfuj Ahmed Sarker
-          |38th BCS|Horticulturist, Horticulture Center,Asambasti, Rangamati.
-        </p>
       </div>
     </div>
 
@@ -768,8 +757,8 @@
     <div class="app" id="app">
       <aside class="sb" id="sb">
         <div class="sbl">
-          <h1>🌿 উদ্যানতত্ত্ববিদের কার্যালয়</h1>
-          <p>আসামবস্তি, রাঙামাটি<</p>
+          <h1>🌿 উদ্যানতত্ত্ব কেন্দ্র</h1>
+          <p>Asambasti, Rangamati</p>
         </div>
         <div style="overflow-y: auto; flex: 1; padding-bottom: 10px">
           <div class="ss">প্রধান / Main</div>
@@ -3767,16 +3756,43 @@
       }
 
       // EDIT SALE
-      function editSale(s) {
+      async function editSale(s) {
+        // Customer info সেট করুন
         document.getElementById("slC").value = s.customer_name || "";
         document.getElementById("slPh").value = s.customer_phone || "";
         document.getElementById("slAd").value = s.customer_address || "";
         document.getElementById("slPm").value = s.payment_method || "cash";
         document.getElementById("slDi").value = s.discount || 0;
         document.getElementById("mSale").dataset.editId = s.id;
-        // ✅ Modal title পরিবর্তন করুন
         document.querySelector("#mSale .mh h3").textContent =
           `বিক্রয় সম্পাদনা — ${s.invoice_no}`;
+
+        // ✅ আইটেম সমূহ API থেকে লোড করুন
+        try {
+          const detail = await api("/sales/" + s.id);
+          if (
+            detail.success &&
+            detail.data.items &&
+            detail.data.items.length > 0
+          ) {
+            const item = detail.data.items[0];
+            // চারা dropdown-এ সঠিক চারা সিলেক্ট করুন
+            const seedSel = document.getElementById("slSd");
+            if (seedSel) {
+              for (let i = 0; i < seedSel.options.length; i++) {
+                if (parseInt(seedSel.options[i].value) === item.seedling_id) {
+                  seedSel.selectedIndex = i;
+                  break;
+                }
+              }
+            }
+            document.getElementById("slQt").value = item.quantity || 1;
+            document.getElementById("slRt").value = item.unit_price || 0;
+            // মোট হিসাব আপডেট করুন
+            if (typeof calcSale === "function") calcSale();
+          }
+        } catch (e) {}
+
         oM("mSale");
       }
 
