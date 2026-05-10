@@ -149,12 +149,20 @@ router.post('/damages',     authenticate, canProduce,  reportDamage);
 // CUSTOMER ROUTES - /api/customers
 // ============================================================
 router.get('/customers', authenticate, async (req, res) => {
+    const { search } = req.query;
     try {
+        const params = [];
+        const where = search ? (params.push(`%${search}%`), `WHERE c.name ILIKE $1 OR c.phone ILIKE $1`) : '';
         const result = await db.query(
-            `SELECT c.*, COUNT(s.id) AS total_orders, COALESCE(SUM(s.total_amount), 0) AS total_spent
+            `SELECT c.*,
+                COUNT(s.id) AS total_orders,
+                COALESCE(SUM(s.total_amount), 0) AS total_spent
              FROM customers c
-             LEFT JOIN sales s ON c.id = s.customer_id
-             GROUP BY c.id ORDER BY c.name`
+             LEFT JOIN sales s ON (c.id = s.customer_id OR c.phone = s.customer_phone)
+             ${where}
+             GROUP BY c.id
+             ORDER BY total_orders DESC, c.name`,
+            params
         );
         res.json({ success: true, data: result.rows });
     } catch (err) {
