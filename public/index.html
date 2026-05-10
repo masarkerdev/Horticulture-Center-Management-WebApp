@@ -3376,6 +3376,7 @@
         .split("T")[0];
 
       async function saveSale() {
+        const editId = document.getElementById("mSale").dataset.editId || "";
         const b = {
           customer_name: document.getElementById("slC").value,
           customer_phone: document.getElementById("slPh").value,
@@ -3391,17 +3392,41 @@
           ],
         };
         if (!b.customer_name) return toast("গ্রাহকের নাম দিন", 1);
-        if (!b.items[0].unit_price) return toast("দর দিন", 1);
         try {
-          const d = await api("/sales", {
-            method: "POST",
-            body: JSON.stringify(b),
-          });
-          if (d.success) {
-            toast("বিক্রয় সম্পন্ন ✅ চালান: " + (d.data?.invoice_no || ""));
-            cM("mSale");
-            lSale();
-          } else toast(d.error || d.message || "সমস্যা", 1);
+          let d;
+          if (editId) {
+            // ✅ EDIT MODE — নতুন তৈরি না করে আপডেট করুন
+            d = await api("/sales/" + editId, {
+              method: "PUT",
+              body: JSON.stringify({
+                customer_name: b.customer_name,
+                customer_phone: b.customer_phone,
+                customer_address: b.customer_address,
+                payment_method: b.payment_method,
+                discount: b.discount,
+              }),
+            });
+            if (d.success) {
+              toast("বিক্রয় আপডেট হয়েছে ✅");
+              cM("mSale");
+              delete document.getElementById("mSale").dataset.editId;
+              document.querySelector("#mSale .mh h3").textContent =
+                "নতুন বিক্রয় / চালান";
+              lSale();
+            } else toast(d.error || d.message || "সমস্যা", 1);
+          } else {
+            // ✅ NEW MODE — নতুন বিক্রয় তৈরি করুন
+            if (!b.items[0].unit_price) return toast("দর দিন", 1);
+            d = await api("/sales", {
+              method: "POST",
+              body: JSON.stringify(b),
+            });
+            if (d.success) {
+              toast("বিক্রয় সম্পন্ন ✅ চালান: " + (d.data?.invoice_no || ""));
+              cM("mSale");
+              lSale();
+            } else toast(d.error || d.message || "সমস্যা", 1);
+          }
         } catch (e) {
           toast("সমস্যা", 1);
         }
@@ -3738,9 +3763,10 @@
         document.getElementById("slPm").value = s.payment_method || "cash";
         document.getElementById("slDi").value = s.discount || 0;
         document.getElementById("mSale").dataset.editId = s.id;
-        document.getElementById("mSale").dataset.editStatus = s.payment_status;
+        // ✅ Modal title পরিবর্তন করুন
+        document.querySelector("#mSale .mh h3").textContent =
+          `বিক্রয় সম্পাদনা — ${s.invoice_no}`;
         oM("mSale");
-        toast("বিক্রয় সম্পাদনায় — শুধু অবস্থা পরিবর্তন করা যাবে");
       }
 
       // SETTINGS FUNCTIONS

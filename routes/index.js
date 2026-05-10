@@ -204,6 +204,32 @@ router.delete('/customers/:id', authenticate, adminOrManager, async (req, res) =
 });
 
 // ============================================================
+// SALES UPDATE - /api/sales/:id (নতুন — বিক্রয় আপডেট)
+// ============================================================
+router.put('/sales/:id', authenticate, canSell, async (req, res) => {
+    const { customer_name, customer_phone, customer_address, payment_method, payment_status, discount, notes } = req.body;
+    try {
+        const result = await db.query(
+            `UPDATE sales SET
+                customer_name = COALESCE($1, customer_name),
+                customer_phone = COALESCE($2, customer_phone),
+                customer_address = COALESCE($3, customer_address),
+                payment_method = COALESCE($4, payment_method),
+                payment_status = COALESCE($5, payment_status),
+                discount = COALESCE($6, discount),
+                notes = COALESCE($7, notes)
+             WHERE id = $8 RETURNING *`,
+            [customer_name, customer_phone, customer_address, payment_method, payment_status, discount, notes, req.params.id]
+        );
+        if (result.rows.length === 0)
+            return res.status(404).json({ success: false, message: 'বিক্রয় পাওয়া যায়নি।' });
+        res.json({ success: true, message: 'বিক্রয় আপডেট হয়েছে।', data: result.rows[0] });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// ============================================================
 // SALES DELETE - /api/sales/:id
 // ============================================================
 router.delete('/sales/:id', authenticate, adminOrManager, async (req, res) => {
@@ -308,6 +334,60 @@ router.get('/reports/profit-loss', authenticate, adminOrManager, async (req, res
                 profit_margin: totalRevenue > 0 ? ((totalRevenue - totalCost) / totalRevenue * 100).toFixed(2) : 0
             }
         });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// ============================================================
+// মাসিক উৎপাদন — /api/reports/monthly-production
+// ============================================================
+router.get('/reports/monthly-production', authenticate, async (req, res) => {
+    try {
+        const result = await db.query(`
+            SELECT
+                TO_CHAR(created_at, 'YYYY-MM') AS month_key,
+                TO_CHAR(created_at, 'Mon') AS month_name,
+                EXTRACT(MONTH FROM created_at) AS month_num,
+                EXTRACT(YEAR FROM created_at) AS year_num,
+                SUM(CASE WHEN production_type = 'seed' THEN produced_quantity ELSE 0 END) AS seed_qty,
+                SUM(CASE WHEN production_type != 'seed' THEN produced_quantity ELSE 0 END) AS asexual_qty,
+                SUM(produced_quantity) AS total_qty
+            FROM production_batches
+            WHERE created_at >= NOW() - INTERVAL '6 months'
+            GROUP BY month_key, month_name, month_num, year_num
+            ORDER BY year_num, month_num
+        `);
+        res.json({ success: true, data: result.rows });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// ============================================================
+// ক্যাটাগরি অনুযায়ী বিক্রয় — /api/reports/sales-by-category
+// ============================================================
+router.get('/reports/sales-by-category', authenticate, async (req, res) => {
+    try {
+        const result = await db.query(`
+            SELECT
+                c.name_bn AS category,
+                COALESCE(SUM(si.total_price), 0) AS total_sales,
+                COUNT(DISTINCT si.sale_id) AS total_orders
+            FROM categories c
+            LEFT JOIN seedlings s ON s.category_id = c.id
+            LEFT JOIN sales_items si ON si.seedling_id = s.id
+            GROUP BY c.id, c.name_bn
+            ORDER BY total_sales DESC
+        `);
+
+        const total = result.rows.reduce((sum, r) => sum + parseFloat(r.total_sales), 0);
+        const dataWithPercent = result.rows.map(r => ({
+            ...r,
+            percent: total > 0 ? ((parseFloat(r.total_sales) / total) * 100).toFixed(1) : 0
+        }));
+
+        res.json({ success: true, data: dataWithPercent, total });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
