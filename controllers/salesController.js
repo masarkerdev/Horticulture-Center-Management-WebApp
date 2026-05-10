@@ -109,37 +109,57 @@ const createSale = async (req, res) => {
 
         const sale = saleResult.rows[0];
 
+        // ✅ নতুন — গ্রাহক তালিকায় স্বয়ংক্রিয়ভাবে যোগ করুন
+        if (customer_name) {
+            try {
+                if (customer_phone) {
+                    const existingCustomer = await client.query(
+                        'SELECT id FROM customers WHERE phone = $1', [customer_phone]
+                    );
+                    if (existingCustomer.rows.length === 0) {
+                        await client.query(
+                            'INSERT INTO customers (name, phone, address) VALUES ($1,$2,$3)',
+                            [customer_name, customer_phone, customer_address || null]
+                        );
+                    }
+                } else {
+                    const existingCustomer = await client.query(
+                        'SELECT id FROM customers WHERE name = $1', [customer_name]
+                    );
+                    if (existingCustomer.rows.length === 0) {
+                        await client.query(
+                            'INSERT INTO customers (name, address) VALUES ($1,$2)',
+                            [customer_name, customer_address || null]
+                        );
+                    }
+                }
+            } catch (custErr) {
+                console.log('Customer auto-save skipped:', custErr.message);
+            }
+        }
+
         // আইটেম যোগ করুন ও স্টক কমান
         for (const item of items) {
-            // স্টক যাচাই করুন
             const stockCheck = await client.query(
                 'SELECT current_stock, name_bn FROM seedlings WHERE id = $1', [item.seedling_id]
             );
-
             if (stockCheck.rows.length === 0) {
                 throw new Error(`চারা ID ${item.seedling_id} পাওয়া যায়নি।`);
             }
-
             const currentStock = parseInt(stockCheck.rows[0].current_stock);
             if (currentStock < item.quantity) {
                 throw new Error(`${stockCheck.rows[0].name_bn} এর স্টক পর্যাপ্ত নেই। আছে: ${currentStock}, চাইলেন: ${item.quantity}`);
             }
-
-            // আইটেম ইনসার্ট
             await client.query(
                 `INSERT INTO sales_items (sale_id, seedling_id, batch_id, quantity, unit_price, total_price)
                  VALUES ($1,$2,$3,$4,$5,$6)`,
                 [sale.id, item.seedling_id, item.batch_id || null,
                  item.quantity, item.unit_price, item.quantity * item.unit_price]
             );
-
-            // স্টক কমান
             const newStock = currentStock - item.quantity;
             await client.query(
                 'UPDATE seedlings SET current_stock = $1 WHERE id = $2', [newStock, item.seedling_id]
             );
-
-            // স্টক লেনদেন লগ করুন
             await client.query(
                 `INSERT INTO stock_transactions
                  (seedling_id, batch_id, txn_type, quantity, direction, balance_after, reference_id, reference_type, notes, created_by)
