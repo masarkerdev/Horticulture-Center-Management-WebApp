@@ -2748,7 +2748,7 @@
 <div class="sc"><div class="si" style="background:var(--a50)"><i class="ti ti-sun" style="color:var(--a400);font-size:18px"></i></div><div class="sl">আজকের উৎপাদন</div><div class="sv">${toBnNum(d.today_production)}</div><div class="ss2">আজ উৎপাদিত</div></div>
 <div class="sc"><div class="si" style="background:var(--c50)"><i class="ti ti-receipt" style="color:var(--c400);font-size:18px"></i></div><div class="sl">আজকের বিক্রয়</div><div class="sv">${toBnMoney(d.today_revenue)}</div><div class="ss2">${toBnNum(d.today_invoices)}টি চালান</div></div>
 <div class="sc"><div class="si" style="background:var(--b50)"><i class="ti ti-coin" style="color:var(--b600);font-size:18px"></i></div><div class="sl">মাসিক আয়</div><div class="sv">${toBnMoney(d.monthly_revenue)}</div><div class="ss2">এই মাসে</div></div>`;
-          // Bar chart — Real API data
+          // Bar chart — আলাদাভাবে call করুন
           const bnMonths = {
             Jan: "জান",
             Feb: "ফেব",
@@ -2763,20 +2763,19 @@
             Nov: "নভে",
             Dec: "ডিসে",
           };
-          const [monthlyRes, catRes] = await Promise.all([
-            api("/reports/monthly-production"),
-            api("/reports/sales-by-category"),
-          ]);
           let pd = [];
-          if (monthlyRes.success && monthlyRes.data.length > 0) {
-            pd = monthlyRes.data.map((r) => ({
-              m: bnMonths[r.month_name] || r.month_name,
-              s: +r.seed_qty || 0,
-              a: +r.asexual_qty || 0,
-            }));
-          } else {
+          try {
+            const monthlyRes = await api("/reports/monthly-production");
+            if (monthlyRes.success && monthlyRes.data.length > 0) {
+              pd = monthlyRes.data.map((r) => ({
+                m: bnMonths[r.month_name] || r.month_name,
+                s: +r.seed_qty || 0,
+                a: +r.asexual_qty || 0,
+              }));
+            }
+          } catch (me) {}
+          if (!pd.length)
             pd = [{ m: "এই মাস", s: d.today_production || 0, a: 0 }];
-          }
           const mx = Math.max(...pd.map((x) => x.s + x.a), 1);
           document.getElementById("dChart").innerHTML = pd
             .map((x) => {
@@ -2789,7 +2788,7 @@
             })
             .join("");
 
-          // Donut chart — Real category sales data
+          // Donut chart — আলাদাভাবে call করুন
           const catColors = [
             "var(--g400)",
             "var(--t400)",
@@ -2800,6 +2799,7 @@
           const svgEl = document.getElementById("catSvg");
           const dlEl = document.getElementById("catLegend");
           try {
+            const catRes = await api("/reports/sales-by-category");
             if (catRes && catRes.success && catRes.data) {
               const hasSales = catRes.data.some(
                 (c) => parseFloat(c.total_sales) > 0,
@@ -2823,14 +2823,14 @@
                   dlEl.innerHTML = active
                     .map(
                       (c, i) =>
-                        `<div class="dli"><div class="dld" style="background:${catColors[i % catColors.length]}"></div>${c.category} — ${c.percent}%</div>`,
+                        `<div class="dli"><div class="dld" style="background:${catColors[i % catColors.length]}"></div>${c.category} — ${toBn(c.percent)}%</div>`,
                     )
                     .join("");
               }
-              // বিক্রয় না থাকলে default "বিক্রয় ডেটা নেই" দেখাবে
+              // বিক্রয় না থাকলে "বিক্রয় ডেটা নেই" দেখাবে
             }
           } catch (ce) {
-            // Error হলেও "বিক্রয় ডেটা নেই" দেখাবে — কোনো সমস্যা নেই
+            /* error হলে "বিক্রয় ডেটা নেই" থাকবে */
           }
           // Success rates
           let rH = "";
