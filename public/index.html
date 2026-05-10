@@ -2527,6 +2527,21 @@
         }
       }
 
+      // ✅ নতুন — DD/MM/YYYY বাংলা ফরমেট (সব table-এ ব্যবহার হবে)
+      function fmtDMY(d) {
+        if (!d) return "-";
+        try {
+          const dt = new Date(d);
+          if (isNaN(dt.getTime())) return d;
+          const day = String(dt.getDate()).padStart(2, "0");
+          const month = String(dt.getMonth() + 1).padStart(2, "0");
+          const year = dt.getFullYear();
+          return toBn(`${day}/${month}/${year}`);
+        } catch (e) {
+          return d;
+        }
+      }
+
       // ===== বাংলা সংখ্যা HELPER =====
       function toBn(n) {
         if (n === null || n === undefined) return "০";
@@ -2872,7 +2887,7 @@
           if (sa.data)
             sa.data.forEach((x) =>
               acts.push({
-                time: x.sale_date,
+                time: fmtDMY(x.sale_date),
                 txt: `চালান ${x.invoice_no} — ${x.customer_name || "-"} — ৳${parseFloat(x.total_amount).toLocaleString()}`,
                 mod: "বিক্রয়",
                 st: "paid",
@@ -3034,7 +3049,7 @@
 <td><strong style="color:var(--g600)">${b.batch_code}</strong></td>
 <td>${b.seedling_bn || "-"}</td>
 <td>${b.seed_quantity || "-"}</td>
-<td>${fmtDate(b.sowing_date)}</td>
+<td>${fmtDMY(b.sowing_date)}</td>
 <td>${b.produced_quantity}</td>
 <td>${b.failed_quantity}</td>
 <td><span class="b ${(+b.germination_percent || 0) >= 75 ? "bg" : "ba"}">${b.germination_percent || "-"}%</span></td>
@@ -3054,7 +3069,7 @@
 <td>${b.seedling_bn || "-"}</td>
 <td><span class="b bt">${MN[b.production_type] || b.production_type}</span></td>
 <td>${b.mother_variety || "-"}</td>
-<td>${fmtDate(b.propagation_date || b.created_at)}</td>
+<td>${fmtDMY(b.propagation_date || b.created_at)}</td>
 <td>${b.success_quantity}</td>
 <td>${b.failed_quantity}</td>
 <td><span class="b ${(+b.success_percent || 0) >= 75 ? "bg" : "ba"}">${b.success_percent || "-"}%</span></td>
@@ -3251,7 +3266,7 @@
             ? d.data
                 .map(
                   (x) =>
-                    `<tr><td>${x.damage_date}</td><td>${x.name_bn || "-"}</td><td>${x.batch_code || "-"}</td><td><strong>${x.quantity}</strong></td><td><span class="b br">${DN[x.reason] || x.reason}</span></td><td>${x.remarks || "-"}</td><td>${x.reporter || "-"}</td></tr>`,
+                    `<tr><td>${fmtDMY(x.damage_date)}</td><td>${x.name_bn || "-"}</td><td>${x.batch_code || "-"}</td><td><strong>${x.quantity}</strong></td><td><span class="b br">${DN[x.reason] || x.reason}</span></td><td>${x.remarks || "-"}</td><td>${x.reporter || "-"}</td></tr>`,
                 )
                 .join("")
             : '<tr><td colspan="7" class="lt">নেই</td></tr>';
@@ -3317,7 +3332,7 @@
                   (x) => `<tr>
 <td><strong>${x.invoice_no}</strong></td>
 <td>${x.customer_name || "-"}<br><span style="font-size:11px;color:var(--tm)">${x.customer_phone || ""}</span></td>
-<td>${x.sale_date}</td>
+<td>${fmtDMY(x.sale_date)}</td>
 <td><strong>${toBnMoney(x.total_amount)}</strong></td>
 <td><span class="b bg">${PN[x.payment_method] || x.payment_method}</span></td>
 <td><span class="b ${x.payment_status === "paid" ? "bg" : "ba"}">${SN[x.payment_status] || x.payment_status}</span></td>
@@ -3340,7 +3355,7 @@
           const s = d.data;
           const its = s.items || [];
           document.getElementById("invBody").innerHTML =
-            `<div style="text-align:center;margin-bottom:14px"><div style="font-size:15px;font-weight:700">উদ্যানতত্ত্ব কেন্দ্র, আসামবস্তি, রাঙামাটি</div><div style="font-size:11px;color:var(--tm)">চালান নম্বর: ${s.invoice_no} | তারিখ: ${s.sale_date}</div></div><div style="margin-bottom:10px;font-size:13px"><strong>গ্রাহক:</strong> ${s.customer_name || "-"} | ফোন: ${s.customer_phone || "-"}</div><table style="width:100%;font-size:12px;border-collapse:collapse"><thead><tr style="background:var(--g400);color:#fff"><th style="padding:6px 10px;text-align:left">চারা</th><th style="padding:6px 10px">পরিমাণ</th><th style="padding:6px 10px">দর</th><th style="padding:6px 10px">মোট</th></tr></thead><tbody>${its.map((i) => `<tr style="border-bottom:1px solid var(--bd)"><td style="padding:6px 10px">${i.name_bn || "-"}</td><td style="padding:6px 10px;text-align:center">${i.quantity}</td><td style="padding:6px 10px;text-align:center">৳${i.unit_price}</td><td style="padding:6px 10px;text-align:center">৳${i.total_price}</td></tr>`).join("")}</tbody></table><div style="margin-top:10px;text-align:right;font-size:13px"><div>মোট: ৳${parseFloat(s.subtotal).toLocaleString()}</div><div>ছাড়: −৳${parseFloat(s.discount).toLocaleString()}</div><div style="font-weight:700;font-size:15px">নিট মোট: ৳${parseFloat(s.total_amount).toLocaleString()}</div></div>`;
+            `<div style="text-align:center;margin-bottom:14px"><div style="font-size:15px;font-weight:700">উদ্যানতত্ত্ব কেন্দ্র, আসামবস্তি, রাঙামাটি</div><div style="font-size:11px;color:var(--tm)">চালান নম্বর: ${s.invoice_no} | তারিখ: ${fmtDMY(s.sale_date)}</div></div><div style="margin-bottom:10px;font-size:13px"><strong>গ্রাহক:</strong> ${s.customer_name || "-"} | ফোন: ${s.customer_phone || "-"}</div><table style="width:100%;font-size:12px;border-collapse:collapse"><thead><tr style="background:var(--g400);color:#fff"><th style="padding:6px 10px;text-align:left">চারা</th><th style="padding:6px 10px">পরিমাণ</th><th style="padding:6px 10px">দর</th><th style="padding:6px 10px">মোট</th></tr></thead><tbody>${its.map((i) => `<tr style="border-bottom:1px solid var(--bd)"><td style="padding:6px 10px">${i.name_bn || "-"}</td><td style="padding:6px 10px;text-align:center">${i.quantity}</td><td style="padding:6px 10px;text-align:center">৳${i.unit_price}</td><td style="padding:6px 10px;text-align:center">৳${i.total_price}</td></tr>`).join("")}</tbody></table><div style="margin-top:10px;text-align:right;font-size:13px"><div>মোট: ৳${parseFloat(s.subtotal).toLocaleString()}</div><div>ছাড়: −৳${parseFloat(s.discount).toLocaleString()}</div><div style="font-weight:700;font-size:15px">নিট মোট: ৳${parseFloat(s.total_amount).toLocaleString()}</div></div>`;
           oM("mInv");
         } catch (e) {
           toast("চালান লোড সমস্যা", 1);
@@ -3710,7 +3725,7 @@
 <td><strong style="color:var(--g600)">${b.batch_code}</strong></td>
 <td>${b.seedling_bn || "-"}</td>
 <td><span class="b bt">${MN[b.production_type] || b.production_type}</span></td>
-<td>${fmtDate(dt || b.created_at)}</td>
+<td>${fmtDMY(dt || b.created_at)}</td>
 <td>${b.produced_quantity}</td>
 <td><strong style="${avail <= 10 ? "color:var(--c400)" : ""}">${avail}</strong></td>
 <td>${Math.max(0, sold)}</td>
