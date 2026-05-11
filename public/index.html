@@ -452,9 +452,59 @@ function login(){
   };
   tryLogin(1);
 }
-function showApp(){document.getElementById('lp').style.display='none';document.getElementById('app').classList.add('active');const n=ME.name||'User',i=n.split(' ').map(x=>x[0]).join('').substring(0,2).toUpperCase();document.getElementById('unn').textContent=n;document.getElementById('url').textContent=ME.role||'';['uav','tav'].forEach(id=>document.getElementById(id).textContent=i);lDash();startAutoRefresh();startInactivityWatch();
-// Admin হলে notification চেক শুরু করুন
+function showApp(){document.getElementById('lp').style.display='none';document.getElementById('app').classList.add('active');const n=ME.name||'User',i=n.split(' ').map(x=>x[0]).join('').substring(0,2).toUpperCase();document.getElementById('unn').textContent=n;document.getElementById('url').textContent=ME.role||'';['uav','tav'].forEach(id=>document.getElementById(id).textContent=i);
+applyRoleSidebar(); // ✅ Role অনুযায়ী sidebar সাজান
+lDash();startAutoRefresh();startInactivityWatch();
 if(ME.role==='admin') checkAdminNotif();}
+
+// ===== Role-based Sidebar =====
+function applyRoleSidebar(){
+  const role=ME.role||'viewer';
+
+  // সব nav item-এর access নির্ধারণ করুন
+  const access={
+    admin:       ['dash','seed','prod','moth','batch','stk','dmg','sale','cust','rep','usr'],
+    manager:     ['dash','seed','prod','moth','batch','stk','dmg','sale','cust','rep','usr'],
+    production_officer: ['dash','seed','prod','moth','batch','stk','dmg','rep'],
+    sales_operator:     ['dash','sale','cust','stk','rep'],
+    viewer:             ['dash','rep']
+  };
+
+  const allowed=access[role]||['dash'];
+
+  // প্রতিটি nav item চেক করুন
+  document.querySelectorAll('.ni').forEach(ni=>{
+    const fn=ni.getAttribute('onclick')||'';
+    const match=fn.match(/go\('(\w+)'/);
+    if(match){
+      const pageId=match[1];
+      if(allowed.includes(pageId)){
+        ni.style.display='flex'; // দেখাবে
+      }else{
+        ni.style.display='none'; // লুকাবে
+      }
+    }
+  });
+
+  // Section headers লুকান যদি সব item লুকানো থাকে
+  document.querySelectorAll('.ss').forEach(sec=>{
+    let next=sec.nextElementSibling;
+    let hasVisible=false;
+    while(next&&!next.classList.contains('ss')){
+      if(next.classList.contains('ni')&&next.style.display!=='none'){
+        hasVisible=true;break;
+      }
+      next=next.nextElementSibling;
+    }
+    sec.style.display=hasVisible?'block':'none';
+  });
+
+  // Topbar বাটন লুকান role অনুযায়ী
+  const prodBtn=document.querySelector('.tb .btn[onclick*="mProd"]');
+  const saleBtn=document.querySelector('.tb .btn[onclick*="mSale"]');
+  if(prodBtn) prodBtn.style.display=allowed.includes('prod')?'':'none';
+  if(saleBtn) saleBtn.style.display=allowed.includes('sale')?'':'none';
+}
 
 // ===== Admin Notification — পাসওয়ার্ড অনুরোধ চেক (স্বাধীন function) =====
 async function checkAdminNotif(){
