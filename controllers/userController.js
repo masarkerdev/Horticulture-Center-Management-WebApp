@@ -63,17 +63,15 @@ const updateUser = async (req, res) => {
     }
 };
 
-// ব্যবহারকারী মুছুন (শুধু নিষ্ক্রিয় করা হয়)
+// ব্যবহারকারী স্থায়ীভাবে মুছুন
 const deleteUser = async (req, res) => {
     const { id } = req.params;
-
     if (parseInt(id) === req.user.id) {
         return res.status(400).json({ success: false, message: 'নিজেকে মুছতে পারবেন না।' });
     }
-
     try {
-        await db.query('UPDATE users SET is_active = FALSE WHERE id = $1', [id]);
-        res.json({ success: true, message: 'ব্যবহারকারী নিষ্ক্রিয় করা হয়েছে।' });
+        await db.query('DELETE FROM users WHERE id = $1', [id]);
+        res.json({ success: true, message: 'ব্যবহারকারী স্থায়ীভাবে মুছে ফেলা হয়েছে।' });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }

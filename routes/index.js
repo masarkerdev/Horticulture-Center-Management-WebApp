@@ -401,6 +401,19 @@ router.get('/reports/sales-by-category', authenticate, async (req, res) => {
     }
 });
 
+// ব্যবহারকারী নিষ্ক্রিয়/সক্রিয় toggle
+router.post('/users/:id/toggle-active', authenticate, adminOnly, async (req, res) => {
+    try {
+        const user = await db.query('SELECT is_active, name FROM users WHERE id=$1', [req.params.id]);
+        if (!user.rows.length) return res.status(404).json({ success: false, message: 'পাওয়া যায়নি।' });
+        const newStatus = !user.rows[0].is_active;
+        await db.query('UPDATE users SET is_active=$1 WHERE id=$2', [newStatus, req.params.id]);
+        res.json({ success: true, message: user.rows[0].name+(newStatus?' সক্রিয় করা হয়েছে।':' নিষ্ক্রিয় করা হয়েছে।'), is_active: newStatus });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // ============================================================
 // পাসওয়ার্ড পরিবর্তনের অনুরোধ — /api/auth/request-password-change
 // ============================================================

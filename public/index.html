@@ -979,8 +979,9 @@ async function lUsr(){
 <td>${u.is_active?'<span class="b bg">সক্রিয়</span>':'<span class="b br">নিষ্ক্রিয়</span>'}</td>
 <td><div style="display:flex;gap:4px">
 ${ME.role==='admin'&&u.password_request_status==='pending'?`<button class="btn btns" style="background:var(--g50);color:var(--g600)" onclick="approvePwd(${u.id})" title="অনুমোদন"><i class="ti ti-check"></i></button><button class="btn btns btnr" onclick="rejectPwd(${u.id})" title="প্রত্যাখ্যান"><i class="ti ti-x"></i></button>`:''}
-<button class="btn btns btne" onclick="editUsr(${JSON.stringify(u).replace(/"/g,'&quot;')})"><i class="ti ti-edit"></i></button>
-<button class="btn btns btnr" onclick="delItem('users',${u.id},'${u.name} কে মুছে ফেলবেন?')"><i class="ti ti-trash"></i></button>
+<button class="btn btns btne" onclick="editUsr(${JSON.stringify(u).replace(/"/g,'&quot;')})" title="সম্পাদনা"><i class="ti ti-edit"></i></button>
+<button class="btn btns" style="${u.is_active?'background:var(--a50);color:var(--a400)':'background:var(--g50);color:var(--g600)'}" onclick="toggleUser(${u.id},'${u.name}')" title="${u.is_active?'নিষ্ক্রিয় করুন':'সক্রিয় করুন'}"><i class="ti ti-${u.is_active?'lock':'lock-open'}"></i></button>
+<button class="btn btns btnr" onclick="delItem('users',${u.id},'⚠️ ${u.name} কে স্থায়ীভাবে মুছে ফেলবেন? এটা পূর্বাবস্থায় ফেরানো যাবে না!')" title="স্থায়ীভাবে মুছুন"><i class="ti ti-trash"></i></button>
 </div></td></tr>`).join('')||''}
   catch(e){document.getElementById('uTbl').innerHTML='<tr><td colspan="5" class="lt">শুধু Admin দেখতে পারে</td></tr>'}
 }
@@ -1231,6 +1232,15 @@ async function reqPwdChange(){
   if(d.success){toast('অনুরোধ পাঠানো হয়েছে ✅ Admin এর অনুমোদনের জন্য অপেক্ষা করুন');cM('mPwdReq');['pwdNew','pwdCon'].forEach(id=>document.getElementById(id).value='');}
   else toast(d.message||'সমস্যা',1)}catch(e){toast('সমস্যা',1)}
 }
+// ব্যবহারকারী সক্রিয়/নিষ্ক্রিয় toggle
+async function toggleUser(id,name){
+  try{
+    const d=await api('/users/'+id+'/toggle-active',{method:'POST'});
+    if(d.success){toast(d.message+' ✅');lUsr();}
+    else toast(d.message||'সমস্যা',1);
+  }catch(e){toast('সমস্যা',1)}
+}
+
 async function approvePwd(id){try{const d=await api('/users/'+id+'/approve-password',{method:'POST'});if(d.success){toast('পাসওয়ার্ড অনুমোদিত ✅');lUsr();checkAdminNotif();}else toast(d.message||'সমস্যা',1)}catch(e){toast('সমস্যা',1)}}
 async function rejectPwd(id){try{const d=await api('/users/'+id+'/reject-password',{method:'POST'});if(d.success){toast('অনুরোধ প্রত্যাখ্যান করা হয়েছে');lUsr();checkAdminNotif();}else toast(d.message||'সমস্যা',1)}catch(e){toast('সমস্যা',1)}}
 
