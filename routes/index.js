@@ -401,4 +401,53 @@ router.get('/reports/sales-by-category', authenticate, async (req, res) => {
     }
 });
 
+// ============================================================
+// পাসওয়ার্ড পরিবর্তনের অনুরোধ — /api/auth/request-password-change
+// ============================================================
+router.post('/auth/request-password-change', authenticate, async (req, res) => {
+    const { new_password } = req.body;
+    if (!new_password || new_password.length < 6)
+        return res.status(400).json({ success: false, message: 'কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড দিন।' });
+    try {
+        const bcrypt = require('bcryptjs');
+        const hashed = await bcrypt.hash(new_password, 10);
+        await db.query(
+            `UPDATE users SET pending_password=$1, password_request_status='pending' WHERE id=$2`,
+            [hashed, req.user.id]
+        );
+        res.json({ success: true, message: 'পাসওয়ার্ড পরিবর্তনের অনুরোধ পাঠানো হয়েছে। Admin অনুমোদনের জন্য অপেক্ষা করুন।' });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Admin — অনুরোধ Approve করুন
+router.post('/users/:id/approve-password', authenticate, adminOnly, async (req, res) => {
+    try {
+        const user = await db.query('SELECT pending_password FROM users WHERE id=$1', [req.params.id]);
+        if (!user.rows[0]?.pending_password)
+            return res.status(400).json({ success: false, message: 'কোনো pending অনুরোধ নেই।' });
+        await db.query(
+            `UPDATE users SET password=$1, pending_password=NULL, password_request_status='approved' WHERE id=$2`,
+            [user.rows[0].pending_password, req.params.id]
+        );
+        res.json({ success: true, message: 'পাসওয়ার্ড পরিবর্তন অনুমোদিত হয়েছে।' });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Admin — অনুরোধ Reject করুন
+router.post('/users/:id/reject-password', authenticate, adminOnly, async (req, res) => {
+    try {
+        await db.query(
+            `UPDATE users SET pending_password=NULL, password_request_status='rejected' WHERE id=$1`,
+            [req.params.id]
+        );
+        res.json({ success: true, message: 'পাসওয়ার্ড পরিবর্তনের অনুরোধ প্রত্যাখ্যান করা হয়েছে।' });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 module.exports = router;

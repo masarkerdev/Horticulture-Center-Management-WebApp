@@ -297,7 +297,7 @@ textarea.fc{resize:vertical}
 
 <!-- USERS -->
 <div class="pg" id="pg-usr">
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><div style="font-size:13px;color:var(--tm)">ব্যবহারকারী ও ভূমিকা</div><button class="btn btnp" onclick="oM('mUsr')"><i class="ti ti-user-plus"></i> নতুন ব্যবহারকারী</button></div>
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><div style="font-size:13px;color:var(--tm)">ব্যবহারকারী ও ভূমিকা</div><div style="display:flex;gap:8px"><button class="btn btns" onclick="oM('mPwdReq')"><i class="ti ti-key"></i> পাসওয়ার্ড পরিবর্তন</button><button class="btn btns btnp" onclick="oM('mUsr')"><i class="ti ti-user-plus"></i> নতুন ব্যবহারকারী</button></div></div>
 <div class="card" style="margin-bottom:16px" id="permMatrix"><div class="cdt">অনুমতি ম্যাট্রিক্স</div><div class="tw"><table><thead><tr><th>ভূমিকা</th><th style="text-align:center">তৈরি</th><th style="text-align:center">সম্পাদনা</th><th style="text-align:center">মুছুন</th><th style="text-align:center">দেখুন</th><th style="text-align:center">এক্সপোর্ট</th></tr></thead><tbody><tr><td><strong>Admin</strong></td><td style="text-align:center;color:var(--g600)">✓</td><td style="text-align:center;color:var(--g600)">✓</td><td style="text-align:center;color:var(--g600)">✓</td><td style="text-align:center;color:var(--g600)">✓</td><td style="text-align:center;color:var(--g600)">✓</td></tr><tr><td><strong>Manager</strong></td><td style="text-align:center;color:var(--g600)">✓</td><td style="text-align:center;color:var(--g600)">✓</td><td style="text-align:center;color:var(--c400)">✗</td><td style="text-align:center;color:var(--g600)">✓</td><td style="text-align:center;color:var(--g600)">✓</td></tr><tr><td><strong>Production Officer</strong></td><td style="text-align:center;color:var(--g600)">✓</td><td style="text-align:center;color:var(--g600)">✓</td><td style="text-align:center;color:var(--c400)">✗</td><td style="text-align:center;color:var(--g600)">✓</td><td style="text-align:center;color:var(--c400)">✗</td></tr><tr><td><strong>Sales Operator</strong></td><td style="text-align:center;color:var(--g600)">✓</td><td style="text-align:center;color:var(--c400)">✗</td><td style="text-align:center;color:var(--c400)">✗</td><td style="text-align:center;color:var(--g600)">✓</td><td style="text-align:center;color:var(--g600)">✓</td></tr><tr><td><strong>Viewer</strong></td><td style="text-align:center;color:var(--c400)">✗</td><td style="text-align:center;color:var(--c400)">✗</td><td style="text-align:center;color:var(--c400)">✗</td><td style="text-align:center;color:var(--g600)">✓</td><td style="text-align:center;color:var(--c400)">✗</td></tr></tbody></table></div></div>
 <div class="card" style="padding:0"><div class="tw"><table><thead><tr><th>ব্যবহারকারী</th><th>ইমেইল</th><th>ভূমিকা</th><th>অবস্থা</th><th>কার্যক্রম</th></tr></thead><tbody id="uTbl"><tr><td colspan="5" class="lt">লোড হচ্ছে...</td></tr></tbody></table></div></div>
 </div>
@@ -340,7 +340,15 @@ textarea.fc{resize:vertical}
 <!-- INVOICE VIEW MODAL -->
 <div class="mo" id="mInv"><div class="md" style="max-width:660px"><div class="mh"><h3>চালান / Invoice</h3><button class="mx" onclick="cM('mInv')"><i class="ti ti-x"></i></button></div><div id="invBody" style="border:1px solid var(--bd);border-radius:8px;padding:20px;background:var(--gr50)"></div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px"><button class="btn btns" onclick="printInv()"><i class="ti ti-printer"></i> প্রিন্ট</button><button class="btn btns" onclick="cM('mInv')">বন্ধ</button></div></div></div>
 
-<!-- CONFIRM DELETE MODAL -->
+<!-- পাসওয়ার্ড পরিবর্তন অনুরোধ Modal -->
+<div class="mo" id="mPwdReq"><div class="md" style="max-width:420px">
+<div class="mh"><h3>পাসওয়ার্ড পরিবর্তনের অনুরোধ</h3><button class="mx" onclick="cM('mPwdReq')"><i class="ti ti-x"></i></button></div>
+<div style="background:var(--b50);border-radius:8px;padding:12px;margin-bottom:16px;font-size:13px;color:var(--b600)"><i class="ti ti-info-circle"></i> আপনার নতুন পাসওয়ার্ড Admin অনুমোদন করলে কার্যকর হবে।</div>
+<div class="fg"><label>বর্তমান পাসওয়ার্ড*</label><input class="fc" type="password" id="pwdCur" placeholder="বর্তমান পাসওয়ার্ড"></div>
+<div class="fg"><label>নতুন পাসওয়ার্ড*</label><input class="fc" type="password" id="pwdNew" placeholder="কমপক্ষে ৬ অক্ষর"></div>
+<div class="fg"><label>নতুন পাসওয়ার্ড নিশ্চিত করুন*</label><input class="fc" type="password" id="pwdCon" placeholder="আবার লিখুন"></div>
+<div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" onclick="cM('mPwdReq')">বাতিল</button><button class="btn btnp" onclick="reqPwdChange()"><i class="ti ti-send"></i> অনুরোধ পাঠান</button></div>
+</div></div>
 <div class="mo" id="mDel"><div class="md" style="max-width:400px"><div class="mh"><h3>নিশ্চিত করুন</h3><button class="mx" onclick="cM('mDel')"><i class="ti ti-x"></i></button></div><p style="font-size:13px;margin-bottom:20px" id="delMsg">এটি মুছে ফেলতে চান?</p><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" onclick="cM('mDel')">বাতিল</button><button class="btn btnr" id="delBtn">মুছুন</button></div></div></div>
 
 <script>
@@ -856,10 +864,27 @@ async function saveCust(){const id=document.getElementById('cId').value;const b=
 
 // ===== USERS =====
 async function lUsr(){
-  // ✅ শুধু Admin অনুমতি ম্যাট্রিক্স দেখবে
   const matrix=document.getElementById('permMatrix');
   if(matrix) matrix.style.display=ME.role==='admin'?'block':'none';
-  try{const d=await api('/users');document.getElementById('uTbl').innerHTML=d.data?.map(u=>`<tr><td><div style="display:flex;align-items:center;gap:8px"><div class="av">${u.name.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase()}</div><strong>${u.name}</strong></div></td><td>${u.email}</td><td><span class="b bg">${RN[u.role]||u.role}</span></td><td>${u.is_active?'<span class="b bg">সক্রিয়</span>':'<span class="b br">নিষ্ক্রিয়</span>'}</td><td><div style="display:flex;gap:4px"><button class="btn btns btne" onclick="editUsr(${JSON.stringify(u).replace(/"/g,'&quot;')})"><i class="ti ti-edit"></i></button><button class="btn btns btnr" onclick="delItem('users',${u.id},'ব্যবহারকারী নিষ্ক্রিয় করবেন?')"><i class="ti ti-trash"></i></button></div></td></tr>`).join('')||''}catch(e){document.getElementById('uTbl').innerHTML='<tr><td colspan="5" class="lt">শুধু Admin দেখতে পারে</td></tr>'}}
+  try{
+    const d=await api('/users');
+    const pendingCount=d.data?.filter(u=>u.password_request_status==='pending').length||0;
+    // Pending badge সিডবার-এ দেখান
+    const usrNav=document.querySelector('.ni[onclick*="usr"]');
+    if(usrNav&&pendingCount>0){const nb=usrNav.querySelector('.nb')||document.createElement('span');nb.className='nb';nb.textContent=pendingCount;if(!usrNav.querySelector('.nb'))usrNav.appendChild(nb);}
+    document.getElementById('uTbl').innerHTML=d.data?.map(u=>`<tr>
+<td><div style="display:flex;align-items:center;gap:8px"><div class="av">${u.name.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase()}</div>
+<div><strong>${u.name}</strong>${u.password_request_status==='pending'?'<br><span style="font-size:11px;color:var(--a400)">⏳ পাসওয়ার্ড পরিবর্তনের অনুরোধ</span>':u.password_request_status==='approved'?'<br><span style="font-size:11px;color:var(--g600)">✅ পাসওয়ার্ড অনুমোদিত</span>':''}</div></div></td>
+<td>${u.email}</td>
+<td><span class="b bg">${RN[u.role]||u.role}</span></td>
+<td>${u.is_active?'<span class="b bg">সক্রিয়</span>':'<span class="b br">নিষ্ক্রিয়</span>'}</td>
+<td><div style="display:flex;gap:4px">
+${ME.role==='admin'&&u.password_request_status==='pending'?`<button class="btn btns" style="background:var(--g50);color:var(--g600)" onclick="approvePwd(${u.id})" title="অনুমোদন"><i class="ti ti-check"></i></button><button class="btn btns btnr" onclick="rejectPwd(${u.id})" title="প্রত্যাখ্যান"><i class="ti ti-x"></i></button>`:''}
+<button class="btn btns btne" onclick="editUsr(${JSON.stringify(u).replace(/"/g,'&quot;')})"><i class="ti ti-edit"></i></button>
+<button class="btn btns btnr" onclick="delItem('users',${u.id},'${u.name} কে মুছে ফেলবেন?')"><i class="ti ti-trash"></i></button>
+</div></td></tr>`).join('')||''}
+  catch(e){document.getElementById('uTbl').innerHTML='<tr><td colspan="5" class="lt">শুধু Admin দেখতে পারে</td></tr>'}
+}
 
 function editUsr(u){document.getElementById('mUsrT').textContent='ব্যবহারকারী সম্পাদনা';document.getElementById('uId').value=u.id;document.getElementById('uNm').value=u.name||'';document.getElementById('uEm').value=u.email||'';document.getElementById('uRl').value=u.role||'';document.getElementById('uPw').value='';oM('mUsr')}
 
@@ -1095,6 +1120,20 @@ async function testConn(){try{const d=await api('/');if(d.success)toast('সং�
   if(c.name_bn || c.name_en) applySiteConfig(c);
   if(c.language && c.language!=='bn') setTimeout(()=>applyLanguage(c.language),200);
 })();
+
+// ===== পাসওয়ার্ড পরিবর্তনের অনুরোধ =====
+async function reqPwdChange(){
+  const nw=document.getElementById('pwdNew').value;
+  const con=document.getElementById('pwdCon').value;
+  if(!nw||!con)return toast('সব তথ্য দিন',1);
+  if(nw!==con)return toast('পাসওয়ার্ড মিলছে না',1);
+  if(nw.length<6)return toast('কমপক্ষে ৬ অক্ষর দিন',1);
+  try{const d=await api('/auth/request-password-change',{method:'POST',body:JSON.stringify({new_password:nw})});
+  if(d.success){toast('অনুরোধ পাঠানো হয়েছে ✅ Admin এর অনুমোদনের জন্য অপেক্ষা করুন');cM('mPwdReq');['pwdNew','pwdCon'].forEach(id=>document.getElementById(id).value='');}
+  else toast(d.message||'সমস্যা',1)}catch(e){toast('সমস্যা',1)}
+}
+async function approvePwd(id){try{const d=await api('/users/'+id+'/approve-password',{method:'POST'});if(d.success){toast('পাসওয়ার্ড অনুমোদিত ✅');lUsr();}else toast(d.message||'সমস্যা',1)}catch(e){toast('সমস্যা',1)}}
+async function rejectPwd(id){try{const d=await api('/users/'+id+'/reject-password',{method:'POST'});if(d.success){toast('অনুরোধ প্রত্যাখ্যান করা হয়েছে');lUsr();}else toast(d.message||'সমস্যা',1)}catch(e){toast('সমস্যা',1)}}
 
 async function exportCSV(type){const fns={stock:'/stock',sale:'/sales',prod:'/production',dmg:'/damages'};if(!fns[type])return;try{const d=await api(fns[type]);let rows=[],hdrs=[],data=[];if(type==='stock'&&d.data){hdrs=['চারা','মোট ইন','মোট আউট','স্টক','মূল্য'];data=d.data.map(x=>[x.name_bn,x.total_in,x.total_out,x.current_stock,x.current_stock*x.unit_price])}else if(type==='sale'&&d.data){hdrs=['চালান','গ্রাহক','তারিখ','মোট','পরিশোধ'];data=d.data.map(x=>[x.invoice_no,x.customer_name,x.sale_date,x.total_amount,x.payment_method])}else if(type==='prod'&&d.data){hdrs=['ব্যাচ','চারা','পদ্ধতি','উৎপাদিত','সফল','সাফল্য%'];data=d.data.map(x=>[x.batch_code,x.seedling_bn,x.production_type,x.produced_quantity,x.success_quantity,x.success_percent||x.germination_percent||0])}else if(type==='dmg'&&d.data){hdrs=['তারিখ','চারা','পরিমাণ','কারণ'];data=d.data.map(x=>[x.damage_date,x.name_bn,x.quantity,x.reason])}
 const csv=[hdrs.join(','),...data.map(r=>r.join(','))].join('\n');const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);a.download=type+'_report.csv';a.click();toast('CSV ডাউনলোড হচ্ছে ✅')}catch(e){toast('সমস্যা',1)}}
