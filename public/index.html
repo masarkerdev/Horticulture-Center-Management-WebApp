@@ -144,7 +144,6 @@ textarea.fc{resize:vertical}
 <div class="ni" onclick="go('cfg',this)"><i class="ti ti-settings"></i> সেটিংস</div>
 </div>
 <div class="sbu"><div class="av0" id="uav">MA</div><div><div style="font-size:12px;color:#fff;font-weight:500" id="unn">Admin</div><div style="font-size:10px;color:var(--st);opacity:.7" id="url">admin</div></div>
-<button class="lob" onclick="oM('mPwdReq')" title="পাসওয়ার্ড পরিবর্তন"><i class="ti ti-key"></i></button>
 <button class="lob" onclick="logout()" title="লগআউট"><i class="ti ti-logout"></i></button></div>
 </aside>
 
@@ -153,6 +152,7 @@ textarea.fc{resize:vertical}
 <button class="mob" onclick="tSB()"><i class="ti ti-menu-2"></i></button>
 <div class="tbt" id="pt">ড্যাশবোর্ড</div>
 <div style="display:flex;gap:8px;align-items:center">
+<button class="btn btns" onclick="oM('mPwdReq')" title="পাসওয়ার্ড পরিবর্তন"><i class="ti ti-key"></i></button>
 <button class="btn btns" onclick="oM('mProd')"><i class="ti ti-plus"></i> উৎপাদন</button>
 <button class="btn btns btnp" onclick="oM('mSale')"><i class="ti ti-shopping-cart"></i> বিক্রয়</button>
 <div class="av" id="tav">MA</div>
@@ -163,6 +163,8 @@ textarea.fc{resize:vertical}
 
 <!-- DASHBOARD -->
 <div class="pg active" id="pg-dash">
+<!-- শুধু Admin দেখবে — Pending password requests -->
+<div id="adminNotif" style="display:none;margin-bottom:16px"></div>
 <div class="sg" id="dSt"><div class="lt">লোড হচ্ছে...</div></div>
 <div class="cr">
 <div class="card"><div class="cdt">মাসিক উৎপাদন <span>বীজ ও অঙ্গজ</span></div><div class="bc" id="dChart"></div><div style="display:flex;gap:12px;margin-top:8px"><div style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--tm)"><div style="width:9px;height:9px;border-radius:2px;background:var(--g400)"></div> বীজ</div><div style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--tm)"><div style="width:9px;height:9px;border-radius:2px;background:var(--t400)"></div> অঙ্গজ</div></div></div>
@@ -538,7 +540,42 @@ document.getElementById('dChart').innerHTML=pd.map(x=>{
   <div class="bar" style="height:${Math.max(ah,2)}px;background:var(--t400);flex:1" title="অঙ্গজ: ${toBnNum(x.a)}"></div>
   </div><div class="brlbl">${x.m}</div></div>`}).join('');
 
-// Donut chart — আলাদাভাবে call করুন
+// Admin হলে pending password requests চেক করুন
+if(ME.role==='admin'){
+  try{
+    const ur=await api('/users');
+    const pending=ur.data?.filter(u=>u.password_request_status==='pending')||[];
+    if(pending.length>0){
+      // Sidebar badge যোগ করুন
+      const usrNav=document.querySelector('.ni[onclick*="usr"]');
+      if(usrNav){
+        let nb=usrNav.querySelector('.nb');
+        if(!nb){nb=document.createElement('span');nb.className='nb';usrNav.appendChild(nb);}
+        nb.textContent=pending.length;
+      }
+      // Dashboard-এ notification দেখান
+      const notifDiv=document.getElementById('adminNotif');
+      if(notifDiv){
+        notifDiv.innerHTML=pending.map(u=>`
+          <div class="ai" style="background:var(--b50);border-color:#b5d4f4">
+            <i class="ti ti-key" style="color:var(--b600)"></i>
+            <div style="flex:1"><strong>${u.name}</strong> পাসওয়ার্ড পরিবর্তনের অনুরোধ করেছেন</div>
+            <div style="display:flex;gap:4px">
+              <button class="btn btns" style="background:var(--g50);color:var(--g600)" onclick="approvePwd(${u.id})"><i class="ti ti-check"></i> অনুমোদন</button>
+              <button class="btn btns btnr" onclick="rejectPwd(${u.id})"><i class="ti ti-x"></i></button>
+            </div>
+          </div>`).join('');
+        notifDiv.style.display='block';
+      }
+    }else{
+      // কোনো request নেই — badge সরান
+      const nb=document.querySelector('.ni[onclick*="usr"] .nb');
+      if(nb)nb.remove();
+      const notifDiv=document.getElementById('adminNotif');
+      if(notifDiv)notifDiv.style.display='none';
+    }
+  }catch(e){}
+}
 const catColors=['var(--g400)','var(--t400)','var(--a200)','var(--c400)','var(--b400)'];
 const svgEl=document.getElementById('catSvg');
 const dlEl=document.getElementById('catLegend');
