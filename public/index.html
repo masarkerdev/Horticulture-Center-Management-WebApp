@@ -1153,7 +1153,7 @@ function saveSettings(){
   applySiteConfig(cfg);
 
   // ভাষা পরিবর্তন apply করুন
-  if(cfg.language&&cfg.language!=='bn') applyLanguage(cfg.language);
+  if(cfg.language&&cfg.language!=='bn') applyLangNow(cfg.language);
 
   toast('সেটিংস সংরক্ষণ হয়েছে ✅');
 }
@@ -1286,52 +1286,6 @@ function applyLangNow(lang){
 
 // Load saved lang
 (function(){const l=localStorage.getItem('hc_lang');if(l&&l!=='bn'){currentLang=l;setTimeout(()=>applyLangNow(l),300);}})();
-  const labels={
-    bn:{
-      dash:'ড্যাশবোর্ড',seed:'চারা তালিকা',prod:'উৎপাদন রেজিস্টার',
-      batch:'ব্যাচ ম্যানেজমেন্ট',moth:'মাদার প্ল্যান্ট',stk:'স্টক রেজিস্টার',
-      dmg:'ক্ষতি / নষ্ট',sale:'বিক্রয় ও চালান',cust:'গ্রাহক তালিকা',
-      rep:'রিপোর্ট ও বিশ্লেষণ',usr:'ব্যবহারকারী',cfg:'সেটিংস',
-      logo:'উদ্যানতত্ত্ববিদের কার্যালয়',sub:'Asambasti, Rangamati',
-      btn_prod:'উৎপাদন',btn_sale:'বিক্রয়',
-      sec_main:'প্রধান / Main',sec_prod:'উৎপাদন / Production',
-      sec_inv:'মজুদ / Inventory',sec_sale:'বিক্রয় / Sales',
-      sec_rep:'রিপোর্ট / Reports',sec_sys:'সিস্টেম'
-    },
-    en:{
-      dash:'Dashboard',seed:'Seedling Master',prod:'Production Register',
-      batch:'Batch Management',moth:'Mother Plants',stk:'Stock Register',
-      dmg:'Damage / Loss',sale:'Sales & Invoices',cust:'Customers',
-      rep:'Reports & Analytics',usr:'User Management',cfg:'Settings',
-      logo:'Horticulture Center',sub:'Asambasti, Rangamati',
-      btn_prod:'Production',btn_sale:'New Sale',
-      sec_main:'Main',sec_prod:'Production',
-      sec_inv:'Inventory',sec_sale:'Sales',
-      sec_rep:'Reports',sec_sys:'System'
-    }
-  };
-  const L=lang==='en'?labels.en:labels.bn;
-  // Update sidebar logo
-  const logoEl=document.querySelector('.sbl h1');
-  if(logoEl)logoEl.textContent='🌿 '+L.logo;
-  // Update nav items text (keep icon)
-  const navMap={dash:L.dash,seed:L.seed,prod:L.prod,batch:L.batch,moth:L.moth,stk:L.stk,dmg:L.dmg,sale:L.sale,cust:L.cust,rep:L.rep,usr:L.usr,cfg:L.cfg};
-  document.querySelectorAll('.ni').forEach(ni=>{
-    const fn=ni.getAttribute('onclick')||'';
-    const match=fn.match(/go\('(\w+)'/);
-    if(match&&navMap[match[1]]){
-      const icon=ni.querySelector('i');
-      const badge=ni.querySelector('.nb');
-      ni.textContent=navMap[match[1]];
-      if(icon)ni.insertBefore(icon,ni.firstChild);
-      if(badge)ni.appendChild(badge);
-    }
-  });
-  // Update page title if currently on a page
-  const curPage=Object.keys(navMap).find(k=>document.getElementById('pg-'+k)?.classList.contains('active'));
-  if(curPage)document.getElementById('pt').textContent=navMap[curPage];
-  // Store lang
-  document.documentElement.lang=lang==='en'?'en':'bn';}
 
 async function testConn(){try{const d=await api('/');if(d.success)toast('সংযোগ সফল ✅ — '+d.message);else toast('সংযোগ ব্যর্থ',1)}catch(e){toast('সার্ভার সংযোগ ব্যর্থ। npm run dev চালু আছে?',1)}}
 
@@ -1345,7 +1299,7 @@ async function testConn(){try{const d=await api('/');if(d.success)toast('সং�
   if(c.language) document.getElementById('cfgLng').value=c.language;
   // ✅ App load হলেই সংরক্ষিত নাম apply করুন
   if(c.name_bn || c.name_en) applySiteConfig(c);
-  if(c.language && c.language!=='bn') setTimeout(()=>applyLanguage(c.language),200);
+  if(c.language && c.language!=='bn') setTimeout(()=>applyLangNow(c.language),200);
 })();
 
 // ===== পাসওয়ার্ড পরিবর্তনের অনুরোধ =====
