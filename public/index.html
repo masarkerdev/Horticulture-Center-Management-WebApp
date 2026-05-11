@@ -103,6 +103,7 @@ textarea.fc{resize:vertical}
 /* TOAST */
 .toast{position:fixed;top:20px;right:20px;background:var(--g600);color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;z-index:300;display:none;box-shadow:0 4px 20px rgba(0,0,0,.2)}.toast.err{background:var(--r400)}
 .lt{text-align:center;padding:30px;color:var(--tm);font-size:13px}
+.pw-wrap{position:relative}.pw-wrap .fc{padding-right:38px}.pw-eye{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--gr400);font-size:16px;padding:0}
 .sov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:99}
 /* REPORT CARDS */
 .rg{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
@@ -119,7 +120,7 @@ textarea.fc{resize:vertical}
 <div class="sov" id="sov" onclick="cSB()"></div>
 
 <!-- LOGIN -->
-<div class="lp" id="lp"><div class="lb"><div style="font-size:48px;margin-bottom:12px">🌿</div><h1>উদ্যানতত্ত্ববিদের কার্যালয়</h1><div class="su">Horticulture Center</div><div class="lc">আসামবস্তি, রাঙামাটি</div><div class="lf"><label>ইমেইল</label><input id="le" placeholder="আপনার ইমেইল লিখুন"></div><div class="lf"><label>পাসওয়ার্ড</label><input type="password" id="lp2" placeholder="পাসওয়ার্ড লিখুন"></div><button class="lbtn" onclick="login()">লগইন করুন</button><div class="le" id="lerr"></div></div></div>
+<div class="lp" id="lp"><div class="lb"><div style="font-size:48px;margin-bottom:12px">🌿</div><h1>উদ্যানতত্ত্ববিদের কার্যালয়</h1><div class="su">Horticulture Center</div><div class="lc">আসামবস্তি, রাঙামাটি</div><div class="lf"><label>ইমেইল</label><input id="le" placeholder="আপনার ইমেইল লিখুন"></div><div class="lf"><label>পাসওয়ার্ড</label><div class="pw-wrap"><input type="password" id="lp2" placeholder="পাসওয়ার্ড লিখুন"><button class="pw-eye" onclick="togglePwd('lp2',this)" type="button"><i class="ti ti-eye"></i></button></div></div><button class="lbtn" onclick="login()">লগইন করুন</button><div class="le" id="lerr"></div></div></div>
 
 <!-- APP -->
 <div class="app" id="app">
@@ -230,27 +231,6 @@ textarea.fc{resize:vertical}
 
 <!-- SETTINGS -->
 <div class="pg" id="pg-cfg">
-
-<!-- প্রোফাইল সম্পাদনা -->
-<div class="card" style="max-width:600px;margin-bottom:20px">
-<div class="cdt">👤 আমার প্রোফাইল / My Profile</div>
-<div class="fr">
-<div class="fg"><label>নাম</label><input class="fc" id="prName" placeholder="আপনার নাম"></div>
-<div class="fg"><label>ইমেইল</label><input class="fc" id="prEmail" type="email" placeholder="আপনার নতুন ইমেইল"></div>
-</div>
-<div style="border:1px solid var(--bd);border-radius:8px;padding:14px;margin-bottom:14px;background:var(--gr50)">
-<div style="font-size:12px;font-weight:600;margin-bottom:10px;color:var(--tm)">পাসওয়ার্ড পরিবর্তন</div>
-<div class="fg"><label>বর্তমান পাসওয়ার্ড *</label><input class="fc" type="password" id="prCurPwd" placeholder="বর্তমান পাসওয়ার্ড দিন"></div>
-<div class="fr">
-<div class="fg"><label>নতুন পাসওয়ার্ড</label><input class="fc" type="password" id="prNewPwd" placeholder="নতুন পাসওয়ার্ড (ঐচ্ছিক)"></div>
-<div class="fg"><label>নিশ্চিত করুন</label><input class="fc" type="password" id="prConPwd" placeholder="আবার লিখুন"></div>
-</div>
-</div>
-<div style="background:var(--a50);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:var(--a400)">
-<i class="ti ti-info-circle"></i> পরিবর্তন করলে পুনরায় Login করতে হবে।
-</div>
-<button class="btn btnp" onclick="updateProfile()"><i class="ti ti-check"></i> প্রোফাইল আপডেট করুন</button>
-</div>
 
 <!-- System Settings -->
 <div class="card" style="max-width:600px">
@@ -382,7 +362,7 @@ textarea.fc{resize:vertical}
 <div class="mo" id="mCust"><div class="md"><div class="mh"><h3 id="mCustT">নতুন গ্রাহক</h3><button class="mx" onclick="cM('mCust')"><i class="ti ti-x"></i></button></div><input type="hidden" id="cId"><div class="fr"><div class="fg"><label>নাম*</label><input class="fc" id="cNm" placeholder="পূর্ণ নাম"></div><div class="fg"><label>ফোন</label><input class="fc" id="cPh" placeholder="01X-XXXXXXXX"></div></div><div class="fg"><label>ঠিকানা</label><input class="fc" id="cAd" placeholder="ঠিকানা"></div><div class="fg"><label>ইমেইল</label><input class="fc" id="cEm" type="email" placeholder="email@example.com"></div><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" onclick="cM('mCust')">বাতিল</button><button class="btn btnp" onclick="saveCust()"><i class="ti ti-check"></i> সংরক্ষণ</button></div></div></div>
 
 <!-- USER MODAL -->
-<div class="mo" id="mUsr"><div class="md"><div class="mh"><h3 id="mUsrT">নতুন ব্যবহারকারী</h3><button class="mx" onclick="cM('mUsr')"><i class="ti ti-x"></i></button></div><input type="hidden" id="uId"><div class="fr"><div class="fg"><label>নাম*</label><input class="fc" id="uNm" placeholder="পূর্ণ নাম"></div><div class="fg"><label>ইমেইল*</label><input class="fc" id="uEm" type="email" placeholder="user@horticulture.bd"></div></div><div class="fr"><div class="fg"><label>ভূমিকা*</label><select class="fc" id="uRl"><option value="production_officer">Production Officer</option><option value="sales_operator">Sales Operator</option><option value="viewer">Viewer</option><option value="manager">Manager</option><option value="admin">Admin</option></select></div><div class="fg"><label>পাসওয়ার্ড</label><input class="fc" id="uPw" type="password" placeholder="নতুন পাসওয়ার্ড (পরিবর্তনের জন্য)"></div></div><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" onclick="cM('mUsr')">বাতিল</button><button class="btn btnp" onclick="saveUsr()"><i class="ti ti-user-plus"></i> সংরক্ষণ</button></div></div></div>
+<div class="mo" id="mUsr"><div class="md"><div class="mh"><h3 id="mUsrT">নতুন ব্যবহারকারী</h3><button class="mx" onclick="cM('mUsr')"><i class="ti ti-x"></i></button></div><input type="hidden" id="uId"><div class="fr"><div class="fg"><label>নাম*</label><input class="fc" id="uNm" placeholder="পূর্ণ নাম"></div><div class="fg"><label>ইমেইল*</label><input class="fc" id="uEm" type="email" placeholder="user@horticulture.bd"></div></div><div class="fr"><div class="fg"><label>ভূমিকা*</label><select class="fc" id="uRl"><option value="production_officer">Production Officer</option><option value="sales_operator">Sales Operator</option><option value="viewer">Viewer</option><option value="manager">Manager</option><option value="admin">Admin</option></select></div><div class="fg"><label>পাসওয়ার্ড</label><div class="pw-wrap"><input class="fc" id="uPw" type="password" placeholder="নতুন পাসওয়ার্ড (পরিবর্তনের জন্য)"><button class="pw-eye" onclick="togglePwd('uPw',this)" type="button"><i class="ti ti-eye"></i></button></div></div></div><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" onclick="cM('mUsr')">বাতিল</button><button class="btn btnp" onclick="saveUsr()"><i class="ti ti-user-plus"></i> সংরক্ষণ</button></div></div></div>
 
 <!-- P&L MODAL -->
 <div class="mo" id="mPL"><div class="md"><div class="mh"><h3>লাভ / ক্ষতি রিপোর্ট</h3><button class="mx" onclick="cM('mPL')"><i class="ti ti-x"></i></button></div><div class="fr"><div class="fg"><label>শুরুর তারিখ</label><input class="fc" type="date" id="plFr"></div><div class="fg"><label>শেষ তারিখ</label><input class="fc" type="date" id="plTo"></div></div><button class="btn btnp" style="margin-bottom:16px" onclick="loadPL()"><i class="ti ti-calculator"></i> হিসাব করুন</button><div id="plRes" style="background:var(--gr50);border-radius:8px;padding:16px;display:none"><div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px"><span>মোট আয়</span><strong id="plRev" style="color:var(--g600)">৳০</strong></div><div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px"><span>মোট উৎপাদন খরচ</span><strong id="plCost" style="color:var(--c400)">৳০</strong></div><div style="display:flex;justify-content:space-between;border-top:1px solid var(--bd);padding-top:10px;margin-top:4px;font-size:15px;font-weight:700"><span>নিট লাভ</span><strong id="plNet">৳০</strong></div><div style="text-align:center;margin-top:8px;font-size:12px;color:var(--tm)">মার্জিন: <strong id="plMg">০%</strong></div></div></div></div>
@@ -406,10 +386,10 @@ textarea.fc{resize:vertical}
   </div>
   <div style="border:1px solid var(--bd);border-radius:8px;padding:14px;margin-bottom:14px">
     <div style="font-size:12px;font-weight:600;margin-bottom:10px;color:var(--tm)">পাসওয়ার্ড পরিবর্তন</div>
-    <div class="fg"><label>বর্তমান পাসওয়ার্ড *</label><input class="fc" type="password" id="prCurPwd" placeholder="বর্তমান পাসওয়ার্ড"></div>
+    <div class="fg"><label>বর্তমান পাসওয়ার্ড *</label><div class="pw-wrap"><input class="fc" type="password" id="prCurPwd" placeholder="বর্তমান পাসওয়ার্ড"><button class="pw-eye" onclick="togglePwd('prCurPwd',this)" type="button"><i class="ti ti-eye"></i></button></div></div>
     <div class="fr">
-      <div class="fg"><label>নতুন পাসওয়ার্ড</label><input class="fc" type="password" id="prNewPwd" placeholder="নতুন পাসওয়ার্ড (ঐচ্ছিক)"></div>
-      <div class="fg"><label>নিশ্চিত করুন</label><input class="fc" type="password" id="prConPwd" placeholder="আবার লিখুন"></div>
+      <div class="fg"><label>নতুন পাসওয়ার্ড</label><div class="pw-wrap"><input class="fc" type="password" id="prNewPwd" placeholder="নতুন পাসওয়ার্ড (ঐচ্ছিক)"><button class="pw-eye" onclick="togglePwd('prNewPwd',this)" type="button"><i class="ti ti-eye"></i></button></div></div>
+      <div class="fg"><label>নিশ্চিত করুন</label><div class="pw-wrap"><input class="fc" type="password" id="prConPwd" placeholder="আবার লিখুন"><button class="pw-eye" onclick="togglePwd('prConPwd',this)" type="button"><i class="ti ti-eye"></i></button></div></div>
     </div>
   </div>
   <div style="background:var(--a50);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:var(--a400)">
@@ -1209,6 +1189,19 @@ async function editSale(s){
     }
   }catch(e){}
   oM('mSale');
+}
+
+// ===== PASSWORD VISIBILITY TOGGLE =====
+function togglePwd(id,btn){
+  const inp=document.getElementById(id);
+  const icon=btn.querySelector('i');
+  if(inp.type==='password'){
+    inp.type='text';
+    icon.className='ti ti-eye-off';
+  }else{
+    inp.type='password';
+    icon.className='ti ti-eye';
+  }
 }
 
 // ===== PROFILE MODAL =====
