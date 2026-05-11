@@ -154,7 +154,6 @@ textarea.fc{resize:vertical}
 <button class="mob" onclick="tSB()"><i class="ti ti-menu-2"></i></button>
 <div class="tbt" id="pt">ড্যাশবোর্ড</div>
 <div style="display:flex;gap:8px;align-items:center">
-<button class="btn btns" onclick="switchLang()" id="langBtn" title="ভাষা পরিবর্তন">🇧🇩 বাংলা</button>
 <button class="btn btns" onclick="oM('mPwdReq')" title="পাসওয়ার্ড পরিবর্তন"><i class="ti ti-key"></i></button>
 <button class="btn btns" onclick="oM('mProd')"><i class="ti ti-plus"></i> উৎপাদন</button>
 <button class="btn btns btnp" onclick="oM('mSale')"><i class="ti ti-shopping-cart"></i> বিক্রয়</button>
@@ -637,11 +636,11 @@ async function lDash(){
 try{
 const d=(await api('/dashboard/stats')).data;
 document.getElementById('dSt').innerHTML=`
-<div class="sc"><div class="si" style="background:var(--g50)"><i class="ti ti-plant" style="color:var(--g600);font-size:18px"></i></div><div class="sl">${t('stat_types')}</div><div class="sv">${toBnNum(d.seedling_types)}</div><div class="ss2">${t('desc_seed')}</div></div>
-<div class="sc"><div class="si" style="background:var(--t50)"><i class="ti ti-stack-2" style="color:var(--t600);font-size:18px"></i></div><div class="sl">${t('stat_stock')}</div><div class="sv">${toBnNum(d.total_stock)}</div></div>
-<div class="sc"><div class="si" style="background:var(--a50)"><i class="ti ti-sun" style="color:var(--a400);font-size:18px"></i></div><div class="sl">${t('stat_todayp')}</div><div class="sv">${toBnNum(d.today_production)}</div></div>
-<div class="sc"><div class="si" style="background:var(--c50)"><i class="ti ti-receipt" style="color:var(--c400);font-size:18px"></i></div><div class="sl">${t('stat_todays')}</div><div class="sv">${toBnMoney(d.today_revenue)}</div><div class="ss2">${toBnNum(d.today_invoices)}${currentLang==='en'?' invoices':'টি চালান'}</div></div>
-<div class="sc"><div class="si" style="background:var(--b50)"><i class="ti ti-coin" style="color:var(--b600);font-size:18px"></i></div><div class="sl">${t('stat_monthly')}</div><div class="sv">${toBnMoney(d.monthly_revenue)}</div><div class="ss2">${currentLang==='en'?'This month':'এই মাসে'}</div></div>`;
+<div class="sc"><div class="si" style="background:var(--g50)"><i class="ti ti-plant" style="color:var(--g600);font-size:18px"></i></div><div class="sl">চারার ধরন</div><div class="sv">${toBnNum(d.seedling_types)}</div><div class="ss2">প্রকার নিবন্ধিত</div></div>
+<div class="sc"><div class="si" style="background:var(--t50)"><i class="ti ti-stack-2" style="color:var(--t600);font-size:18px"></i></div><div class="sl">মোট স্টক</div><div class="sv">${toBnNum(d.total_stock)}</div></div>
+<div class="sc"><div class="si" style="background:var(--a50)"><i class="ti ti-sun" style="color:var(--a400);font-size:18px"></i></div><div class="sl">আজকের উৎপাদন</div><div class="sv">${toBnNum(d.today_production)}</div></div>
+<div class="sc"><div class="si" style="background:var(--c50)"><i class="ti ti-receipt" style="color:var(--c400);font-size:18px"></i></div><div class="sl">আজকের বিক্রয়</div><div class="sv">${toBnMoney(d.today_revenue)}</div><div class="ss2">${toBnNum(d.today_invoices)}টি চালান</div></div>
+<div class="sc"><div class="si" style="background:var(--b50)"><i class="ti ti-coin" style="color:var(--b600);font-size:18px"></i></div><div class="sl">মাসিক আয়</div><div class="sv">${toBnMoney(d.monthly_revenue)}</div><div class="ss2">এই মাসে</div></div>`;
 // Bar chart — আলাদাভাবে call করুন
 const bnMonths={Jan:'জান',Feb:'ফেব',Mar:'মার্চ',Apr:'এপ্রি',May:'মে',Jun:'জুন',Jul:'জুলা',Aug:'আগস্ট',Sep:'সেপ্টে',Oct:'অক্টো',Nov:'নভে',Dec:'ডিসে'};
 let pd=[];
@@ -871,7 +870,7 @@ if(td.success){
   document.getElementById('s4').textContent=toBnMoney(td.data.pending_amount||0);
 }
 if(mo.success)document.getElementById('s2').textContent=toBnMoney(mo.data[0]?.revenue||0);
-if(td.success)document.getElementById('salSum').innerHTML=`${currentLang==='en'?'Today':'আজ'}: <strong>${toBnNum(td.data.total_invoices)}</strong>${currentLang==='en'?' invoices':'টি চালান'} | ${currentLang==='en'?'Revenue':'আয়'}: <strong>${toBnMoney(td.data.total_revenue)}</strong>`;
+if(td.success)document.getElementById('salSum').innerHTML=`আজ: <strong>${toBnNum(td.data.total_invoices)}</strong>টি চালান | আয়: <strong>${toBnMoney(td.data.total_revenue)}</strong>`;
 document.getElementById('salB').innerHTML=sl.data?.length?sl.data.map(x=>`<tr>
 <td><strong>${x.invoice_no}</strong></td>
 <td>${x.customer_name||'-'}<br><span style="font-size:11px;color:var(--tm)">${x.customer_phone||''}</span></td>
@@ -1151,10 +1150,6 @@ function saveSettings(){
 
   // ✅ Sidebar Logo তাৎক্ষণিক আপডেট করুন
   applySiteConfig(cfg);
-
-  // ভাষা পরিবর্তন apply করুন
-  if(cfg.language&&cfg.language!=='bn') applyLangNow(cfg.language);
-
   toast('সেটিংস সংরক্ষণ হয়েছে ✅');
 }
 
@@ -1252,179 +1247,6 @@ async function downloadProductionExcel(){
   }catch(e){toast('সমস্যা',1);}
 }
 
-// ===== LANGUAGE SWITCH — Full System =====
-let currentLang='bn';
-
-const translations={
-  bn:{
-    // Sidebar nav
-    dash:'ড্যাশবোর্ড',seed:'চারা তালিকা',prod:'উৎপাদন রেজিস্টার',moth:'মাদার প্ল্যান্ট',
-    batch:'ব্যাচ ম্যানেজমেন্ট',stk:'স্টক রেজিস্টার',dmg:'ক্ষতি / নষ্ট',
-    sale:'বিক্রয় ও চালান',cust:'গ্রাহক তালিকা',rep:'রিপোর্ট ও বিশ্লেষণ',
-    usr:'ব্যবহারকারী',cfg:'সেটিংস',
-    logo:'উদ্যানতত্ত্ববিদের কার্যালয়',sub:'Asambasti, Rangamati',langBtn:'🇧🇩 বাংলা',
-    // Sections
-    sec_main:'প্রধান / Main',sec_prod:'উৎপাদন / Production',
-    sec_inv:'মজুদ / Inventory',sec_sale:'বিক্রয় / Sales',
-    sec_rep:'রিপোর্ট / Reports',sec_sys:'সিস্টেম',
-    // Dashboard
-    stat_types:'চারার ধরন',stat_stock:'মোট স্টক',stat_todayp:'আজকের উৎপাদন',
-    stat_todays:'আজকের বিক্রয়',stat_monthly:'মাসিক আয়',
-    chart_prod:'মাসিক উৎপাদন',chart_seed:'বীজ',chart_asex:'অঙ্গজ',
-    chart_cat:'বিক্রয় - ক্যাটাগরি অনুযায়ী',chart_nodata:'বিক্রয় ডেটা নেই',
-    low_stock:'⚠ কম স্টক সতর্কতা',success_rate:'উৎপাদন সাফল্যের হার',
-    recent_act:'সাম্প্রতিক কার্যক্রম',recent_sub:'সর্বশেষ ৫টি',
-    // Table headers common
-    th_id:'ID',th_name:'নাম / জাত',th_cat:'ক্যাটাগরি',th_method:'পদ্ধতি',
-    th_price:'মূল্য',th_stock:'স্টক',th_status:'অবস্থা',th_action:'কার্যক্রম',
-    th_date:'তারিখ',th_qty:'পরিমাণ',th_reason:'কারণ',th_remark:'মন্তব্য',
-    th_batch:'ব্যাচ ID',th_seedling:'চারা',th_produced:'উৎপাদিত',
-    th_success:'সফল',th_failed:'ব্যর্থ',th_pct:'সাফল্য %',
-    th_cust:'গ্রাহক',th_total:'মোট (৳)',th_payment:'পরিশোধ',
-    th_invoice:'চালান #',th_avail:'পাওয়া যাচ্ছে',th_sold:'বিক্রিত',
-    th_damaged:'নষ্ট',th_in:'ইন (+)',th_out:'আউট (-)',th_value:'মূল্য (৳)',
-    th_user:'ব্যবহারকারী',th_email:'ইমেইল',th_role:'ভূমিকা',
-    th_age:'বয়স',th_location:'অবস্থান',th_health:'স্বাস্থ্য',
-    th_time:'সময়',th_activity:'কার্যক্রম',th_module:'মডিউল',
-    th_rank:'#',th_revenue:'আয় (৳)',th_orders:'অর্ডার',th_rate:'বিক্রয় হার',
-    // Buttons
-    btn_new_seed:'নতুন চারা',btn_new_prod:'নতুন উৎপাদন',btn_new_sale:'নতুন বিক্রয়',
-    btn_new_cust:'নতুন গ্রাহক',btn_new_user:'নতুন ব্যবহারকারী',btn_damage:'ক্ষতি রিপোর্ট',
-    btn_save:'সংরক্ষণ',btn_cancel:'বাতিল',btn_add_item:'আইটেম যোগ',
-    btn_print:'প্রিন্ট',btn_export:'CSV',btn_excel:'Excel',
-    btn_approve:'অনুমোদন',btn_reject:'প্রত্যাখ্যান',btn_logout:'লগআউট',
-    // Status badges
-    active:'সক্রিয়',inactive:'নিষ্ক্রিয়',paid:'পরিশোধিত',pending:'বকেয়া',
-    low:'কম স্টক',good:'ভালো',critical:'সংকটজনক',
-    // Form labels
-    lbl_name_bn:'নাম (বাংলা)*',lbl_name_en:'English Name',lbl_variety:'জাত',
-    lbl_cat:'ক্যাটাগরি*',lbl_method:'পদ্ধতি*',lbl_price:'বিক্রয় মূল্য (৳)*',
-    lbl_cost:'উৎপাদন খরচ (৳)',lbl_desc:'বিবরণ',lbl_cust_name:'গ্রাহক নাম*',
-    lbl_phone:'ফোন',lbl_address:'ঠিকানা',lbl_discount:'ছাড় (৳)',
-    lbl_pay_method:'পরিশোধ পদ্ধতি',lbl_total:'মোট',lbl_net:'নিট মোট',
-    // Page descriptions
-    desc_seed:'চারা তালিকা ও মজুদ',desc_prod:'সকল উৎপাদন ব্যাচ',
-    desc_stock:'স্বয়ংক্রিয় স্টক হিসাব',desc_dmg:'ক্ষতিগ্রস্ত চারার রেকর্ড',
-    desc_sale:'বিক্রয় তথ্য লোড হচ্ছে...',desc_cust:'গ্রাহক ডেটাবেস',
-    desc_rep:'রিপোর্ট তৈরি করুন ও এক্সপোর্ট করুন',desc_usr:'ব্যবহারকারী ও ভূমিকা',
-    // Login
-    login_title:'লগইন করুন',login_email:'ইমেইল',login_pass:'পাসওয়ার্ড',login_btn:'লগইন করুন'
-  },
-  en:{
-    dash:'Dashboard',seed:'Seedling Master',prod:'Production Register',moth:'Mother Plants',
-    batch:'Batch Management',stk:'Stock Register',dmg:'Damage / Loss',
-    sale:'Sales & Invoices',cust:'Customers',rep:'Reports & Analytics',
-    usr:'User Management',cfg:'Settings',
-    logo:'Horticulture Office',sub:'Asambasti, Rangamati',langBtn:'🇧🇩 বাংলা',
-    sec_main:'Main',sec_prod:'Production',sec_inv:'Inventory',
-    sec_sale:'Sales',sec_rep:'Reports',sec_sys:'System',
-    stat_types:'Seedling Types',stat_stock:'Total Stock',stat_todayp:"Today's Production",
-    stat_todays:"Today's Sales",stat_monthly:'Monthly Revenue',
-    chart_prod:'Monthly Production',chart_seed:'Seed',chart_asex:'Asexual',
-    chart_cat:'Sales by Category',chart_nodata:'No sales data',
-    low_stock:'⚠ Low Stock Alert',success_rate:'Production Success Rate',
-    recent_act:'Recent Activities',recent_sub:'Last 5',
-    th_id:'ID',th_name:'Name / Variety',th_cat:'Category',th_method:'Method',
-    th_price:'Price',th_stock:'Stock',th_status:'Status',th_action:'Actions',
-    th_date:'Date',th_qty:'Quantity',th_reason:'Reason',th_remark:'Remarks',
-    th_batch:'Batch ID',th_seedling:'Seedling',th_produced:'Produced',
-    th_success:'Success',th_failed:'Failed',th_pct:'Success %',
-    th_cust:'Customer',th_total:'Total (৳)',th_payment:'Payment',
-    th_invoice:'Invoice #',th_avail:'Available',th_sold:'Sold',
-    th_damaged:'Damaged',th_in:'In (+)',th_out:'Out (-)',th_value:'Value (৳)',
-    th_user:'User',th_email:'Email',th_role:'Role',
-    th_age:'Age',th_location:'Location',th_health:'Health',
-    th_time:'Time',th_activity:'Activity',th_module:'Module',
-    th_rank:'#',th_revenue:'Revenue (৳)',th_orders:'Orders',th_rate:'Sales Rate',
-    btn_new_seed:'New Seedling',btn_new_prod:'New Production',btn_new_sale:'New Sale',
-    btn_new_cust:'New Customer',btn_new_user:'New User',btn_damage:'Damage Report',
-    btn_save:'Save',btn_cancel:'Cancel',btn_add_item:'Add Item',
-    btn_print:'Print',btn_export:'CSV',btn_excel:'Excel',
-    btn_approve:'Approve',btn_reject:'Reject',btn_logout:'Logout',
-    active:'Active',inactive:'Inactive',paid:'Paid',pending:'Pending',
-    low:'Low Stock',good:'Good',critical:'Critical',
-    lbl_name_bn:'Name (Bengali)*',lbl_name_en:'English Name',lbl_variety:'Variety',
-    lbl_cat:'Category*',lbl_method:'Method*',lbl_price:'Sale Price (৳)*',
-    lbl_cost:'Production Cost (৳)',lbl_desc:'Description',lbl_cust_name:'Customer Name*',
-    lbl_phone:'Phone',lbl_address:'Address',lbl_discount:'Discount (৳)',
-    lbl_pay_method:'Payment Method',lbl_total:'Total',lbl_net:'Net Total',
-    desc_seed:'Seedling list & inventory',desc_prod:'All production batches',
-    desc_stock:'Auto-calculated stock register',desc_dmg:'Damaged seedling records',
-    desc_sale:'Loading sales data....',desc_cust:'Customer database',
-    desc_rep:'Generate and export reports',desc_usr:'Users & roles',
-    login_title:'Login',login_email:'Email',login_pass:'Password',login_btn:'Login'
-  }
-};
-
-// Translation shorthand
-const t=key=>translations[currentLang]?.[key]??translations.bn[key]??key;
-
-function switchLang(){
-  currentLang=currentLang==='bn'?'en':'bn';
-  localStorage.setItem('hc_lang',currentLang);
-  applyLangNow(currentLang);
-  // Current page re-render
-  const curId=Object.keys(tls).find(k=>document.getElementById('pg-'+k)?.classList.contains('active'));
-  if(curId && lrs[curId]) lrs[curId]();
-}
-
-function applyLangNow(lang){
-  const T=translations[lang];
-
-  // 1. Logo & subtitle
-  const logoEl=document.querySelector('.sbl h1');if(logoEl)logoEl.textContent='🌿 '+T.logo;
-  const subEl=document.querySelector('.sbl p');if(subEl)subEl.textContent=T.sub;
-  document.title=T.logo+' — Management';
-
-  // 2. Sidebar nav items
-  const navMap={dash:T.dash,seed:T.seed,prod:T.prod,moth:T.moth,batch:T.batch,stk:T.stk,dmg:T.dmg,sale:T.sale,cust:T.cust,rep:T.rep,usr:T.usr,cfg:T.cfg};
-  document.querySelectorAll('.ni').forEach(ni=>{
-    const fn=ni.getAttribute('onclick')||'';const m=fn.match(/go\('(\w+)'/);
-    if(m&&navMap[m[1]]){const ic=ni.querySelector('i');const nb=ni.querySelector('.nb');ni.textContent=navMap[m[1]];if(ic)ni.insertBefore(ic,ni.firstChild);if(nb)ni.appendChild(nb);}
-  });
-
-  // 3. Sidebar section headers
-  const secMap={'প্রধান / Main':T.sec_main,'উৎপাদন / Production':T.sec_prod,'মজুদ / Inventory':T.sec_inv,'বিক্রয় / Sales':T.sec_sale,'রিপোর্ট / Reports':T.sec_rep,'সিস্টেম':T.sec_sys};
-  document.querySelectorAll('.ss').forEach(el=>{
-    const txt=el.textContent.trim();if(secMap[txt])el.textContent=secMap[txt];
-  });
-
-  // 4. Page title in topbar
-  const curId=Object.keys(navMap).find(k=>document.getElementById('pg-'+k)?.classList.contains('active'));
-  if(curId)document.getElementById('pt').textContent=navMap[curId];
-
-  // 5. Lang button
-  const lb=document.getElementById('langBtn');if(lb)lb.textContent=T.langBtn;
-
-  // 6. All [data-i18n] elements
-  document.querySelectorAll('[data-i18n]').forEach(el=>{
-    const key=el.getAttribute('data-i18n');if(T[key])el.textContent=T[key];
-  });
-  document.querySelectorAll('[data-i18n-ph]').forEach(el=>{
-    const key=el.getAttribute('data-i18n-ph');if(T[key])el.placeholder=T[key];
-  });
-
-  // 7. Table headers — all thead th
-  const thMap={'ID':T.th_id,'চারার নাম / জাত':T.th_name,'ক্যাটাগরি':T.th_cat,'পদ্ধতি':T.th_method,'মূল্য':T.th_price,'স্টক':T.th_stock,'অবস্থা':T.th_status,'কার্যক্রম':T.th_action,'তারিখ':T.th_date,'পরিমাণ':T.th_qty,'কারণ':T.th_reason,'মন্তব্য':T.th_remark,'ব্যাচ ID':T.th_batch,'চারা':T.th_seedling,'উৎপাদিত':T.th_produced,'সফল':T.th_success,'ব্যর্থ':T.th_failed,'সাফল্য %':T.th_pct,'গ্রাহক':T.th_cust,'মোট (৳)':T.th_total,'পরিশোধ':T.th_payment,'চালান #':T.th_invoice,'পাওয়া যাচ্ছে':T.th_avail,'বিক্রিত':T.th_sold,'নষ্ট':T.th_damaged,'ইন (+)':T.th_in,'আউট (-)':T.th_out,'মূল্য (৳)':T.th_value,'ব্যবহারকারী':T.th_user,'ইমেইল':T.th_email,'ভূমিকা':T.th_role,'বয়স':T.th_age,'অবস্থান':T.th_location,'স্বাস্থ্য':T.th_health,'সময়':T.th_time,'কার্যক্রম ':T.th_activity,'মডিউল':T.th_module,'#':T.th_rank,'আয় (৳)':T.th_revenue,'অর্ডার':T.th_orders,'বিক্রয় হার':T.th_rate};
-  document.querySelectorAll('thead th').forEach(th=>{
-    const txt=th.textContent.trim();if(thMap[txt])th.textContent=thMap[txt];
-  });
-
-  // 8. Dashboard chart/section titles (static elements)
-  const titleMap={'মাসিক উৎপাদন':T.chart_prod,'বিক্রয় - ক্যাটাগরি অনুযায়ী':T.chart_cat,'উৎপাদন সাফল্যের হার':T.success_rate,'সাম্প্রতিক কার্যক্রম':T.recent_act};
-  document.querySelectorAll('.cdt').forEach(el=>{
-    const main=el.childNodes[0];if(main&&main.nodeType===3){const txt=main.textContent.trim();if(titleMap[txt])main.textContent=titleMap[txt]+' ';}
-  });
-
-  // 9. Logout button title
-  const lob=document.querySelector('.lob[onclick*="logout"]');if(lob)lob.title=T.btn_logout;
-
-  document.documentElement.lang=lang;
-}
-
-// Load saved lang
-(function(){const l=localStorage.getItem('hc_lang');if(l&&l!=='bn'){currentLang=l;setTimeout(()=>applyLangNow(l),300);}})();
-
 async function testConn(){try{const d=await api('/');if(d.success)toast('সংযোগ সফল ✅ — '+d.message);else toast('সংযোগ ব্যর্থ',1)}catch(e){toast('সার্ভার সংযোগ ব্যর্থ। npm run dev চালু আছে?',1)}}
 
 // Load saved settings on startup
@@ -1437,7 +1259,6 @@ async function testConn(){try{const d=await api('/');if(d.success)toast('সং�
   if(c.language) document.getElementById('cfgLng').value=c.language;
   // ✅ App load হলেই সংরক্ষিত নাম apply করুন
   if(c.name_bn || c.name_en) applySiteConfig(c);
-  if(c.language && c.language!=='bn') setTimeout(()=>applyLangNow(c.language),200);
 })();
 
 // ===== পাসওয়ার্ড পরিবর্তনের অনুরোধ =====
