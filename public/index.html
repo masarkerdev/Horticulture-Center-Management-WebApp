@@ -6,6 +6,7 @@
 <title>উদ্যানতত্ত্ববিদের কার্যালয় — Horticulture Center, Asambasti</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@300;400;500;600;700&family=Playfair+Display:wght@500;700&display=swap');
 *{margin:0;padding:0;box-sizing:border-box}
@@ -373,7 +374,7 @@ textarea.fc{resize:vertical}
 <div class="mo" id="mPL"><div class="md"><div class="mh"><h3>লাভ / ক্ষতি রিপোর্ট</h3><button class="mx" onclick="cM('mPL')"><i class="ti ti-x"></i></button></div><div class="fr"><div class="fg"><label>শুরুর তারিখ</label><input class="fc" type="date" id="plFr"></div><div class="fg"><label>শেষ তারিখ</label><input class="fc" type="date" id="plTo"></div></div><button class="btn btnp" style="margin-bottom:16px" onclick="loadPL()"><i class="ti ti-calculator"></i> হিসাব করুন</button><div id="plRes" style="background:var(--gr50);border-radius:8px;padding:16px;display:none"><div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px"><span>মোট আয়</span><strong id="plRev" style="color:var(--g600)">৳০</strong></div><div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px"><span>মোট উৎপাদন খরচ</span><strong id="plCost" style="color:var(--c400)">৳০</strong></div><div style="display:flex;justify-content:space-between;border-top:1px solid var(--bd);padding-top:10px;margin-top:4px;font-size:15px;font-weight:700"><span>নিট লাভ</span><strong id="plNet">৳০</strong></div><div style="text-align:center;margin-top:8px;font-size:12px;color:var(--tm)">মার্জিন: <strong id="plMg">০%</strong></div></div></div></div>
 
 <!-- INVOICE VIEW MODAL -->
-<div class="mo" id="mInv"><div class="md" style="max-width:660px"><div class="mh"><h3>চালান / Invoice</h3><button class="mx" onclick="cM('mInv')"><i class="ti ti-x"></i></button></div><div id="invBody" style="border:1px solid var(--bd);border-radius:8px;padding:20px;background:var(--gr50)"></div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px"><button class="btn btns" onclick="printInv()"><i class="ti ti-printer"></i> প্রিন্ট</button><button class="btn btns" onclick="cM('mInv')">বন্ধ</button></div></div></div>
+<div class="mo" id="mInv"><div class="md" style="max-width:680px"><div class="mh"><h3>চালান / Invoice</h3><button class="mx" onclick="cM('mInv')"><i class="ti ti-x"></i></button></div><div id="invBody" style="border:1px solid var(--bd);border-radius:8px;padding:20px;background:#fff"></div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px"><button class="btn btns btnp" onclick="downloadInvoicePDF()"><i class="ti ti-download"></i> PDF ডাউনলোড</button><button class="btn btns" onclick="printInv()"><i class="ti ti-printer"></i> প্রিন্ট</button><button class="btn btns" onclick="cM('mInv')">বন্ধ</button></div></div></div>
 
 <!-- PROFILE MODAL -->
 <div class="mo" id="mProfile"><div class="md" style="max-width:480px">
@@ -970,10 +971,115 @@ document.getElementById('salB').innerHTML=sl.data?.length?sl.data.map(x=>`<tr>
 </div></td></tr>`).join(''):'<tr><td colspan="7" class="lt">কোনো বিক্রয় নেই</td></tr>'
 }catch(e){}}
 
-async function viewInv(id){try{const d=await api('/sales/'+id);if(!d.success)return;const s=d.data;const its=s.items||[];document.getElementById('invBody').innerHTML=`<div style="text-align:center;margin-bottom:14px"><div style="font-size:15px;font-weight:700">উদ্যানতত্ত্ববিদের কার্যালয়, আসামবস্তি, রাঙামাটি</div><div style="font-size:11px;color:var(--tm)">চালান নম্বর: ${s.invoice_no} | তারিখ: ${fmtDMY(s.sale_date)}</div></div><div style="margin-bottom:10px;font-size:13px"><strong>গ্রাহক:</strong> ${s.customer_name||'-'} | ফোন: ${s.customer_phone||'-'}</div><table style="width:100%;font-size:12px;border-collapse:collapse"><thead><tr style="background:var(--g400);color:#fff"><th style="padding:6px 10px;text-align:left">চারা</th><th style="padding:6px 10px">পরিমাণ</th><th style="padding:6px 10px">দর</th><th style="padding:6px 10px">মোট</th></tr></thead><tbody>${its.map(i=>`<tr style="border-bottom:1px solid var(--bd)"><td style="padding:6px 10px">${i.name_bn||'-'}</td><td style="padding:6px 10px;text-align:center">${i.quantity}</td><td style="padding:6px 10px;text-align:center">৳${i.unit_price}</td><td style="padding:6px 10px;text-align:center">৳${i.total_price}</td></tr>`).join('')}</tbody></table><div style="margin-top:10px;text-align:right;font-size:13px"><div>মোট: ৳${parseFloat(s.subtotal).toLocaleString()}</div><div>ছাড়: −৳${parseFloat(s.discount).toLocaleString()}</div><div style="font-weight:700;font-size:15px">নিট মোট: ৳${parseFloat(s.total_amount).toLocaleString()}</div></div>`;oM('mInv')}catch(e){toast('চালান লোড সমস্যা',1)}}
+let currentInvData=null;
+async function viewInv(id){
+  try{
+    const d=await api('/sales/'+id);
+    if(!d.success)return;
+    const s=d.data;currentInvData=s;
+    const its=s.items||[];
+    const cfg=JSON.parse(localStorage.getItem('hc_cfg')||'{}');
+    const orgName=cfg.name_bn||'উদ্যানতত্ত্ববিদের কার্যালয়';
+    const orgSub=cfg.name_en||'Horticulture Office';
+    const orgAddr=cfg.address||'আসামবস্তি, রাঙামাটি';
+    document.getElementById('invBody').innerHTML=`
+    <div id="invoicePrint" style="font-family:'Noto Sans Bengali',Arial,sans-serif;color:#222;background:#fff;padding:10px">
+      <!-- Header -->
+      <div style="text-align:center;border-bottom:3px solid #3B6D11;padding-bottom:14px;margin-bottom:16px">
+        <div style="font-size:22px;font-weight:700;color:#3B6D11">🌿 ${orgName}</div>
+        <div style="font-size:12px;color:#666">${orgSub} | ${orgAddr}</div>
+        <div style="font-size:11px;color:#888">বাংলাদেশ কৃষি মন্ত্রণালয়</div>
+      </div>
+      <!-- Invoice Info -->
+      <div style="display:flex;justify-content:space-between;margin-bottom:16px;font-size:13px">
+        <div>
+          <div style="font-weight:700;font-size:15px;margin-bottom:4px">চালান নং: ${s.invoice_no}</div>
+          <div style="color:#666">তারিখ: ${fmtDMY(s.sale_date)}</div>
+          <div style="color:#666">পরিশোধ: <span style="color:${s.payment_status==='paid'?'#3B6D11':'#e24b4a'};font-weight:600">${s.payment_status==='paid'?'পরিশোধিত':'বকেয়া'}</span></div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-weight:700;margin-bottom:4px">গ্রাহক তথ্য</div>
+          <div>${s.customer_name||'—'}</div>
+          <div style="color:#666">${s.customer_phone||''}</div>
+          <div style="color:#666">${s.customer_address||''}</div>
+        </div>
+      </div>
+      <!-- Items Table -->
+      <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:16px">
+        <thead>
+          <tr style="background:#3B6D11;color:#fff">
+            <th style="padding:8px 12px;text-align:left;border-radius:4px 0 0 0">#</th>
+            <th style="padding:8px 12px;text-align:left">চারার নাম</th>
+            <th style="padding:8px 12px;text-align:center">পরিমাণ</th>
+            <th style="padding:8px 12px;text-align:right">একক দর (৳)</th>
+            <th style="padding:8px 12px;text-align:right;border-radius:0 4px 0 0">মোট (৳)</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${its.map((i,idx)=>`<tr style="border-bottom:1px solid #eee;background:${idx%2===0?'#f9f9f9':'#fff'}">
+            <td style="padding:8px 12px;color:#888">${idx+1}</td>
+            <td style="padding:8px 12px;font-weight:500">${i.name_bn||'—'}${i.variety?` (${i.variety})`:''}</td>
+            <td style="padding:8px 12px;text-align:center">${toBnNum(i.quantity)}</td>
+            <td style="padding:8px 12px;text-align:right">${toBnMoney(i.unit_price)}</td>
+            <td style="padding:8px 12px;text-align:right;font-weight:600">${toBnMoney(i.total_price)}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+      <!-- Totals -->
+      <div style="display:flex;justify-content:flex-end;margin-bottom:20px">
+        <div style="width:260px;font-size:13px">
+          <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #eee">
+            <span style="color:#666">উপমোট:</span>
+            <span>${toBnMoney(s.subtotal||s.total_amount)}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #eee;color:#e24b4a">
+            <span>ছাড়:</span>
+            <span>− ${toBnMoney(s.discount||0)}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:8px 0;font-weight:700;font-size:16px;color:#3B6D11;border-top:2px solid #3B6D11;margin-top:4px">
+            <span>নিট মোট:</span>
+            <span>${toBnMoney(s.total_amount)}</span>
+          </div>
+          <div style="font-size:11px;color:#888;text-align:right">পরিশোধ পদ্ধতি: ${s.payment_method==='cash'?'নগদ':s.payment_method==='bank'?'ব্যাংক':'মোবাইল ব্যাংকিং'}</div>
+        </div>
+      </div>
+      <!-- Footer -->
+      <div style="border-top:1px solid #eee;padding-top:14px;display:flex;justify-content:space-between;font-size:11px;color:#888">
+        <div>
+          <div style="margin-bottom:4px">ধন্যবাদ আপনার ক্রয়ের জন্য 🌿</div>
+          <div>Generated: ${new Date().toLocaleDateString('bn-BD')}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="margin-bottom:30px">কর্তৃপক্ষের স্বাক্ষর</div>
+          <div style="border-top:1px solid #333;width:120px;text-align:center;padding-top:4px">অনুমোদনকারী</div>
+        </div>
+      </div>
+    </div>`;
+    oM('mInv');
+  }catch(e){toast('চালান লোড সমস্যা',1);}
+}
 
-function printInv(){window.print()}
-function printSale(id){viewInv(id).then(()=>setTimeout(()=>window.print(),500))}
+// ===== INVOICE PDF DOWNLOAD =====
+function downloadInvoicePDF(){
+  const el=document.getElementById('invoicePrint');
+  if(!el)return toast('চালান খুলুন তারপর PDF ডাউনলোড করুন',1);
+  const inv=currentInvData;
+  const filename=`চালান_${inv?.invoice_no||'invoice'}_${inv?.customer_name||''}.pdf`;
+  toast('PDF তৈরি হচ্ছে...');
+  const opt={
+    margin:[8,8,8,8],
+    filename:filename,
+    image:{type:'jpeg',quality:0.98},
+    html2canvas:{scale:2,useCORS:true,letterRendering:true},
+    jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
+  };
+  html2pdf().set(opt).from(el).save().then(()=>{
+    toast('PDF ডাউনলোড হয়েছে ✅');
+  });
+}
+
+function printInv(){window.print();}
+function printSale(id){viewInv(id).then(()=>setTimeout(()=>window.print(),800));}
 
 // Calc total
 // ===== বহু আইটেম বিক্রয় =====
