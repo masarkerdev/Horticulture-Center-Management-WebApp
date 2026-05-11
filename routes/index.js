@@ -414,6 +414,62 @@ router.post('/users/:id/toggle-active', authenticate, adminOnly, async (req, res
     }
 });
 
+// Best Selling Seedlings
+router.get('/reports/best-selling', authenticate, async (req, res) => {
+    try {
+        const result = await db.query(`
+            SELECT s.name_bn, s.name_en, s.variety,
+                   COALESCE(SUM(si.quantity), 0) AS total_sold,
+                   COALESCE(SUM(si.total_price), 0) AS total_revenue,
+                   COUNT(DISTINCT si.sale_id) AS order_count
+            FROM seedlings s
+            LEFT JOIN sales_items si ON s.id = si.seedling_id
+            LEFT JOIN sales sa ON si.sale_id = sa.id
+            WHERE s.is_active = TRUE
+            GROUP BY s.id, s.name_bn, s.name_en, s.variety
+            ORDER BY total_sold DESC
+            LIMIT 10
+        `);
+        res.json({ success: true, data: result.rows });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Monthly Sales Report
+router.get('/reports/monthly-summary', authenticate, async (req, res) => {
+    const { year } = req.query;
+    const y = year || new Date().getFullYear();
+    try {
+        const sales = await db.query(`
+            SELECT
+                TO_CHAR(sale_date,'MM') AS month_num,
+                TO_CHAR(sale_date,'Mon') AS month_name,
+                COUNT(*) AS total_invoices,
+                COALESCE(SUM(total_amount), 0) AS total_revenue,
+                COALESCE(SUM(discount), 0) AS total_discount
+            FROM sales
+            WHERE EXTRACT(YEAR FROM sale_date) = $1
+            GROUP BY month_num, month_name
+            ORDER BY month_num`, [y]);
+
+        const production = await db.query(`
+            SELECT
+                TO_CHAR(created_at,'MM') AS month_num,
+                TO_CHAR(created_at,'Mon') AS month_name,
+                COALESCE(SUM(produced_quantity), 0) AS total_produced,
+                COUNT(*) AS total_batches
+            FROM production_batches
+            WHERE EXTRACT(YEAR FROM created_at) = $1
+            GROUP BY month_num, month_name
+            ORDER BY month_num`, [y]);
+
+        res.json({ success: true, data: { sales: sales.rows, production: production.rows, year: y } });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // ============================================================
 // পাসওয়ার্ড পরিবর্তনের অনুরোধ — /api/auth/request-password-change
 // ============================================================

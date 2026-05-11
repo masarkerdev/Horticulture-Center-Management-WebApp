@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>উদ্যানতত্ত্ববিদের কার্যালয় — Horticulture Center, Asambasti</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@300;400;500;600;700&family=Playfair+Display:wght@500;700&display=swap');
 *{margin:0;padding:0;box-sizing:border-box}
@@ -109,7 +110,8 @@ textarea.fc{resize:vertical}
 .rc:hover{border-color:var(--g400)}
 /* PRINT */
 @media print{.sb,.tb,.mob,.no-print{display:none!important}.mn{margin-left:0}}
-@media(max-width:768px){.sb{transform:translateX(-100%)}.sb.open{transform:translateX(0)}.sov.open{display:block}.mn{margin-left:0}.mob{display:block}.cr,.fr,.f3{grid-template-columns:1fr}.sg{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:768px){.sb{transform:translateX(-100%)}.sb.open{transform:translateX(0)}.sov.open{display:block}.mn{margin-left:0}.mob{display:block}.cr,.fr,.f3{grid-template-columns:1fr}.sg{grid-template-columns:repeat(2,1fr)}.ct{padding:12px}.tb{padding:0 10px}.tbt{font-size:15px}.sc{padding:12px}.sv{font-size:20px}.md{padding:14px;width:96%;max-height:96vh}.b{font-size:10px;padding:2px 6px}table{font-size:12px}thead th{padding:6px 8px}tbody td{padding:7px 8px}.hide-mob{display:none!important}}
+@media(max-width:480px){.sg{grid-template-columns:1fr 1fr}.tb .btn:not(.btnp):not([onclick*="mPwdReq"]){display:none}}
 </style>
 </head>
 <body>
@@ -152,6 +154,7 @@ textarea.fc{resize:vertical}
 <button class="mob" onclick="tSB()"><i class="ti ti-menu-2"></i></button>
 <div class="tbt" id="pt">ড্যাশবোর্ড</div>
 <div style="display:flex;gap:8px;align-items:center">
+<button class="btn btns" onclick="switchLang()" id="langBtn" title="ভাষা পরিবর্তন">🇧🇩 বাংলা</button>
 <button class="btn btns" onclick="oM('mPwdReq')" title="পাসওয়ার্ড পরিবর্তন"><i class="ti ti-key"></i></button>
 <button class="btn btns" onclick="oM('mProd')"><i class="ti ti-plus"></i> উৎপাদন</button>
 <button class="btn btns btnp" onclick="oM('mSale')"><i class="ti ti-shopping-cart"></i> বিক্রয়</button>
@@ -289,6 +292,27 @@ textarea.fc{resize:vertical}
 <!-- REPORTS -->
 <div class="pg" id="pg-rep">
 <div style="font-size:13px;color:var(--tm);margin-bottom:20px">রিপোর্ট তৈরি করুন ও এক্সপোর্ট করুন</div>
+
+<!-- Monthly Excel Report -->
+<div class="card" style="margin-bottom:20px">
+<div class="cdt">📅 মাসিক রিপোর্ট — Excel ডাউনলোড</div>
+<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+<select class="fc" style="width:120px" id="repYear">
+  <option>2026</option><option>2025</option><option>2024</option>
+</select>
+<button class="btn btnp" onclick="downloadMonthlyExcel()"><i class="ti ti-file-type-xls"></i> মাসিক বিক্রয় Excel</button>
+<button class="btn" onclick="downloadProductionExcel()"><i class="ti ti-file-type-xls"></i> মাসিক উৎপাদন Excel</button>
+<button class="btn" onclick="exportCSV('sale')"><i class="ti ti-download"></i> সব বিক্রয় CSV</button>
+<button class="btn" onclick="exportCSV('stock')"><i class="ti ti-download"></i> স্টক CSV</button>
+</div>
+</div>
+
+<!-- Best Selling Seedlings -->
+<div class="card" style="margin-bottom:20px">
+<div class="cdt">🏆 সর্বাধিক বিক্রিত চারা <span>Top 10</span></div>
+<div id="bestSellingList"><div class="lt">লোড হচ্ছে...</div></div>
+</div>
+
 <div class="rg">
 <div class="rc" onclick="oM('mRep1')"><div style="font-size:28px;margin-bottom:8px">📊</div><div style="font-weight:600;font-size:14px;margin-bottom:4px">দৈনিক উৎপাদন রিপোর্ট</div><div style="font-size:12px;color:var(--tm);margin-bottom:12px">চারা ও পদ্ধতি অনুযায়ী</div><div style="display:flex;gap:6px"><button class="btn btns" onclick="event.stopPropagation();printRep('prod')"><i class="ti ti-printer"></i></button><button class="btn btns" onclick="event.stopPropagation();exportCSV('prod')"><i class="ti ti-download"></i> CSV</button></div></div>
 <div class="rc"><div style="font-size:28px;margin-bottom:8px">💰</div><div style="font-weight:600;font-size:14px;margin-bottom:4px">বিক্রয় রিপোর্ট</div><div style="font-size:12px;color:var(--tm);margin-bottom:12px">আয় ও গ্রাহক বিশ্লেষণ</div><div style="display:flex;gap:6px"><button class="btn btns" onclick="printRep('sale')"><i class="ti ti-printer"></i></button><button class="btn btns" onclick="exportCSV('sale')"><i class="ti ti-download"></i> CSV</button></div></div>
@@ -602,7 +626,7 @@ document.getElementById('lp2').addEventListener('keypress',e=>{if(e.key==='Enter
 
 // NAV
 const tls={dash:'ড্যাশবোর্ড',seed:'চারা তালিকা',prod:'উৎপাদন রেজিস্টার',moth:'মাদার প্ল্যান্ট',batch:'ব্যাচ ম্যানেজমেন্ট',stk:'স্টক রেজিস্টার',dmg:'ক্ষতি / নষ্ট',sale:'বিক্রয় ও চালান',cust:'গ্রাহক তালিকা',rep:'রিপোর্ট ও বিশ্লেষণ',usr:'ব্যবহারকারী',cfg:'সেটিংস'};
-const lrs={dash:lDash,seed:lSeed,prod:lProd,moth:lMoth,batch:lBatch,stk:lStk,dmg:lDmg,sale:lSale,cust:lCust,usr:lUsr,cfg:()=>{}};
+const lrs={dash:lDash,seed:lSeed,prod:lProd,moth:lMoth,batch:lBatch,stk:lStk,dmg:lDmg,sale:lSale,cust:lCust,usr:lUsr,cfg:()=>{},rep:lBestSelling};
 function go(id,el){document.querySelectorAll('.pg').forEach(p=>p.classList.remove('active'));document.getElementById('pg-'+id).classList.add('active');document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));if(el)el.classList.add('active');document.getElementById('pt').textContent=tls[id]||id;cSB();lrs[id]?.()}
 function tSB(){document.getElementById('sb').classList.toggle('open');document.getElementById('sov').classList.toggle('open')}
 function cSB(){document.getElementById('sb').classList.remove('open');document.getElementById('sov').classList.remove('open')}
@@ -1157,8 +1181,111 @@ function applySiteConfig(cfg){
   if(lpSu) lpSu.textContent = nameEn;
 }
 
-// Language switching
-function applyLanguage(lang){
+// ===== BEST SELLING SEEDLINGS =====
+async function lBestSelling(){
+  try{
+    const d=await api('/reports/best-selling');
+    if(!d.success||!d.data.length){document.getElementById('bestSellingList').innerHTML='<div class="lt">বিক্রয় ডেটা নেই</div>';return;}
+    const max=+d.data[0].total_sold||1;
+    document.getElementById('bestSellingList').innerHTML=`
+    <div class="tw"><table><thead><tr><th>#</th><th>চারা</th><th>বিক্রিত</th><th>আয় (৳)</th><th>অর্ডার</th><th>বিক্রয় হার</th></tr></thead>
+    <tbody>${d.data.map((r,i)=>`<tr>
+      <td><strong style="color:${i<3?'var(--g600)':'var(--tm)'}">${toBn(i+1)}</strong>${i===0?' 🥇':i===1?' 🥈':i===2?' 🥉':''}</td>
+      <td><strong>${r.name_bn}</strong>${r.variety?`<br><span style="font-size:11px;color:var(--tm)">${r.variety}</span>`:''}</td>
+      <td><strong>${toBnNum(r.total_sold)}</strong>টি</td>
+      <td>${toBnMoney(r.total_revenue)}</td>
+      <td>${toBnNum(r.order_count)}টি</td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div class="pb" style="flex:1;height:8px"><div class="pf" style="width:${Math.round((r.total_sold/max)*100)}%;background:var(--g400)"></div></div><span style="font-size:11px;min-width:35px">${toBn(Math.round((r.total_sold/max)*100))}%</span></div></td>
+    </tr>`).join('')}</tbody></table></div>`;
+  }catch(e){document.getElementById('bestSellingList').innerHTML='<div class="lt">লোড সমস্যা</div>';}
+}
+
+// ===== MONTHLY EXCEL DOWNLOAD =====
+async function downloadMonthlyExcel(){
+  const year=document.getElementById('repYear').value||new Date().getFullYear();
+  try{
+    toast('Excel তৈরি হচ্ছে...');
+    const d=await api('/reports/monthly-summary?year='+year);
+    if(!d.success)return toast('ডেটা আনতে সমস্যা',1);
+
+    const wb=XLSX.utils.book_new();
+    const bnMonthsFull={Jan:'জানুয়ারি',Feb:'ফেব্রুয়ারি',Mar:'মার্চ',Apr:'এপ্রিল',May:'মে',Jun:'জুন',Jul:'জুলাই',Aug:'আগস্ট',Sep:'সেপ্টেম্বর',Oct:'অক্টোবর',Nov:'নভেম্বর',Dec:'ডিসেম্বর'};
+
+    // বিক্রয় Sheet
+    const salesData=[['মাস','চালান সংখ্যা','মোট বিক্রয় (৳)','মোট ছাড় (৳)','নিট আয় (৳)']];
+    let totalRev=0,totalInv=0;
+    d.data.sales.forEach(r=>{
+      const net=parseFloat(r.total_revenue)-parseFloat(r.total_discount);
+      totalRev+=net;totalInv+=parseInt(r.total_invoices);
+      salesData.push([bnMonthsFull[r.month_name]||r.month_name,r.total_invoices,parseFloat(r.total_revenue).toFixed(2),parseFloat(r.total_discount).toFixed(2),net.toFixed(2)]);
+    });
+    salesData.push(['মোট',totalInv,'','' ,totalRev.toFixed(2)]);
+    const wsS=XLSX.utils.aoa_to_sheet(salesData);
+    wsS['!cols']=[{wch:15},{wch:12},{wch:18},{wch:15},{wch:15}];
+    XLSX.utils.book_append_sheet(wb,wsS,'মাসিক বিক্রয়');
+
+    // উৎপাদন Sheet
+    const prodData=[['মাস','মোট ব্যাচ','মোট উৎপাদিত']];
+    d.data.production.forEach(r=>prodData.push([bnMonthsFull[r.month_name]||r.month_name,r.total_batches,r.total_produced]));
+    const wsP=XLSX.utils.aoa_to_sheet(prodData);
+    wsP['!cols']=[{wch:15},{wch:12},{wch:18}];
+    XLSX.utils.book_append_sheet(wb,wsP,'মাসিক উৎপাদন');
+
+    XLSX.writeFile(wb,`উদ্যানতত্ত্ববিদের_কার্যালয়_${year}_মাসিক_রিপোর্ট.xlsx`);
+    toast('Excel ডাউনলোড হচ্ছে ✅');
+  }catch(e){toast('সমস্যা হয়েছে',1);}
+}
+
+async function downloadProductionExcel(){
+  try{
+    toast('Excel তৈরি হচ্ছে...');
+    const d=await api('/production');
+    if(!d.success)return toast('ডেটা আনতে সমস্যা',1);
+    const wb=XLSX.utils.book_new();
+    const rows=[['ব্যাচ ID','চারা','পদ্ধতি','বপন/প্রচার তারিখ','উৎপাদিত','সফল','ব্যর্থ','সাফল্য %','অবস্থা']];
+    d.data.forEach(b=>rows.push([b.batch_code,b.seedling_bn,b.production_type,b.sowing_date||b.propagation_date||'',b.produced_quantity,b.success_quantity,b.failed_quantity,b.success_percent||b.germination_percent||0,b.status]));
+    const ws=XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols']=[{wch:14},{wch:18},{wch:12},{wch:15},{wch:10},{wch:8},{wch:8},{wch:10},{wch:10}];
+    XLSX.utils.book_append_sheet(wb,ws,'উৎপাদন');
+    XLSX.writeFile(wb,'উৎপাদন_রেজিস্টার.xlsx');
+    toast('Excel ডাউনলোড হচ্ছে ✅');
+  }catch(e){toast('সমস্যা',1);}
+}
+
+// ===== LANGUAGE SWITCH =====
+let currentLang='bn';
+const translations={
+  bn:{dash:'ড্যাশবোর্ড',seed:'চারা তালিকা',prod:'উৎপাদন রেজিস্টার',moth:'মাদার প্ল্যান্ট',batch:'ব্যাচ ম্যানেজমেন্ট',stk:'স্টক রেজিস্টার',dmg:'ক্ষতি / নষ্ট',sale:'বিক্রয় ও চালান',cust:'গ্রাহক তালিকা',rep:'রিপোর্ট ও বিশ্লেষণ',usr:'ব্যবহারকারী',cfg:'সেটিংস',logo:'উদ্যানতত্ত্ববিদের কার্যালয়',sub:'Asambasti, Rangamati',langBtn:'🇧🇩 বাংলা'},
+  en:{dash:'Dashboard',seed:'Seedling Master',prod:'Production Register',moth:'Mother Plants',batch:'Batch Management',stk:'Stock Register',dmg:'Damage / Loss',sale:'Sales & Invoices',cust:'Customers',rep:'Reports & Analytics',usr:'Users',cfg:'Settings',logo:'Horticulture Office',sub:'Asambasti, Rangamati',langBtn:'🇬🇧 English'}
+};
+
+function switchLang(){
+  currentLang=currentLang==='bn'?'en':'bn';
+  localStorage.setItem('hc_lang',currentLang);
+  applyLangNow(currentLang);
+}
+
+function applyLangNow(lang){
+  const T=translations[lang];
+  // Logo
+  const logoEl=document.querySelector('.sbl h1');if(logoEl)logoEl.textContent='🌿 '+T.logo;
+  const subEl=document.querySelector('.sbl p');if(subEl)subEl.textContent=T.sub;
+  // Nav items
+  const navMap={dash:T.dash,seed:T.seed,prod:T.prod,moth:T.moth,batch:T.batch,stk:T.stk,dmg:T.dmg,sale:T.sale,cust:T.cust,rep:T.rep,usr:T.usr,cfg:T.cfg};
+  document.querySelectorAll('.ni').forEach(ni=>{
+    const fn=ni.getAttribute('onclick')||'';const m=fn.match(/go\('(\w+)'/);
+    if(m&&navMap[m[1]]){const ic=ni.querySelector('i');const nb=ni.querySelector('.nb');ni.textContent=navMap[m[1]];if(ic)ni.insertBefore(ic,ni.firstChild);if(nb)ni.appendChild(nb);}
+  });
+  // Page title
+  const curId=Object.keys(navMap).find(k=>document.getElementById('pg-'+k)?.classList.contains('active'));
+  if(curId)document.getElementById('pt').textContent=navMap[curId];
+  // Lang button
+  const lb=document.getElementById('langBtn');if(lb)lb.textContent=T.langBtn;
+  document.documentElement.lang=lang;
+}
+
+// Load saved lang
+(function(){const l=localStorage.getItem('hc_lang');if(l&&l!=='bn'){currentLang=l;setTimeout(()=>applyLangNow(l),300);}})();
   const labels={
     bn:{
       dash:'ড্যাশবোর্ড',seed:'চারা তালিকা',prod:'উৎপাদন রেজিস্টার',
