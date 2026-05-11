@@ -345,8 +345,8 @@ textarea.fc{resize:vertical}
 
 <script>
 const API='https://horticulturecenterasambasti.vercel.app/api';
-let TK=localStorage.getItem('hc_tk')||'';
-let ME=JSON.parse(localStorage.getItem('hc_me')||'{}');
+let TK=sessionStorage.getItem('hc_tk')||'';
+let ME=JSON.parse(sessionStorage.getItem('hc_me')||'{}');
 let sPage=1,sTotal=0;
 const MN={seed:'বীজ',grafting:'গ্রাফটিং',cutting:'কাটিং',budding:'বাডিং',layering:'লেয়ারিং',tissue_culture:'টিস্যু কালচার'};
 const RN={admin:'Admin',manager:'Manager',production_officer:'Prod.Officer',sales_operator:'Sales Operator',viewer:'Viewer'};
@@ -424,7 +424,7 @@ function login(){
     .then(r=>r.json())
     .then(d=>{
       btn.textContent='লগইন করুন';btn.disabled=false;
-      if(d.success){TK=d.token;ME=d.user;localStorage.setItem('hc_tk',TK);localStorage.setItem('hc_me',JSON.stringify(ME));showApp();}
+      if(d.success){TK=d.token;ME=d.user;sessionStorage.setItem('hc_tk',TK);sessionStorage.setItem('hc_me',JSON.stringify(ME));showApp();}
       else{er.textContent=d.message||'ইমেইল বা পাসওয়ার্ড ভুল।';er.style.display='block';}
     })
     .catch(()=>{
@@ -440,7 +440,36 @@ function login(){
   };
   tryLogin(1);
 }
-function showApp(){document.getElementById('lp').style.display='none';document.getElementById('app').classList.add('active');const n=ME.name||'User',i=n.split(' ').map(x=>x[0]).join('').substring(0,2).toUpperCase();document.getElementById('unn').textContent=n;document.getElementById('url').textContent=ME.role||'';['uav','tav'].forEach(id=>document.getElementById(id).textContent=i);lDash();startAutoRefresh();}
+function showApp(){document.getElementById('lp').style.display='none';document.getElementById('app').classList.add('active');const n=ME.name||'User',i=n.split(' ').map(x=>x[0]).join('').substring(0,2).toUpperCase();document.getElementById('unn').textContent=n;document.getElementById('url').textContent=ME.role||'';['uav','tav'].forEach(id=>document.getElementById(id).textContent=i);lDash();startAutoRefresh();startInactivityWatch();}
+
+// ===== AUTO LOGOUT — ১০ মিনিট নিষ্ক্রিয় থাকলে লগআউট =====
+let inactivityTimer=null;
+const INACTIVE_LIMIT=5*60*1000; // ৫ মিনিট
+
+function resetInactivityTimer(){
+  if(!TK)return;
+  clearTimeout(inactivityTimer);
+  inactivityTimer=setTimeout(()=>{
+    if(TK){
+      toast('১০ মিনিট নিষ্ক্রিয় — স্বয়ংক্রিয় লগআউট হচ্ছে...');
+      setTimeout(()=>logout(),2000);
+    }
+  },INACTIVE_LIMIT);
+}
+
+function startInactivityWatch(){
+  ['mousemove','mousedown','keypress','scroll','touchstart','click'].forEach(evt=>{
+    document.addEventListener(evt,resetInactivityTimer,true);
+  });
+  resetInactivityTimer();
+}
+
+function stopInactivityWatch(){
+  clearTimeout(inactivityTimer);
+  ['mousemove','mousedown','keypress','scroll','touchstart','click'].forEach(evt=>{
+    document.removeEventListener(evt,resetInactivityTimer,true);
+  });
+}
 
 // ===== AUTO REFRESH — প্রতি ৩০ সেকেন্ডে Dashboard আপডেট =====
 let autoRefreshTimer=null;
@@ -457,7 +486,7 @@ function stopAutoRefresh(){
   if(autoRefreshTimer){clearInterval(autoRefreshTimer);autoRefreshTimer=null;}
 }
 // Logout করলে timer বন্ধ করুন
-function logout(){stopAutoRefresh();TK='';ME={};localStorage.removeItem('hc_tk');localStorage.removeItem('hc_me');location.reload()}
+function logout(){stopAutoRefresh();stopInactivityWatch();TK='';ME={};sessionStorage.removeItem('hc_tk');sessionStorage.removeItem('hc_me');location.reload()}
 
 // ✅ Page refresh করলে auto-login
 if(TK)showApp();
