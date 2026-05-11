@@ -5,7 +5,7 @@ const db = require('../config/db');
 const getAllUsers = async (req, res) => {
     try {
         const result = await db.query(
-            'SELECT id, name, email, role, is_active, created_at FROM users ORDER BY created_at DESC'
+            'SELECT id, name, email, role, is_active, created_at, password_request_status FROM users ORDER BY created_at DESC'
         );
         res.json({ success: true, data: result.rows });
     } catch (err) {
