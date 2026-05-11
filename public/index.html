@@ -452,7 +452,53 @@ function login(){
   };
   tryLogin(1);
 }
-function showApp(){document.getElementById('lp').style.display='none';document.getElementById('app').classList.add('active');const n=ME.name||'User',i=n.split(' ').map(x=>x[0]).join('').substring(0,2).toUpperCase();document.getElementById('unn').textContent=n;document.getElementById('url').textContent=ME.role||'';['uav','tav'].forEach(id=>document.getElementById(id).textContent=i);lDash();startAutoRefresh();startInactivityWatch();}
+function showApp(){document.getElementById('lp').style.display='none';document.getElementById('app').classList.add('active');const n=ME.name||'User',i=n.split(' ').map(x=>x[0]).join('').substring(0,2).toUpperCase();document.getElementById('unn').textContent=n;document.getElementById('url').textContent=ME.role||'';['uav','tav'].forEach(id=>document.getElementById(id).textContent=i);lDash();startAutoRefresh();startInactivityWatch();
+// Admin হলে notification চেক শুরু করুন
+if(ME.role==='admin') checkAdminNotif();}
+
+// ===== Admin Notification — পাসওয়ার্ড অনুরোধ চেক (স্বাধীন function) =====
+async function checkAdminNotif(){
+  if(ME.role!=='admin') return; // শুধু Admin
+  try{
+    const ur=await api('/users');
+    if(!ur.success) return;
+    const pending=ur.data.filter(u=>u.password_request_status==='pending');
+
+    // Sidebar badge আপডেট
+    const usrNav=document.querySelector('.ni[onclick*="usr"]');
+    if(usrNav){
+      let nb=usrNav.querySelector('.nb');
+      if(pending.length>0){
+        if(!nb){nb=document.createElement('span');nb.className='nb';usrNav.appendChild(nb);}
+        nb.textContent=pending.length;
+      }else{
+        if(nb) nb.remove();
+      }
+    }
+
+    // Dashboard notification আপডেট
+    const notifDiv=document.getElementById('adminNotif');
+    if(!notifDiv) return;
+    if(pending.length>0){
+      notifDiv.innerHTML=`<div style="margin-bottom:8px;font-size:13px;font-weight:600;color:var(--b600)"><i class="ti ti-bell"></i> পাসওয়ার্ড পরিবর্তনের অনুরোধ</div>`+
+        pending.map(u=>`<div class="ai" style="background:var(--b50);border-color:#b5d4f4;margin-bottom:6px">
+          <i class="ti ti-key" style="color:var(--b600);font-size:18px"></i>
+          <div style="flex:1"><strong>${u.name}</strong> (${u.email})<br><span style="font-size:11px;color:var(--tm)">পাসওয়ার্ড পরিবর্তনের অনুরোধ পাঠিয়েছেন</span></div>
+          <div style="display:flex;gap:6px">
+            <button class="btn btns" style="background:var(--g50);color:var(--g600);border-color:var(--g400)" onclick="approvePwd(${u.id})"><i class="ti ti-check"></i> অনুমোদন</button>
+            <button class="btn btns btnr" onclick="rejectPwd(${u.id})" title="প্রত্যাখ্যান"><i class="ti ti-x"></i></button>
+          </div>
+        </div>`).join('');
+      notifDiv.style.display='block';
+    }else{
+      notifDiv.style.display='none';
+      notifDiv.innerHTML='';
+    }
+  }catch(e){
+    // column না থাকলে বা error হলে চুপ থাকবে
+    console.log('Notif check skipped:',e.message);
+  }
+}
 
 // ===== AUTO LOGOUT — ১০ মিনিট নিষ্ক্রিয় থাকলে লগআউট =====
 let inactivityTimer=null;
@@ -540,42 +586,6 @@ document.getElementById('dChart').innerHTML=pd.map(x=>{
   <div class="bar" style="height:${Math.max(ah,2)}px;background:var(--t400);flex:1" title="অঙ্গজ: ${toBnNum(x.a)}"></div>
   </div><div class="brlbl">${x.m}</div></div>`}).join('');
 
-// Admin হলে pending password requests চেক করুন
-if(ME.role==='admin'){
-  try{
-    const ur=await api('/users');
-    const pending=ur.data?.filter(u=>u.password_request_status==='pending')||[];
-    if(pending.length>0){
-      // Sidebar badge যোগ করুন
-      const usrNav=document.querySelector('.ni[onclick*="usr"]');
-      if(usrNav){
-        let nb=usrNav.querySelector('.nb');
-        if(!nb){nb=document.createElement('span');nb.className='nb';usrNav.appendChild(nb);}
-        nb.textContent=pending.length;
-      }
-      // Dashboard-এ notification দেখান
-      const notifDiv=document.getElementById('adminNotif');
-      if(notifDiv){
-        notifDiv.innerHTML=pending.map(u=>`
-          <div class="ai" style="background:var(--b50);border-color:#b5d4f4">
-            <i class="ti ti-key" style="color:var(--b600)"></i>
-            <div style="flex:1"><strong>${u.name}</strong> পাসওয়ার্ড পরিবর্তনের অনুরোধ করেছেন</div>
-            <div style="display:flex;gap:4px">
-              <button class="btn btns" style="background:var(--g50);color:var(--g600)" onclick="approvePwd(${u.id})"><i class="ti ti-check"></i> অনুমোদন</button>
-              <button class="btn btns btnr" onclick="rejectPwd(${u.id})"><i class="ti ti-x"></i></button>
-            </div>
-          </div>`).join('');
-        notifDiv.style.display='block';
-      }
-    }else{
-      // কোনো request নেই — badge সরান
-      const nb=document.querySelector('.ni[onclick*="usr"] .nb');
-      if(nb)nb.remove();
-      const notifDiv=document.getElementById('adminNotif');
-      if(notifDiv)notifDiv.style.display='none';
-    }
-  }catch(e){}
-}
 const catColors=['var(--g400)','var(--t400)','var(--a200)','var(--c400)','var(--b400)'];
 const svgEl=document.getElementById('catSvg');
 const dlEl=document.getElementById('catLegend');
@@ -1171,8 +1181,8 @@ async function reqPwdChange(){
   if(d.success){toast('অনুরোধ পাঠানো হয়েছে ✅ Admin এর অনুমোদনের জন্য অপেক্ষা করুন');cM('mPwdReq');['pwdNew','pwdCon'].forEach(id=>document.getElementById(id).value='');}
   else toast(d.message||'সমস্যা',1)}catch(e){toast('সমস্যা',1)}
 }
-async function approvePwd(id){try{const d=await api('/users/'+id+'/approve-password',{method:'POST'});if(d.success){toast('পাসওয়ার্ড অনুমোদিত ✅');lUsr();}else toast(d.message||'সমস্যা',1)}catch(e){toast('সমস্যা',1)}}
-async function rejectPwd(id){try{const d=await api('/users/'+id+'/reject-password',{method:'POST'});if(d.success){toast('অনুরোধ প্রত্যাখ্যান করা হয়েছে');lUsr();}else toast(d.message||'সমস্যা',1)}catch(e){toast('সমস্যা',1)}}
+async function approvePwd(id){try{const d=await api('/users/'+id+'/approve-password',{method:'POST'});if(d.success){toast('পাসওয়ার্ড অনুমোদিত ✅');lUsr();checkAdminNotif();}else toast(d.message||'সমস্যা',1)}catch(e){toast('সমস্যা',1)}}
+async function rejectPwd(id){try{const d=await api('/users/'+id+'/reject-password',{method:'POST'});if(d.success){toast('অনুরোধ প্রত্যাখ্যান করা হয়েছে');lUsr();checkAdminNotif();}else toast(d.message||'সমস্যা',1)}catch(e){toast('সমস্যা',1)}}
 
 async function exportCSV(type){const fns={stock:'/stock',sale:'/sales',prod:'/production',dmg:'/damages'};if(!fns[type])return;try{const d=await api(fns[type]);let rows=[],hdrs=[],data=[];if(type==='stock'&&d.data){hdrs=['চারা','মোট ইন','মোট আউট','স্টক','মূল্য'];data=d.data.map(x=>[x.name_bn,x.total_in,x.total_out,x.current_stock,x.current_stock*x.unit_price])}else if(type==='sale'&&d.data){hdrs=['চালান','গ্রাহক','তারিখ','মোট','পরিশোধ'];data=d.data.map(x=>[x.invoice_no,x.customer_name,x.sale_date,x.total_amount,x.payment_method])}else if(type==='prod'&&d.data){hdrs=['ব্যাচ','চারা','পদ্ধতি','উৎপাদিত','সফল','সাফল্য%'];data=d.data.map(x=>[x.batch_code,x.seedling_bn,x.production_type,x.produced_quantity,x.success_quantity,x.success_percent||x.germination_percent||0])}else if(type==='dmg'&&d.data){hdrs=['তারিখ','চারা','পরিমাণ','কারণ'];data=d.data.map(x=>[x.damage_date,x.name_bn,x.quantity,x.reason])}
 const csv=[hdrs.join(','),...data.map(r=>r.join(','))].join('\n');const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);a.download=type+'_report.csv';a.click();toast('CSV ডাউনলোড হচ্ছে ✅')}catch(e){toast('সমস্যা',1)}}
