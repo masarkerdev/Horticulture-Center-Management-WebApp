@@ -157,7 +157,7 @@ textarea.fc{resize:vertical}
 <button class="btn btns" onclick="oM('mPwdReq')" title="পাসওয়ার্ড পরিবর্তন"><i class="ti ti-key"></i></button>
 <button class="btn btns" onclick="oM('mProd')"><i class="ti ti-plus"></i> উৎপাদন</button>
 <button class="btn btns btnp" onclick="oM('mSale')"><i class="ti ti-shopping-cart"></i> বিক্রয়</button>
-<div class="av" id="tav">MA</div>
+<div class="av" id="tav" onclick="openProfile()" style="cursor:pointer" title="প্রোফাইল">MA</div>
 </div>
 </div>
 
@@ -230,6 +230,29 @@ textarea.fc{resize:vertical}
 
 <!-- SETTINGS -->
 <div class="pg" id="pg-cfg">
+
+<!-- প্রোফাইল সম্পাদনা -->
+<div class="card" style="max-width:600px;margin-bottom:20px">
+<div class="cdt">👤 আমার প্রোফাইল / My Profile</div>
+<div class="fr">
+<div class="fg"><label>নাম</label><input class="fc" id="prName" placeholder="আপনার নাম"></div>
+<div class="fg"><label>ইমেইল</label><input class="fc" id="prEmail" type="email" placeholder="আপনার নতুন ইমেইল"></div>
+</div>
+<div style="border:1px solid var(--bd);border-radius:8px;padding:14px;margin-bottom:14px;background:var(--gr50)">
+<div style="font-size:12px;font-weight:600;margin-bottom:10px;color:var(--tm)">পাসওয়ার্ড পরিবর্তন</div>
+<div class="fg"><label>বর্তমান পাসওয়ার্ড *</label><input class="fc" type="password" id="prCurPwd" placeholder="বর্তমান পাসওয়ার্ড দিন"></div>
+<div class="fr">
+<div class="fg"><label>নতুন পাসওয়ার্ড</label><input class="fc" type="password" id="prNewPwd" placeholder="নতুন পাসওয়ার্ড (ঐচ্ছিক)"></div>
+<div class="fg"><label>নিশ্চিত করুন</label><input class="fc" type="password" id="prConPwd" placeholder="আবার লিখুন"></div>
+</div>
+</div>
+<div style="background:var(--a50);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:var(--a400)">
+<i class="ti ti-info-circle"></i> পরিবর্তন করলে পুনরায় Login করতে হবে।
+</div>
+<button class="btn btnp" onclick="updateProfile()"><i class="ti ti-check"></i> প্রোফাইল আপডেট করুন</button>
+</div>
+
+<!-- System Settings -->
 <div class="card" style="max-width:600px">
 <div class="cdt">সিস্টেম সেটিংস / System Settings</div>
 <div class="fg"><label>নার্সারির নাম (বাংলা)</label><input class="fc" id="cfgNB" value="উদ্যানতত্ত্ববিদের কার্যালয়, আসামবস্তি, রাঙামাটি"></div>
@@ -367,7 +390,58 @@ textarea.fc{resize:vertical}
 <!-- INVOICE VIEW MODAL -->
 <div class="mo" id="mInv"><div class="md" style="max-width:660px"><div class="mh"><h3>চালান / Invoice</h3><button class="mx" onclick="cM('mInv')"><i class="ti ti-x"></i></button></div><div id="invBody" style="border:1px solid var(--bd);border-radius:8px;padding:20px;background:var(--gr50)"></div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px"><button class="btn btns" onclick="printInv()"><i class="ti ti-printer"></i> প্রিন্ট</button><button class="btn btns" onclick="cM('mInv')">বন্ধ</button></div></div></div>
 
-<!-- পাসওয়ার্ড পরিবর্তন অনুরোধ Modal -->
+<!-- PROFILE MODAL -->
+<div class="mo" id="mProfile"><div class="md" style="max-width:480px">
+<div class="mh"><h3 id="mProfileTitle">আমার প্রোফাইল</h3><button class="mx" onclick="cM('mProfile')"><i class="ti ti-x"></i></button></div>
+
+<!-- Admin view — সরাসরি update -->
+<div id="profileAdmin">
+  <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;padding:14px;background:var(--g50);border-radius:10px">
+    <div style="width:50px;height:50px;border-radius:50%;background:var(--g600);display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff;font-weight:700" id="profAvatar">MA</div>
+    <div><div style="font-weight:600;font-size:15px" id="profName">Admin</div><div style="font-size:12px;color:var(--tm)" id="profRole">admin</div></div>
+  </div>
+  <div class="fr">
+    <div class="fg"><label>নাম</label><input class="fc" id="prName" placeholder="আপনার নাম"></div>
+    <div class="fg"><label>ইমেইল</label><input class="fc" id="prEmail" type="email" placeholder="নতুন ইমেইল"></div>
+  </div>
+  <div style="border:1px solid var(--bd);border-radius:8px;padding:14px;margin-bottom:14px">
+    <div style="font-size:12px;font-weight:600;margin-bottom:10px;color:var(--tm)">পাসওয়ার্ড পরিবর্তন</div>
+    <div class="fg"><label>বর্তমান পাসওয়ার্ড *</label><input class="fc" type="password" id="prCurPwd" placeholder="বর্তমান পাসওয়ার্ড"></div>
+    <div class="fr">
+      <div class="fg"><label>নতুন পাসওয়ার্ড</label><input class="fc" type="password" id="prNewPwd" placeholder="নতুন পাসওয়ার্ড (ঐচ্ছিক)"></div>
+      <div class="fg"><label>নিশ্চিত করুন</label><input class="fc" type="password" id="prConPwd" placeholder="আবার লিখুন"></div>
+    </div>
+  </div>
+  <div style="background:var(--a50);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:var(--a400)">
+    <i class="ti ti-info-circle"></i> পরিবর্তন করলে পুনরায় Login করতে হবে।
+  </div>
+  <div style="display:flex;gap:8px;justify-content:flex-end">
+    <button class="btn" onclick="cM('mProfile')">বাতিল</button>
+    <button class="btn btnp" onclick="updateProfile()"><i class="ti ti-check"></i> আপডেট করুন</button>
+  </div>
+</div>
+
+<!-- Regular user view — Request পাঠান -->
+<div id="profileUser" style="display:none">
+  <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;padding:14px;background:var(--g50);border-radius:10px">
+    <div style="width:50px;height:50px;border-radius:50%;background:var(--g600);display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff;font-weight:700" id="profAvatarU">SK</div>
+    <div><div style="font-weight:600;font-size:15px" id="profNameU">User</div><div style="font-size:12px;color:var(--tm)" id="profRoleU">Sales Operator</div></div>
+  </div>
+  <div style="background:var(--b50);border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:var(--b600)">
+    <i class="ti ti-shield-lock"></i> পাসওয়ার্ড পরিবর্তনে Admin-এর অনুমোদন প্রয়োজন।
+  </div>
+  <div class="fg"><label>নতুন পাসওয়ার্ড *</label><input class="fc" type="password" id="pwdNew" placeholder="কমপক্ষে ৬ অক্ষর"></div>
+  <div class="fg"><label>নিশ্চিত করুন *</label><input class="fc" type="password" id="pwdCon" placeholder="আবার লিখুন"></div>
+  <div id="reqStatus" style="display:none;padding:10px;border-radius:8px;margin-bottom:14px;font-size:12px"></div>
+  <div style="display:flex;gap:8px;justify-content:flex-end">
+    <button class="btn" onclick="cM('mProfile')">বাতিল</button>
+    <button class="btn btnp" onclick="reqPwdChange()"><i class="ti ti-send"></i> অনুরোধ পাঠান</button>
+  </div>
+</div>
+
+</div></div>
+
+<!-- পাসওয়ার্ড পরিবর্তন অনুরোধ Modal (🔑 বাটনের জন্য) -->
 <div class="mo" id="mPwdReq"><div class="md" style="max-width:420px">
 <div class="mh"><h3>পাসওয়ার্ড পরিবর্তনের অনুরোধ</h3><button class="mx" onclick="cM('mPwdReq')"><i class="ti ti-x"></i></button></div>
 <div style="background:var(--b50);border-radius:8px;padding:12px;margin-bottom:16px;font-size:13px;color:var(--b600)"><i class="ti ti-info-circle"></i> আপনার নতুন পাসওয়ার্ড Admin অনুমোদন করলে কার্যকর হবে।</div>
@@ -625,7 +699,7 @@ document.getElementById('lp2').addEventListener('keypress',e=>{if(e.key==='Enter
 
 // NAV
 const tls={dash:'ড্যাশবোর্ড',seed:'চারা তালিকা',prod:'উৎপাদন রেজিস্টার',moth:'মাদার প্ল্যান্ট',batch:'ব্যাচ ম্যানেজমেন্ট',stk:'স্টক রেজিস্টার',dmg:'ক্ষতি / নষ্ট',sale:'বিক্রয় ও চালান',cust:'গ্রাহক তালিকা',rep:'রিপোর্ট ও বিশ্লেষণ',usr:'ব্যবহারকারী',cfg:'সেটিংস'};
-const lrs={dash:lDash,seed:lSeed,prod:lProd,moth:lMoth,batch:lBatch,stk:lStk,dmg:lDmg,sale:lSale,cust:lCust,usr:lUsr,cfg:()=>{},rep:lBestSelling};
+const lrs={dash:lDash,seed:lSeed,prod:lProd,moth:lMoth,batch:lBatch,stk:lStk,dmg:lDmg,sale:lSale,cust:lCust,usr:lUsr,rep:lBestSelling,cfg:lCfg};
 function go(id,el){document.querySelectorAll('.pg').forEach(p=>p.classList.remove('active'));document.getElementById('pg-'+id).classList.add('active');document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));if(el)el.classList.add('active');document.getElementById('pt').textContent=tls[id]||id;cSB();lrs[id]?.()}
 function tSB(){document.getElementById('sb').classList.toggle('open');document.getElementById('sov').classList.toggle('open')}
 function cSB(){document.getElementById('sb').classList.remove('open');document.getElementById('sov').classList.remove('open')}
@@ -1137,6 +1211,75 @@ async function editSale(s){
   oM('mSale');
 }
 
+// ===== PROFILE MODAL =====
+function openProfile(){
+  const isAdmin=ME.role==='admin';
+  const ini=(ME.name||'U').split(' ').map(x=>x[0]).join('').substring(0,2).toUpperCase();
+  const roleLabel={admin:'Admin',manager:'Manager',production_officer:'Prod. Officer',sales_operator:'Sales Operator',viewer:'Viewer'};
+
+  if(isAdmin){
+    // Admin — সরাসরি update দেখাও
+    document.getElementById('profileAdmin').style.display='block';
+    document.getElementById('profileUser').style.display='none';
+    document.getElementById('mProfileTitle').textContent='আমার প্রোফাইল — Admin';
+    document.getElementById('profAvatar').textContent=ini;
+    document.getElementById('profName').textContent=ME.name||'';
+    document.getElementById('profRole').textContent='Admin';
+    document.getElementById('prName').value=ME.name||'';
+    document.getElementById('prEmail').value=ME.email||'';
+    document.getElementById('prCurPwd').value='';
+    document.getElementById('prNewPwd').value='';
+    document.getElementById('prConPwd').value='';
+  }else{
+    // Regular user — Request form দেখাও
+    document.getElementById('profileAdmin').style.display='none';
+    document.getElementById('profileUser').style.display='block';
+    document.getElementById('mProfileTitle').textContent='আমার প্রোফাইল';
+    document.getElementById('profAvatarU').textContent=ini;
+    document.getElementById('profNameU').textContent=ME.name||'';
+    document.getElementById('profRoleU').textContent=roleLabel[ME.role]||ME.role;
+    document.getElementById('pwdNew').value='';
+    document.getElementById('pwdCon').value='';
+    document.getElementById('reqStatus').style.display='none';
+  }
+  oM('mProfile');
+}
+
+// ===== SETTINGS PAGE LOAD =====
+function lCfg(){
+  // প্রোফাইল তথ্য fill করুন
+  document.getElementById('prName').value=ME.name||'';
+  document.getElementById('prEmail').value=ME.email||'';
+}
+
+// প্রোফাইল আপডেট
+async function updateProfile(){
+  const name=document.getElementById('prName').value;
+  const email=document.getElementById('prEmail').value;
+  const curPwd=document.getElementById('prCurPwd').value;
+  const newPwd=document.getElementById('prNewPwd').value;
+  const conPwd=document.getElementById('prConPwd').value;
+
+  if(!curPwd) return toast('বর্তমান পাসওয়ার্ড দিন',1);
+  if(!email) return toast('ইমেইল দিন',1);
+  if(newPwd && newPwd!==conPwd) return toast('নতুন পাসওয়ার্ড মিলছে না',1);
+  if(newPwd && newPwd.length<6) return toast('পাসওয়ার্ড কমপক্ষে ৬ অক্ষর',1);
+
+  try{
+    const d=await api('/auth/update-profile',{
+      method:'PUT',
+      body:JSON.stringify({name,email,current_password:curPwd,new_password:newPwd||undefined})
+    });
+    if(d.success){
+      toast('প্রোফাইল আপডেট হয়েছে ✅ পুনরায় Login করুন...');
+      // তথ্য আপডেট ও logout
+      setTimeout(()=>logout(),2000);
+    }else{
+      toast(d.message||'সমস্যা হয়েছে',1);
+    }
+  }catch(e){toast('সমস্যা',1);}
+}
+
 // SETTINGS FUNCTIONS
 function saveSettings(){
   const cfg={
@@ -1268,9 +1411,15 @@ async function reqPwdChange(){
   if(!nw||!con)return toast('সব তথ্য দিন',1);
   if(nw!==con)return toast('পাসওয়ার্ড মিলছে না',1);
   if(nw.length<6)return toast('কমপক্ষে ৬ অক্ষর দিন',1);
-  try{const d=await api('/auth/request-password-change',{method:'POST',body:JSON.stringify({new_password:nw})});
-  if(d.success){toast('অনুরোধ পাঠানো হয়েছে ✅ Admin এর অনুমোদনের জন্য অপেক্ষা করুন');cM('mPwdReq');['pwdNew','pwdCon'].forEach(id=>document.getElementById(id).value='');}
-  else toast(d.message||'সমস্যা',1)}catch(e){toast('সমস্যা',1)}
+  try{
+    const d=await api('/auth/request-password-change',{method:'POST',body:JSON.stringify({new_password:nw})});
+    if(d.success){
+      const st=document.getElementById('reqStatus');
+      if(st){st.style.display='block';st.style.background='var(--g50)';st.style.color='var(--g600)';st.innerHTML='<i class="ti ti-check"></i> অনুরোধ পাঠানো হয়েছে! Admin অনুমোদন করলে পাসওয়ার্ড পরিবর্তন হবে।';}
+      document.getElementById('pwdNew').value='';
+      document.getElementById('pwdCon').value='';
+    }else toast(d.message||'সমস্যা',1);
+  }catch(e){toast('সমস্যা',1);}
 }
 // ব্যবহারকারী সক্রিয়/নিষ্ক্রিয় toggle
 async function toggleUser(id,name){

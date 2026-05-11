@@ -470,6 +470,41 @@ router.get('/reports/monthly-summary', authenticate, async (req, res) => {
     }
 });
 
+// নিজের Profile আপডেট — /api/auth/update-profile
+router.put('/auth/update-profile', authenticate, async (req, res) => {
+    const { name, email, current_password, new_password } = req.body;
+    try {
+        // বর্তমান user এর তথ্য নিন
+        const userResult = await db.query('SELECT * FROM users WHERE id=$1', [req.user.id]);
+        if (!userResult.rows.length) return res.status(404).json({ success: false, message: 'ব্যবহারকারী পাওয়া যায়নি।' });
+        const user = userResult.rows[0];
+
+        // বর্তমান password যাচাই করুন
+        const bcrypt = require('bcryptjs');
+        const isMatch = await bcrypt.compare(current_password, user.password);
+        if (!isMatch) return res.status(400).json({ success: false, message: 'বর্তমান পাসওয়ার্ড ভুল।' });
+
+        // Email আগে থেকে আছে কিনা চেক করুন
+        if (email && email !== user.email) {
+            const exists = await db.query('SELECT id FROM users WHERE email=$1 AND id!=$2', [email, req.user.id]);
+            if (exists.rows.length) return res.status(400).json({ success: false, message: 'এই ইমেইল আগে থেকে ব্যবহৃত হচ্ছে।' });
+        }
+
+        // আপডেট করুন
+        let newHash = user.password;
+        if (new_password && new_password.length >= 6) {
+            newHash = await bcrypt.hash(new_password, 10);
+        }
+        await db.query(
+            'UPDATE users SET name=$1, email=$2, password=$3 WHERE id=$4',
+            [name || user.name, email || user.email, newHash, req.user.id]
+        );
+        res.json({ success: true, message: 'প্রোফাইল আপডেট হয়েছে।' });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // ============================================================
 // পাসওয়ার্ড পরিবর্তনের অনুরোধ — /api/auth/request-password-change
 // ============================================================
