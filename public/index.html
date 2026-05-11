@@ -120,7 +120,12 @@ textarea.fc{resize:vertical}
 <div class="sov" id="sov" onclick="cSB()"></div>
 
 <!-- LOGIN -->
-<div class="lp" id="lp"><div class="lb"><div style="font-size:48px;margin-bottom:12px">🌿</div><h1>উদ্যানতত্ত্ববিদের কার্যালয়</h1><div class="su">Horticulture Center</div><div class="lc">আসামবস্তি, রাঙামাটি</div><div class="lf"><label>ইমেইল</label><input id="le" placeholder="আপনার ইমেইল লিখুন"></div><div class="lf"><label>পাসওয়ার্ড</label><div class="pw-wrap"><input type="password" id="lp2" placeholder="পাসওয়ার্ড লিখুন"><button class="pw-eye" onclick="togglePwd('lp2',this)" type="button"><i class="ti ti-eye"></i></button></div></div><button class="lbtn" onclick="login()">লগইন করুন</button><div class="le" id="lerr"></div></div></div>
+<div class="lp" id="lp"><div class="lb"><div style="font-size:48px;margin-bottom:12px">🌿</div><h1>উদ্যানতত্ত্ববিদের কার্যালয়</h1><div class="su">Horticulture Center</div><div class="lc">আসামবস্তি, রাঙামাটি</div>
+<!-- Step 1 -->
+<div id="loginStep1"><div class="lf"><label>ইমেইল</label><input id="le" placeholder="আপনার ইমেইল লিখুন"></div><div class="lf"><label>পাসওয়ার্ড</label><div class="pw-wrap"><input type="password" id="lp2" placeholder="পাসওয়ার্ড লিখুন"><button class="pw-eye" onclick="togglePwd('lp2',this)" type="button"><i class="ti ti-eye"></i></button></div></div><button class="lbtn" onclick="login()">লগইন করুন</button></div>
+<!-- Step 2: OTP -->
+<div id="loginStep2" style="display:none"><div style="background:#EAF3DE;border-radius:10px;padding:14px;margin-bottom:16px;font-size:13px;color:#3B6D11"><i class="ti ti-mail"></i> আপনার Email-এ <strong>৬ সংখ্যার OTP</strong> পাঠানো হয়েছে।</div><div class="lf"><label>OTP Code</label><input id="otpInput" placeholder="_ _ _ _ _ _" maxlength="6" style="text-align:center;font-size:28px;letter-spacing:10px;font-weight:700"></div><div style="font-size:12px;color:#888;margin-bottom:14px" id="otpTimer">⏱ ৫ মিনিটের মধ্যে দিন</div><button class="lbtn" onclick="verifyOtp()">✅ যাচাই করুন</button><button style="width:100%;padding:10px;background:none;border:none;color:#888;cursor:pointer;margin-top:8px;font-family:var(--fb)" onclick="backToLogin()">← ফিরে যান</button></div>
+<div class="le" id="lerr"></div></div></div>
 
 <!-- APP -->
 <div class="app" id="app">
@@ -504,30 +509,55 @@ function login(){
   const e=document.getElementById('le').value;
   const p=document.getElementById('lp2').value;
   const er=document.getElementById('lerr');
-  const btn=document.querySelector('.lbtn');
+  const btn=document.querySelector('#loginStep1 .lbtn');
   er.style.display='none';
   if(!e||!p){er.textContent='ইমেইল ও পাসওয়ার্ড দিন।';er.style.display='block';return;}
-  btn.textContent='সংযোগ হচ্ছে...';btn.disabled=true;
+  btn.textContent='যাচাই হচ্ছে...';btn.disabled=true;
   const tryLogin=(attempt)=>{
-    fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:e,password:p})})
-    .then(r=>r.json())
-    .then(d=>{
+    fetch(API+'/auth/send-otp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:e,password:p})})
+    .then(r=>r.json()).then(d=>{
       btn.textContent='লগইন করুন';btn.disabled=false;
-      if(d.success){TK=d.token;ME=d.user;sessionStorage.setItem('hc_tk',TK);sessionStorage.setItem('hc_me',JSON.stringify(ME));showApp();}
-      else{er.textContent=d.message||'ইমেইল বা পাসওয়ার্ড ভুল।';er.style.display='block';}
-    })
-    .catch(()=>{
-      if(attempt<3){
-        btn.textContent=`আবার চেষ্টা হচ্ছে (${attempt}/3)...`;
-        setTimeout(()=>tryLogin(attempt+1),3000);
-      }else{
-        btn.textContent='লগইন করুন';btn.disabled=false;
-        er.textContent='সংযোগ সমস্যা। পেজ Refresh করে আবার চেষ্টা করুন।';
-        er.style.display='block';
-      }
+      if(d.success){
+        document.getElementById('loginStep1').style.display='none';
+        document.getElementById('loginStep2').style.display='block';
+        document.getElementById('otpInput').focus();
+        startOtpTimer();
+      }else{er.textContent=d.message||'ইমেইল বা পাসওয়ার্ড ভুল।';er.style.display='block';}
+    }).catch(()=>{
+      if(attempt<3){btn.textContent=`আবার চেষ্টা (${attempt}/3)...`;setTimeout(()=>tryLogin(attempt+1),3000);}
+      else{btn.textContent='লগইন করুন';btn.disabled=false;er.textContent='সংযোগ সমস্যা।';er.style.display='block';}
     });
   };
   tryLogin(1);
+}
+let otpTimerInterval=null;
+function startOtpTimer(){
+  let secs=300;clearInterval(otpTimerInterval);
+  otpTimerInterval=setInterval(()=>{
+    secs--;const m=Math.floor(secs/60);const s=secs%60;
+    const el=document.getElementById('otpTimer');
+    if(el)el.textContent=`⏱ বাকি সময়: ${m}:${s<10?'0'+s:s}`;
+    if(secs<=0){clearInterval(otpTimerInterval);if(el)el.textContent='⌛ OTP মেয়াদ শেষ। আবার Login করুন।';}
+  },1000);
+}
+function verifyOtp(){
+  const e=document.getElementById('le').value;
+  const otp=document.getElementById('otpInput').value.trim();
+  const er=document.getElementById('lerr');
+  er.style.display='none';
+  if(otp.length!==6){er.textContent='৬ সংখ্যার OTP দিন।';er.style.display='block';return;}
+  fetch(API+'/auth/verify-otp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:e,otp})})
+  .then(r=>r.json()).then(d=>{
+    if(d.success){clearInterval(otpTimerInterval);TK=d.token;ME=d.user;sessionStorage.setItem('hc_tk',TK);sessionStorage.setItem('hc_me',JSON.stringify(ME));showApp();}
+    else{er.textContent=d.message||'OTP ভুল।';er.style.display='block';}
+  }).catch(()=>{er.textContent='সংযোগ সমস্যা।';er.style.display='block';});
+}
+function backToLogin(){
+  clearInterval(otpTimerInterval);
+  document.getElementById('loginStep2').style.display='none';
+  document.getElementById('loginStep1').style.display='block';
+  document.getElementById('otpInput').value='';
+  document.getElementById('lerr').style.display='none';
 }
 function showApp(){document.getElementById('lp').style.display='none';document.getElementById('app').classList.add('active');const n=ME.name||'User',i=n.split(' ').map(x=>x[0]).join('').substring(0,2).toUpperCase();document.getElementById('unn').textContent=n;document.getElementById('url').textContent=ME.role||'';['uav','tav'].forEach(id=>document.getElementById(id).textContent=i);
 applyRoleSidebar(); // ✅ Role অনুযায়ী sidebar সাজান

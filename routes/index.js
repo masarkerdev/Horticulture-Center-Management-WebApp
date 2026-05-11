@@ -470,7 +470,79 @@ router.get('/reports/monthly-summary', authenticate, async (req, res) => {
     }
 });
 
-// নিজের Profile আপডেট — /api/auth/update-profile
+// ============================================================
+// TWO FACTOR AUTH — OTP Email System
+// ============================================================
+const otpStore = {};
+
+router.post('/auth/send-otp', async (req, res) => {
+    const { email, password } = req.body;
+    try {
+        const result = await db.query('SELECT * FROM users WHERE email=$1 AND is_active=TRUE', [email]);
+        if (!result.rows.length)
+            return res.status(401).json({ success: false, message: 'ইমেইল বা পাসওয়ার্ড ভুল।' });
+        const user = result.rows[0];
+        const bcrypt = require('bcryptjs');
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch)
+            return res.status(401).json({ success: false, message: 'ইমেইল বা পাসওয়ার্ড ভুল।' });
+
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const expires = Date.now() + 5 * 60 * 1000;
+        otpStore[email] = { otp, expires, userId: user.id };
+
+        const nodemailer = require('nodemailer');
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_PASS }
+        });
+        await transporter.sendMail({
+            from: `"উদ্যানতত্ত্ববিদের কার্যালয়" <${process.env.GMAIL_USER}>`,
+            to: email,
+            subject: '🔐 Login OTP — উদ্যানতত্ত্ববিদের কার্যালয়',
+            html: `<div style="font-family:Arial,sans-serif;max-width:400px;margin:auto;padding:30px;border:1px solid #e2ddd5;border-radius:12px">
+              <div style="text-align:center;margin-bottom:20px">
+                <h2 style="color:#3B6D11">🌿 উদ্যানতত্ত্ববিদের কার্যালয়</h2>
+                <p style="color:#888">Asambasti, Rangamati</p>
+              </div>
+              <p style="color:#333">আপনার Login OTP Code:</p>
+              <div style="text-align:center;padding:20px;background:#EAF3DE;border-radius:10px;margin:20px 0">
+                <h1 style="color:#3B6D11;font-size:40px;letter-spacing:10px;margin:0">${otp}</h1>
+              </div>
+              <p style="color:#888;font-size:13px">⏱ এই Code <strong>৫ মিনিট</strong> এর জন্য valid।</p>
+              <p style="color:#e24b4a;font-size:13px">⚠️ অন্য কাউকে এই Code দেবেন না।</p>
+            </div>`
+        });
+        res.json({ success: true, message: `OTP পাঠানো হয়েছে।` });
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'OTP পাঠাতে সমস্যা হয়েছে: ' + err.message });
+    }
+});
+
+router.post('/auth/verify-otp', async (req, res) => {
+    const { email, otp } = req.body;
+    try {
+        const stored = otpStore[email];
+        if (!stored) return res.status(401).json({ success: false, message: 'OTP পাওয়া যায়নি। আবার চেষ্টা করুন।' });
+        if (Date.now() > stored.expires) return res.status(401).json({ success: false, message: 'OTP মেয়াদ শেষ। আবার চেষ্টা করুন।' });
+        if (stored.otp !== otp) return res.status(401).json({ success: false, message: 'OTP ভুল।' });
+
+        delete otpStore[email];
+        const user = await db.query('SELECT * FROM users WHERE id=$1', [stored.userId]);
+        const jwt = require('jsonwebtoken');
+        const token = jwt.sign(
+            { id: user.rows[0].id, role: user.rows[0].role, email: user.rows[0].email },
+            process.env.JWT_SECRET,
+            { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+        );
+        res.json({ success: true, token, user: { id: user.rows[0].id, name: user.rows[0].name, email: user.rows[0].email, role: user.rows[0].role } });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// ============================================================
+// নিজের Profile আপডেট
 router.put('/auth/update-profile', authenticate, async (req, res) => {
     const { name, email, current_password, new_password } = req.body;
     try {
