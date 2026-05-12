@@ -1551,15 +1551,16 @@ async function lFiscalAchievement(){
 
     let html=`
     <!-- Donut Charts -->
-    <div style="display:grid;grid-template-columns:1fr;gap:16px;margin-bottom:20px;max-width:300px">
-      <!-- উৎপাদন -->
-      <div style="background:var(--g50);border-radius:10px;padding:16px;text-align:center">
+    <div style="display:grid;grid-template-columns:1fr;gap:16px;margin-bottom:10px">
+      <div style="background:var(--g50);border-radius:10px;padding:16px">
         <div style="font-size:12px;font-weight:600;color:var(--g600);margin-bottom:10px"><i class="ti ti-plant"></i> উৎপাদন লক্ষ্যমাত্রা</div>
-        ${fyDonut(p.actual, p.target, pColor)}
-        <div style="margin-top:10px;font-size:12px">
-          <div style="color:var(--tm)">লক্ষ্য: <strong>${toBnNum(p.target)}টি</strong></div>
-          <div style="color:${pColor};font-weight:600">অর্জন: ${toBnNum(p.actual)}টি</div>
-          ${p.target>0?`<div style="font-size:11px;color:var(--tm);margin-top:4px">${p.actual>=p.target?'✅ লক্ষ্য অর্জিত!':'⬇ বাকি: '+toBnNum(p.target-p.actual)+'টি'}</div>`:'<div style="font-size:11px;color:var(--tm)">লক্ষ্যমাত্রা নির্ধারণ করুন</div>'}
+        <div style="display:flex;align-items:center;gap:16px">
+          ${fyDonut(p.actual, p.target, pColor)}
+          <div style="font-size:13px">
+            <div style="color:var(--tm);margin-bottom:4px">লক্ষ্য: <strong>${toBnNum(p.target)}টি</strong></div>
+            <div style="color:${pColor};font-weight:600;margin-bottom:4px">অর্জন: ${toBnNum(p.actual)}টি</div>
+            ${p.target>0?`<div style="font-size:12px;color:var(--tm)">${p.actual>=p.target?'✅ লক্ষ্য অর্জিত!':'⬇ বাকি: '+toBnNum(p.target-p.actual)+'টি'}</div>`:'<div style="font-size:12px;color:var(--tm)">লক্ষ্যমাত্রা নির্ধারণ করুন</div>'}
+          </div>
         </div>
       </div>
     </div>`;
