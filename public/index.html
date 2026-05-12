@@ -176,8 +176,9 @@ textarea.fc{resize:vertical}
 <div id="adminNotif" style="display:none;margin-bottom:16px"></div>
 <div class="sg" id="dSt"><div class="lt">লোড হচ্ছে...</div></div>
 
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
 <!-- Fiscal Year Target vs Achievement -->
-<div class="card" style="margin-bottom:20px">
+<div class="card">
 <div class="cdt">🎯 অর্থবছর লক্ষ্যমাত্রা বনাম অর্জন
 <span style="float:right"><select class="fc" id="fySelect" style="width:130px;padding:4px 8px;font-size:12px" onchange="lFiscalAchievement()">
 <option value="2025">FY ২০২৫-২০২৬</option>
@@ -186,6 +187,13 @@ textarea.fc{resize:vertical}
 </select></span>
 </div>
 <div id="fyResult"><div class="lt">লোড হচ্ছে...</div></div>
+</div>
+
+<!-- পাশে নতুন widget যোগের জায়গা -->
+<div class="card" id="dashWidget2">
+<div class="cdt">📌 শীঘ্রই আসছে</div>
+<div class="lt">নতুন widget এখানে যোগ হবে</div>
+</div>
 </div>
 
 <div class="cr">
@@ -1553,25 +1561,7 @@ async function lFiscalAchievement(){
       </div>
     </div>`;
 
-    // Category breakdown
-    const activeCats=cats.filter(c=>parseFloat(c.total_qty)>0);
-    if(activeCats.length>0){
-      html+=`<div style="font-size:12px;font-weight:600;color:var(--tm);margin-bottom:10px"><i class="ti ti-chart-bar"></i> ক্যাটাগরি অনুযায়ী বিক্রয় — FY ${fyLabel}</div>`;
-      activeCats.forEach((c,i)=>{
-        const catColors=['var(--g400)','var(--t400)','var(--a400)','var(--b400)','var(--c400)'];
-        const barPct=Math.round((parseFloat(c.total_qty)/maxCat)*100);
-        html+=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:12px">
-          <div style="width:70px;text-align:right;color:var(--tp);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.category||'অন্যান্য'}</div>
-          <div style="flex:1;height:18px;background:var(--gr100);border-radius:4px;overflow:hidden">
-            <div style="height:100%;width:${barPct}%;background:${catColors[i%catColors.length]};border-radius:4px;display:flex;align-items:center;padding-left:6px;font-size:10px;color:#fff;font-weight:600;transition:.3s">${barPct>15?toBnNum(c.total_qty)+'টি':''}</div>
-          </div>
-          <div style="width:55px;text-align:right;color:var(--tm);font-size:11px">${toBnMoney(c.total_amount)}</div>
-        </div>`;
-      });
-    }else{
-      html+=`<div style="text-align:center;padding:16px;color:var(--tm);font-size:13px">📊 এই অর্থবছরে এখনো বিক্রয় ডেটা নেই</div>`;
-    }
-
+    // Category breakdown বাদ দেওয়া হয়েছে
     if(el) el.innerHTML=html;
   }catch(e){if(el)el.innerHTML='<div class="lt">লোড সমস্যা</div>';}
 }
