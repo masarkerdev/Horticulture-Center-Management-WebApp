@@ -470,6 +470,78 @@ router.get('/reports/monthly-summary', authenticate, async (req, res) => {
     }
 });
 
+// Fiscal Year Target vs Achievement
+router.get('/reports/fiscal-achievement', authenticate, async (req, res) => {
+    const fy = parseInt(req.query.fy) || new Date().getFullYear();
+    // FY শুরু: জুলাই ১, শেষ: জুন ৩০
+    const fyStart = `${fy}-07-01`;
+    const fyEnd   = `${fy+1}-06-30`;
+    try {
+        // মোট উৎপাদন
+        const prodTotal = await db.query(`
+            SELECT COALESCE(SUM(pb.produced_quantity),0) AS total
+            FROM production_batches pb
+            WHERE pb.created_at BETWEEN $1 AND $2`, [fyStart, fyEnd]);
+
+        // মোট বিক্রয়
+        const saleTotal = await db.query(`
+            SELECT COALESCE(SUM(total_amount),0) AS total, COUNT(*) AS invoices
+            FROM sales WHERE sale_date BETWEEN $1 AND $2`, [fyStart, fyEnd]);
+
+        // ক্যাটাগরি অনুযায়ী বিক্রয়
+        const catSales = await db.query(`
+            SELECT c.name_bn AS category,
+                COALESCE(SUM(si.quantity),0) AS total_qty,
+                COALESCE(SUM(si.total_price),0) AS total_amount
+            FROM categories c
+            LEFT JOIN seedlings s ON s.category_id=c.id
+            LEFT JOIN sales_items si ON si.seedling_id=s.id
+            LEFT JOIN sales sa ON si.sale_id=sa.id AND sa.sale_date BETWEEN $1 AND $2
+            GROUP BY c.id, c.name_bn
+            ORDER BY total_qty DESC`, [fyStart, fyEnd]);
+
+        // FY-র জন্য target (জুলাই-জুন মাসগুলো)
+        const fyMonths = [7,8,9,10,11,12,1,2,3,4,5,6];
+        const fyYears  = [fy,fy,fy,fy,fy,fy,fy+1,fy+1,fy+1,fy+1,fy+1,fy+1];
+
+        const prodTargets = await db.query(`
+            SELECT COALESCE(SUM(target_quantity),0) AS total
+            FROM targets
+            WHERE target_type='production'
+            AND (target_year=$1 AND target_month=ANY($2)
+                 OR target_year=$3 AND target_month=ANY($4))`,
+            [fy,[7,8,9,10,11,12],fy+1,[1,2,3,4,5,6]]);
+
+        const saleTargets = await db.query(`
+            SELECT COALESCE(SUM(target_amount),0) AS total
+            FROM targets
+            WHERE target_type='sales'
+            AND (target_year=$1 AND target_month=ANY($2)
+                 OR target_year=$3 AND target_month=ANY($4))`,
+            [fy,[7,8,9,10,11,12],fy+1,[1,2,3,4,5,6]]);
+
+        res.json({
+            success: true,
+            data: {
+                fy: `${fy}-${fy+1}`,
+                fyStart, fyEnd,
+                production: {
+                    target: parseFloat(prodTargets.rows[0].total)||0,
+                    actual: parseFloat(prodTotal.rows[0].total)||0
+                },
+                sales: {
+                    target: parseFloat(saleTargets.rows[0].total)||0,
+                    actual: parseFloat(saleTotal.rows[0].total)||0,
+                    invoices: parseInt(saleTotal.rows[0].invoices)||0
+                },
+                categories: catSales.rows
+            }
+        });
+    } catch(err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // ============================================================
 // TARGET vs ACHIEVEMENT ROUTES
 // ============================================================
@@ -537,15 +609,28 @@ router.get('/reports/target-achievement', authenticate, async (req, res) => {
     }
 });
 
-// সব target দেখুন
+// সব target দেখুন (FY support)
 router.get('/targets', authenticate, async (req, res) => {
-    const { year } = req.query;
-    const y = year || new Date().getFullYear();
+    const fy = parseInt(req.query.fy) || new Date().getFullYear();
+    // FY: জুলাই (fy) → জুন (fy+1)
     try {
-        const result = await db.query(
-            'SELECT * FROM targets WHERE target_year=$1 ORDER BY target_type, target_month', [y]
+        const result = await db.query(`
+            SELECT * FROM targets
+            WHERE (target_year=$1 AND target_month>=7)
+               OR (target_year=$2 AND target_month<=6)
+            ORDER BY target_month`, [fy, fy+1]
         );
         res.json({ success: true, data: result.rows });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Target মুছুন (Admin only)
+router.delete('/targets/:id', authenticate, adminOnly, async (req, res) => {
+    try {
+        await db.query('DELETE FROM targets WHERE id=$1', [req.params.id]);
+        res.json({ success: true, message: 'লক্ষ্যমাত্রা মুছে ফেলা হয়েছে।' });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
