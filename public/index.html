@@ -175,6 +175,19 @@ textarea.fc{resize:vertical}
 <!-- শুধু Admin দেখবে — Pending password requests -->
 <div id="adminNotif" style="display:none;margin-bottom:16px"></div>
 <div class="sg" id="dSt"><div class="lt">লোড হচ্ছে...</div></div>
+
+<!-- Fiscal Year Target vs Achievement -->
+<div class="card" style="margin-bottom:20px">
+<div class="cdt">🎯 অর্থবছর লক্ষ্যমাত্রা বনাম অর্জন
+<span style="float:right"><select class="fc" id="fySelect" style="width:130px;padding:4px 8px;font-size:12px" onchange="lFiscalAchievement()">
+<option value="2025">FY ২০২৫-২০২৬</option>
+<option value="2024">FY ২০২৪-২০২৫</option>
+<option value="2023">FY ২০২৩-২০২৪</option>
+</select></span>
+</div>
+<div id="fyResult"><div class="lt">লোড হচ্ছে...</div></div>
+</div>
+
 <div class="cr">
 <div class="card"><div class="cdt">মাসিক উৎপাদন <span>বীজ ও অঙ্গজ</span></div><div class="bc" id="dChart"></div><div style="display:flex;gap:12px;margin-top:8px"><div style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--tm)"><div style="width:9px;height:9px;border-radius:2px;background:var(--g400)"></div> বীজ</div><div style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--tm)"><div style="width:9px;height:9px;border-radius:2px;background:var(--t400)"></div> অঙ্গজ</div></div></div>
 <div class="card"><div class="cdt">বিক্রয় - ক্যাটাগরি অনুযায়ী</div><div style="display:flex;align-items:center;gap:20px"><svg id="catSvg" width="100" height="100" viewBox="0 0 36 36"><circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--gr100,#ddd)" stroke-width="3.8"/><text x="18" y="21" text-anchor="middle" font-size="4" fill="var(--tm)" font-family="Noto Sans Bengali">বিক্রয়</text></svg><div class="dl" id="catLegend"><div style="font-size:12px;color:var(--tm)">বিক্রয় ডেটা নেই</div></div></div></div>
@@ -767,6 +780,7 @@ document.getElementById('dSt').innerHTML=`
 <div class="sc"><div class="si" style="background:var(--c50)"><i class="ti ti-receipt" style="color:var(--c400);font-size:18px"></i></div><div class="sl">আজকের বিক্রয়</div><div class="sv">${toBnMoney(d.today_revenue)}</div><div class="ss2">${toBnNum(d.today_invoices)}টি চালান</div></div>
 <div class="sc"><div class="si" style="background:var(--b50)"><i class="ti ti-coin" style="color:var(--b600);font-size:18px"></i></div><div class="sl">মাসিক আয়</div><div class="sv">${toBnMoney(d.monthly_revenue)}</div><div class="ss2">এই মাসে</div></div>`;
 // Bar chart — আলাদাভাবে call করুন
+lFiscalAchievement();
 const bnMonths={Jan:'জান',Feb:'ফেব',Mar:'মার্চ',Apr:'এপ্রি',May:'মে',Jun:'জুন',Jul:'জুলা',Aug:'আগস্ট',Sep:'সেপ্টে',Oct:'অক্টো',Nov:'নভে',Dec:'ডিসে'};
 let pd=[];
 try{
@@ -1486,6 +1500,75 @@ function applySiteConfig(cfg){
   if(lpH1) lpH1.textContent = nameBn;
   const lpSu = document.querySelector('.lb .su');
   if(lpSu) lpSu.textContent = nameEn;
+}
+
+// ===== FISCAL YEAR TARGET vs ACHIEVEMENT =====
+function fyDonut(actual, target, color){
+  if(!target) return `<svg width="90" height="90" viewBox="0 0 36 36"><circle cx="18" cy="18" r="15.9" fill="none" stroke="#eee" stroke-width="3.8"/><text x="18" y="21" text-anchor="middle" font-size="4.5" fill="#999" font-family="Noto Sans Bengali">লক্ষ্য নেই</text></svg>`;
+  const pct=Math.min(Math.round((actual/target)*100),100);
+  const dash=pct;const gap=100-dash;
+  return `<svg width="90" height="90" viewBox="0 0 36 36">
+    <circle cx="18" cy="18" r="15.9" fill="none" stroke="#eee" stroke-width="3.8"/>
+    <circle cx="18" cy="18" r="15.9" fill="none" stroke="${color}" stroke-width="3.8"
+      stroke-dasharray="${dash} ${gap}" stroke-dashoffset="25" stroke-linecap="round"/>
+    <text x="18" y="17" text-anchor="middle" font-size="6" fill="${color}" font-family="Noto Sans Bengali" font-weight="bold">${pct}%</text>
+    <text x="18" y="23" text-anchor="middle" font-size="3" fill="#888" font-family="Noto Sans Bengali">অর্জিত</text>
+  </svg>`;
+}
+
+async function lFiscalAchievement(){
+  const fy=document.getElementById('fySelect')?.value||2025;
+  const el=document.getElementById('fyResult');
+  if(el) el.innerHTML='<div class="lt">লোড হচ্ছে...</div>';
+  try{
+    const d=await api('/reports/fiscal-achievement?fy='+fy);
+    if(!d.success){if(el)el.innerHTML='<div class="lt">ডেটা আনতে সমস্যা</div>';return;}
+    const {production:p, sales:s, categories:cats, fy:fyLabel}=d.data;
+
+    const pPct=p.target>0?Math.min(Math.round((p.actual/p.target)*100),100):0;
+    const sPct=s.target>0?Math.min(Math.round((s.actual/s.target)*100),100):0;
+    const pColor=pPct>=100?'#3B6D11':pPct>=70?'#4A9B6F':pPct>=40?'#E8A838':'#E24B4A';
+    const sColor=sPct>=100?'#1A6B8A':sPct>=70?'#2E9EC4':sPct>=40?'#E8A838':'#E24B4A';
+
+    // Category max for bar scaling
+    const maxCat=Math.max(...cats.map(c=>parseFloat(c.total_qty)||0),1);
+
+    let html=`
+    <!-- Donut Charts -->
+    <div style="display:grid;grid-template-columns:1fr;gap:16px;margin-bottom:20px;max-width:300px">
+      <!-- উৎপাদন -->
+      <div style="background:var(--g50);border-radius:10px;padding:16px;text-align:center">
+        <div style="font-size:12px;font-weight:600;color:var(--g600);margin-bottom:10px"><i class="ti ti-plant"></i> উৎপাদন লক্ষ্যমাত্রা</div>
+        ${fyDonut(p.actual, p.target, pColor)}
+        <div style="margin-top:10px;font-size:12px">
+          <div style="color:var(--tm)">লক্ষ্য: <strong>${toBnNum(p.target)}টি</strong></div>
+          <div style="color:${pColor};font-weight:600">অর্জন: ${toBnNum(p.actual)}টি</div>
+          ${p.target>0?`<div style="font-size:11px;color:var(--tm);margin-top:4px">${p.actual>=p.target?'✅ লক্ষ্য অর্জিত!':'⬇ বাকি: '+toBnNum(p.target-p.actual)+'টি'}</div>`:'<div style="font-size:11px;color:var(--tm)">লক্ষ্যমাত্রা নির্ধারণ করুন</div>'}
+        </div>
+      </div>
+    </div>`;
+
+    // Category breakdown
+    const activeCats=cats.filter(c=>parseFloat(c.total_qty)>0);
+    if(activeCats.length>0){
+      html+=`<div style="font-size:12px;font-weight:600;color:var(--tm);margin-bottom:10px"><i class="ti ti-chart-bar"></i> ক্যাটাগরি অনুযায়ী বিক্রয় — FY ${fyLabel}</div>`;
+      activeCats.forEach((c,i)=>{
+        const catColors=['var(--g400)','var(--t400)','var(--a400)','var(--b400)','var(--c400)'];
+        const barPct=Math.round((parseFloat(c.total_qty)/maxCat)*100);
+        html+=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:12px">
+          <div style="width:70px;text-align:right;color:var(--tp);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.category||'অন্যান্য'}</div>
+          <div style="flex:1;height:18px;background:var(--gr100);border-radius:4px;overflow:hidden">
+            <div style="height:100%;width:${barPct}%;background:${catColors[i%catColors.length]};border-radius:4px;display:flex;align-items:center;padding-left:6px;font-size:10px;color:#fff;font-weight:600;transition:.3s">${barPct>15?toBnNum(c.total_qty)+'টি':''}</div>
+          </div>
+          <div style="width:55px;text-align:right;color:var(--tm);font-size:11px">${toBnMoney(c.total_amount)}</div>
+        </div>`;
+      });
+    }else{
+      html+=`<div style="text-align:center;padding:16px;color:var(--tm);font-size:13px">📊 এই অর্থবছরে এখনো বিক্রয় ডেটা নেই</div>`;
+    }
+
+    if(el) el.innerHTML=html;
+  }catch(e){if(el)el.innerHTML='<div class="lt">লোড সমস্যা</div>';}
 }
 
 // ===== TARGET vs ACHIEVEMENT =====
