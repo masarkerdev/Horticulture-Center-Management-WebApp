@@ -783,7 +783,7 @@ document.getElementById('dSt').innerHTML=`
 <div class="sc"><div class="si" style="background:var(--c50)"><i class="ti ti-receipt" style="color:var(--c400);font-size:18px"></i></div><div class="sl">আজকের বিক্রয়</div><div class="sv">${toBnMoney(d.today_revenue)}</div><div class="ss2">${toBnNum(d.today_invoices)}টি চালান</div></div>
 <div class="sc"><div class="si" style="background:var(--b50)"><i class="ti ti-coin" style="color:var(--b600);font-size:18px"></i></div><div class="sl">মাসিক আয়</div><div class="sv">${toBnMoney(d.monthly_revenue)}</div><div class="ss2">এই মাসে</div></div>`;
 // Bar chart — আলাদাভাবে call করুন
-lFiscalAchievement();
+lFiscalAchievement(); // ✅ auto-refresh এও চলবে, কিন্তু "লোড হচ্ছে" দেখাবে না
 const bnMonths={Jan:'জান',Feb:'ফেব',Mar:'মার্চ',Apr:'এপ্রি',May:'মে',Jun:'জুন',Jul:'জুলা',Aug:'আগস্ট',Sep:'সেপ্টে',Oct:'অক্টো',Nov:'নভে',Dec:'ডিসে'};
 let pd=[];
 try{
@@ -1522,7 +1522,9 @@ function fyDonut(actual, target, color){
 async function lFiscalAchievement(){
   const fy=document.getElementById('fySelect')?.value||2025;
   const el=document.getElementById('fyResult');
-  if(el) el.innerHTML='<div class="lt">লোড হচ্ছে...</div>';
+  // শুধু একদম প্রথমবার "লোড হচ্ছে" দেখাবে
+  const isEmpty=!el||!el.innerHTML||el.innerHTML.trim()==='';
+  if(isEmpty && el) el.innerHTML='<div class="lt">লোড হচ্ছে...</div>';
   try{
     const d=await api('/reports/fiscal-achievement?fy='+fy);
     if(!d.success){if(el)el.innerHTML='<div class="lt">ডেটা আনতে সমস্যা</div>';return;}
@@ -1623,7 +1625,8 @@ async function lTargetAchievement(){
 
   const fy=document.getElementById('targetFY')?.value||2025;
   const res=document.getElementById('targetResults');
-  if(res) res.innerHTML='<div class="lt">লোড হচ্ছে...</div>';
+  // প্রথমবার ছাড়া loading দেখাবে না
+  if(res&&res.innerHTML.includes('লোড হচ্ছে')) res.innerHTML='<div class="lt">লোড হচ্ছে...</div>';
 
   try{
     const [tgRes, achRes]=await Promise.all([
