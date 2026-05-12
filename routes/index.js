@@ -471,6 +471,87 @@ router.get('/reports/monthly-summary', authenticate, async (req, res) => {
 });
 
 // ============================================================
+// TARGET vs ACHIEVEMENT ROUTES
+// ============================================================
+
+// লক্ষ্যমাত্রা সেট করুন (Admin only)
+router.post('/targets', authenticate, adminOnly, async (req, res) => {
+    const { target_type, target_month, target_year, target_quantity, target_amount, notes } = req.body;
+    try {
+        const result = await db.query(`
+            INSERT INTO targets (target_type, target_month, target_year, target_quantity, target_amount, notes, created_by)
+            VALUES ($1,$2,$3,$4,$5,$6,$7)
+            ON CONFLICT (target_type, target_month, target_year)
+            DO UPDATE SET target_quantity=$4, target_amount=$5, notes=$6
+            RETURNING *`,
+            [target_type, target_month, target_year, target_quantity||0, target_amount||0, notes||null, req.user.id]
+        );
+        res.json({ success: true, message: 'লক্ষ্যমাত্রা সংরক্ষণ হয়েছে।', data: result.rows[0] });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// লক্ষ্যমাত্রা বনাম অর্জন
+router.get('/reports/target-achievement', authenticate, async (req, res) => {
+    const { year } = req.query;
+    const y = year || new Date().getFullYear();
+    try {
+        // উৎপাদন target vs actual
+        const prodResult = await db.query(`
+            SELECT
+                t.target_month AS month,
+                t.target_quantity,
+                t.target_amount,
+                COALESCE(SUM(pb.produced_quantity), 0) AS actual_quantity
+            FROM targets t
+            LEFT JOIN production_batches pb ON
+                EXTRACT(MONTH FROM pb.created_at) = t.target_month AND
+                EXTRACT(YEAR FROM pb.created_at) = $1
+            WHERE t.target_type = 'production' AND t.target_year = $1
+            GROUP BY t.target_month, t.target_quantity, t.target_amount
+            ORDER BY t.target_month`, [y]);
+
+        // বিক্রয় target vs actual
+        const saleResult = await db.query(`
+            SELECT
+                t.target_month AS month,
+                t.target_quantity,
+                t.target_amount,
+                COALESCE(COUNT(s.id), 0) AS actual_invoices,
+                COALESCE(SUM(s.total_amount), 0) AS actual_amount
+            FROM targets t
+            LEFT JOIN sales s ON
+                EXTRACT(MONTH FROM s.sale_date) = t.target_month AND
+                EXTRACT(YEAR FROM s.sale_date) = $1
+            WHERE t.target_type = 'sales' AND t.target_year = $1
+            GROUP BY t.target_month, t.target_quantity, t.target_amount
+            ORDER BY t.target_month`, [y]);
+
+        res.json({
+            success: true,
+            data: { production: prodResult.rows, sales: saleResult.rows, year: y }
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// সব target দেখুন
+router.get('/targets', authenticate, async (req, res) => {
+    const { year } = req.query;
+    const y = year || new Date().getFullYear();
+    try {
+        const result = await db.query(
+            'SELECT * FROM targets WHERE target_year=$1 ORDER BY target_type, target_month', [y]
+        );
+        res.json({ success: true, data: result.rows });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// ============================================================
 // TWO FACTOR AUTH — OTP Email System
 // ============================================================
 const otpStore = {};

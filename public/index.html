@@ -301,6 +301,46 @@ textarea.fc{resize:vertical}
 <div class="pg" id="pg-rep">
 <div style="font-size:13px;color:var(--tm);margin-bottom:20px">রিপোর্ট তৈরি করুন ও এক্সপোর্ট করুন</div>
 
+<!-- Target vs Achievement -->
+<div class="card" style="margin-bottom:20px" id="targetSection">
+<div class="cdt">🎯 লক্ষ্যমাত্রা বনাম অর্জন
+<span style="float:right;display:flex;gap:8px;align-items:center">
+<select class="fc" style="width:100px;padding:4px 8px;font-size:12px" id="targetYear">
+<option>2026</option><option>2025</option><option>2024</option>
+</select>
+<button class="btn btns" onclick="lTargetAchievement()"><i class="ti ti-refresh"></i></button>
+</span>
+</div>
+
+<!-- Admin: লক্ষ্যমাত্রা নির্ধারণ -->
+<div id="targetSetForm" style="display:none;background:var(--g50);border-radius:8px;padding:14px;margin-bottom:16px">
+<div style="font-size:13px;font-weight:600;margin-bottom:10px;color:var(--g600)"><i class="ti ti-target"></i> নতুন লক্ষ্যমাত্রা নির্ধারণ করুন</div>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:8px;align-items:end">
+<div class="fg" style="margin:0"><label style="font-size:11px">ধরন</label>
+<select class="fc" id="tgType"><option value="production">উৎপাদন</option><option value="sales">বিক্রয়</option></select></div>
+<div class="fg" style="margin:0"><label style="font-size:11px">মাস</label>
+<select class="fc" id="tgMonth">
+<option value="1">জানুয়ারি</option><option value="2">ফেব্রুয়ারি</option><option value="3">মার্চ</option>
+<option value="4">এপ্রিল</option><option value="5">মে</option><option value="6">জুন</option>
+<option value="7">জুলাই</option><option value="8">আগস্ট</option><option value="9">সেপ্টেম্বর</option>
+<option value="10">অক্টোবর</option><option value="11">নভেম্বর</option><option value="12">ডিসেম্বর</option>
+</select></div>
+<div class="fg" style="margin:0"><label style="font-size:11px">বছর</label>
+<input class="fc" type="number" id="tgYear" value="2026"></div>
+<div class="fg" style="margin:0"><label style="font-size:11px">পরিমাণ (টি)</label>
+<input class="fc" type="number" id="tgQty" placeholder="0"></div>
+<div class="fg" style="margin:0"><label style="font-size:11px">আয় (৳)</label>
+<input class="fc" type="number" id="tgAmt" placeholder="0"></div>
+</div>
+<div style="margin-top:10px;display:flex;gap:8px">
+<input class="fc" id="tgNotes" placeholder="মন্তব্য (ঐচ্ছিক)" style="flex:1">
+<button class="btn btnp" onclick="saveTarget()"><i class="ti ti-check"></i> সংরক্ষণ</button>
+</div>
+</div>
+
+<div id="targetResults"><div class="lt">লোড হচ্ছে...</div></div>
+</div>
+
 <!-- Monthly Excel Report -->
 <div class="card" style="margin-bottom:20px">
 <div class="cdt">📅 মাসিক রিপোর্ট — Excel ডাউনলোড</div>
@@ -710,7 +750,7 @@ document.getElementById('lp2').addEventListener('keypress',e=>{if(e.key==='Enter
 
 // NAV
 const tls={dash:'ড্যাশবোর্ড',seed:'চারা তালিকা',prod:'উৎপাদন রেজিস্টার',moth:'মাদার প্ল্যান্ট',batch:'ব্যাচ ম্যানেজমেন্ট',stk:'স্টক রেজিস্টার',dmg:'ক্ষতি / নষ্ট',sale:'বিক্রয় ও চালান',cust:'গ্রাহক তালিকা',rep:'রিপোর্ট ও বিশ্লেষণ',usr:'ব্যবহারকারী',cfg:'সেটিংস'};
-const lrs={dash:lDash,seed:lSeed,prod:lProd,moth:lMoth,batch:lBatch,stk:lStk,dmg:lDmg,sale:lSale,cust:lCust,usr:lUsr,rep:lBestSelling,cfg:lCfg};
+const lrs={dash:lDash,seed:lSeed,prod:lProd,moth:lMoth,batch:lBatch,stk:lStk,dmg:lDmg,sale:lSale,cust:lCust,usr:lUsr,rep:()=>{lBestSelling();lTargetAchievement();},cfg:lCfg};
 function go(id,el){document.querySelectorAll('.pg').forEach(p=>p.classList.remove('active'));document.getElementById('pg-'+id).classList.add('active');document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));if(el)el.classList.add('active');document.getElementById('pt').textContent=tls[id]||id;cSB();lrs[id]?.()}
 function tSB(){document.getElementById('sb').classList.toggle('open');document.getElementById('sov').classList.toggle('open')}
 function cSB(){document.getElementById('sb').classList.remove('open');document.getElementById('sov').classList.remove('open')}
@@ -1446,6 +1486,111 @@ function applySiteConfig(cfg){
   if(lpH1) lpH1.textContent = nameBn;
   const lpSu = document.querySelector('.lb .su');
   if(lpSu) lpSu.textContent = nameEn;
+}
+
+// ===== TARGET vs ACHIEVEMENT =====
+const bnMonths2=['','জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
+
+async function lTargetAchievement(){
+  // Admin হলে form দেখান
+  const form=document.getElementById('targetSetForm');
+  if(form) form.style.display=ME.role==='admin'?'block':'none';
+
+  const year=document.getElementById('targetYear')?.value||new Date().getFullYear();
+  const res=document.getElementById('targetResults');
+  if(res) res.innerHTML='<div class="lt">লোড হচ্ছে...</div>';
+
+  try{
+    const d=await api('/reports/target-achievement?year='+year);
+    if(!d.success){res.innerHTML='<div class="lt">ডেটা আনতে সমস্যা</div>';return;}
+
+    const {production,sales}=d.data;
+
+    let html='';
+
+    // উৎপাদন section
+    if(production.length>0){
+      html+=`<div style="font-size:13px;font-weight:600;color:var(--g600);margin-bottom:10px;margin-top:4px"><i class="ti ti-plant"></i> উৎপাদন লক্ষ্যমাত্রা</div>`;
+      html+=`<div class="tw"><table><thead><tr>
+        <th>মাস</th><th>লক্ষ্যমাত্রা (টি)</th><th>অর্জন (টি)</th><th>অগ্রগতি</th><th>অবস্থা</th>
+      </tr></thead><tbody>`;
+      production.forEach(r=>{
+        const tgt=parseInt(r.target_quantity)||0;
+        const act=parseInt(r.actual_quantity)||0;
+        const pct=tgt>0?Math.min(Math.round((act/tgt)*100),100):0;
+        const over=tgt>0&&act>tgt;
+        html+=`<tr>
+          <td><strong>${bnMonths2[r.month]||r.month}</strong></td>
+          <td>${toBnNum(tgt)}</td>
+          <td><strong>${toBnNum(act)}</strong></td>
+          <td><div style="display:flex;align-items:center;gap:8px">
+            <div style="flex:1;height:10px;background:var(--gr100);border-radius:5px;overflow:hidden">
+              <div style="height:100%;width:${pct}%;background:${pct>=100?'var(--g600)':pct>=70?'var(--g400)':pct>=40?'var(--a400)':'var(--r400)'};border-radius:5px;transition:.3s"></div>
+            </div>
+            <span style="font-size:12px;min-width:35px">${toBn(pct)}%</span>
+          </div></td>
+          <td><span class="b" style="background:${pct>=100?'var(--g50)':pct>=70?'var(--b50)':pct>=40?'var(--a50)':'var(--r50)'};color:${pct>=100?'var(--g600)':pct>=70?'var(--b600)':pct>=40?'var(--a400)':'var(--r400)'}">
+            ${pct>=100?'✅ অর্জিত':pct>=70?'🔵 চলমান':pct>=40?'⚠️ পিছিয়ে':'❌ কম'}
+          </span></td>
+        </tr>`;
+      });
+      html+='</tbody></table></div>';
+    }
+
+    // বিক্রয় section
+    if(sales.length>0){
+      html+=`<div style="font-size:13px;font-weight:600;color:var(--t600);margin:16px 0 10px"><i class="ti ti-coin"></i> বিক্রয় লক্ষ্যমাত্রা</div>`;
+      html+=`<div class="tw"><table><thead><tr>
+        <th>মাস</th><th>লক্ষ্যমাত্রা (৳)</th><th>অর্জন (৳)</th><th>অগ্রগতি</th><th>অবস্থা</th>
+      </tr></thead><tbody>`;
+      sales.forEach(r=>{
+        const tgt=parseFloat(r.target_amount)||0;
+        const act=parseFloat(r.actual_amount)||0;
+        const pct=tgt>0?Math.min(Math.round((act/tgt)*100),100):0;
+        html+=`<tr>
+          <td><strong>${bnMonths2[r.month]||r.month}</strong></td>
+          <td>${toBnMoney(tgt)}</td>
+          <td><strong>${toBnMoney(act)}</strong></td>
+          <td><div style="display:flex;align-items:center;gap:8px">
+            <div style="flex:1;height:10px;background:var(--gr100);border-radius:5px;overflow:hidden">
+              <div style="height:100%;width:${pct}%;background:${pct>=100?'var(--t600)':pct>=70?'var(--t400)':pct>=40?'var(--a400)':'var(--r400)'};border-radius:5px"></div>
+            </div>
+            <span style="font-size:12px;min-width:35px">${toBn(pct)}%</span>
+          </div></td>
+          <td><span class="b" style="background:${pct>=100?'var(--g50)':pct>=70?'var(--b50)':pct>=40?'var(--a50)':'var(--r50)'};color:${pct>=100?'var(--g600)':pct>=70?'var(--b600)':pct>=40?'var(--a400)':'var(--r400)'}">
+            ${pct>=100?'✅ অর্জিত':pct>=70?'🔵 চলমান':pct>=40?'⚠️ পিছিয়ে':'❌ কম'}
+          </span></td>
+        </tr>`;
+      });
+      html+='</tbody></table></div>';
+    }
+
+    if(!production.length&&!sales.length){
+      html=`<div style="text-align:center;padding:30px;color:var(--tm)">
+        <div style="font-size:40px;margin-bottom:10px">🎯</div>
+        <div style="font-size:14px">এখনো কোনো লক্ষ্যমাত্রা নির্ধারণ হয়নি</div>
+        ${ME.role==='admin'?'<div style="font-size:12px;color:var(--tm);margin-top:6px">উপরের form থেকে লক্ষ্যমাত্রা যোগ করুন</div>':''}
+      </div>`;
+    }
+
+    if(res) res.innerHTML=html;
+  }catch(e){if(res)res.innerHTML='<div class="lt">লোড সমস্যা</div>';}
+}
+
+async function saveTarget(){
+  const type=document.getElementById('tgType').value;
+  const month=+document.getElementById('tgMonth').value;
+  const year=+document.getElementById('tgYear').value;
+  const qty=+document.getElementById('tgQty').value||0;
+  const amt=+document.getElementById('tgAmt').value||0;
+  const notes=document.getElementById('tgNotes').value;
+  if(!month||!year) return toast('মাস ও বছর দিন',1);
+  if(!qty&&!amt) return toast('পরিমাণ বা আয় দিন',1);
+  try{
+    const d=await api('/targets',{method:'POST',body:JSON.stringify({target_type:type,target_month:month,target_year:year,target_quantity:qty,target_amount:amt,notes})});
+    if(d.success){toast('লক্ষ্যমাত্রা সংরক্ষণ হয়েছে ✅');lTargetAchievement();}
+    else toast(d.message||'সমস্যা',1);
+  }catch(e){toast('সমস্যা',1);}
 }
 
 // ===== BEST SELLING SEEDLINGS =====
