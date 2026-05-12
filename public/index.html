@@ -105,6 +105,8 @@ textarea.fc{resize:vertical}
 .toast{position:fixed;top:20px;right:20px;background:var(--g600);color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;z-index:300;display:none;box-shadow:0 4px 20px rgba(0,0,0,.2)}.toast.err{background:var(--r400)}
 .lt{text-align:center;padding:30px;color:var(--tm);font-size:13px}
 .pw-wrap{position:relative}.pw-wrap .fc{padding-right:38px}.pw-eye{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--gr400);font-size:16px;padding:0}
+.fy-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+@media(max-width:768px){.fy-grid{grid-template-columns:1fr!important;}}
 .sov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:99}
 /* REPORT CARDS */
 .rg{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
@@ -176,7 +178,7 @@ textarea.fc{resize:vertical}
 <div id="adminNotif" style="display:none;margin-bottom:16px"></div>
 <div class="sg" id="dSt"><div class="lt">লোড হচ্ছে...</div></div>
 
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px" class="fy-grid">
 <!-- Fiscal Year Target vs Achievement -->
 <div class="card">
 <div class="cdt">🎯 অর্থবছর লক্ষ্যমাত্রা বনাম অর্জন
