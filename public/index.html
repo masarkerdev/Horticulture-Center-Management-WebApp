@@ -179,8 +179,8 @@ textarea.fc{resize:vertical}
 <div id="adminNotif" style="display:none;margin-bottom:16px"></div>
 <div class="sg" id="dSt"><div class="lt">লোড হচ্ছে...</div></div>
 
-<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px" class="fy-grid">
-<!-- Fiscal Year Target vs Achievement -->
+<!-- Row 1: অর্থবছর + মাসিক উৎপাদন + বিক্রয় ক্যাটাগরি -->
+<div class="fy-grid">
 <div class="card">
 <div class="cdt">🎯 অর্থবছর লক্ষ্যমাত্রা বনাম অর্জন
 <span style="float:right"><select class="fc" id="fySelect" style="width:130px;padding:4px 8px;font-size:12px" onchange="lFiscalAchievement()">
@@ -191,28 +191,22 @@ textarea.fc{resize:vertical}
 </div>
 <div id="fyResult"><div class="lt">লোড হচ্ছে...</div></div>
 </div>
-
-<!-- পাশে নতুন widget যোগের জায়গা -->
-<div class="card" id="dashWidget2">
-<div class="cdt">📌 শীঘ্রই আসছে</div>
-<div class="lt">নতুন widget এখানে যোগ হবে</div>
-</div>
-
-<!-- ৩য় widget -->
-<div class="card" id="dashWidget3">
-<div class="cdt">📌 শীঘ্রই আসছে</div>
-<div class="lt">নতুন widget এখানে যোগ হবে</div>
-</div>
-</div>
-
-<div class="cr">
 <div class="card"><div class="cdt">মাসিক উৎপাদন <span>বীজ ও অঙ্গজ</span></div><div class="bc" id="dChart"></div><div style="display:flex;gap:12px;margin-top:8px"><div style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--tm)"><div style="width:9px;height:9px;border-radius:2px;background:var(--g400)"></div> বীজ</div><div style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--tm)"><div style="width:9px;height:9px;border-radius:2px;background:var(--t400)"></div> অঙ্গজ</div></div></div>
 <div class="card"><div class="cdt">বিক্রয় - ক্যাটাগরি অনুযায়ী</div><div style="display:flex;align-items:center;gap:20px"><svg id="catSvg" width="100" height="100" viewBox="0 0 36 36"><circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--gr100,#ddd)" stroke-width="3.8"/><text x="18" y="21" text-anchor="middle" font-size="4" fill="var(--tm)" font-family="Noto Sans Bengali">বিক্রয়</text></svg><div class="dl" id="catLegend"><div style="font-size:12px;color:var(--tm)">বিক্রয় ডেটা নেই</div></div></div></div>
 </div>
-<div class="cr">
+
+<!-- Row 2: কম স্টক + উৎপাদন সাফল্য + Coming Soon -->
+<div class="fy-grid">
 <div class="card"><div class="cdt">⚠ কম স্টক সতর্কতা <span id="dLowC"></span></div><div id="dLow"><div class="lt">লোড হচ্ছে...</div></div></div>
 <div class="card"><div class="cdt">উৎপাদন সাফল্যের হার</div><div id="dRate"><div class="lt">লোড হচ্ছে...</div></div></div>
+<div class="card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:150px">
+<div style="font-size:36px;margin-bottom:10px">🚀</div>
+<div style="font-weight:600;font-size:14px;color:var(--tp);margin-bottom:6px">নতুন ফিচার আসছে</div>
+<div style="font-size:12px;color:var(--tm);text-align:center">New Feature Coming Soon</div>
 </div>
+</div>
+
+<!-- Row 3: সাম্প্রতিক কার্যক্রম — Full Width -->
 <div class="card"><div class="cdt">সাম্প্রতিক কার্যক্রম <span>সর্বশেষ ৫টি</span></div><div class="tw"><table><thead><tr><th>সময়</th><th>কার্যক্রম</th><th>মডিউল</th><th>অবস্থা</th></tr></thead><tbody id="dAct"><tr><td colspan="4" class="lt">লোড হচ্ছে...</td></tr></tbody></table></div></div>
 </div>
 
