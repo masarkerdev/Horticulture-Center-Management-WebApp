@@ -58,7 +58,7 @@ body{font-family:var(--fb);background:var(--bg);color:var(--tp);font-size:17px}
 .si{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:12px}
 .sl{font-size:13px;color:var(--tm);margin-bottom:4px}.sv{font-size:28px;font-weight:700;font-family:var(--fb);line-height:1}.ss2{font-size:12px;color:var(--tm);margin-top:4px}
 /* CHARTS */
-.cr{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px}
+.cr{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:24px}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:18px}
 .cdt{font-size:13px;font-weight:600;margin-bottom:14px;display:flex;justify-content:space-between}.cdt span{font-size:11px;color:var(--tm);font-weight:400}
 /* BAR CHART */
@@ -105,8 +105,9 @@ textarea.fc{resize:vertical}
 .toast{position:fixed;top:20px;right:20px;background:var(--g600);color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;z-index:300;display:none;box-shadow:0 4px 20px rgba(0,0,0,.2)}.toast.err{background:var(--r400)}
 .lt{text-align:center;padding:30px;color:var(--tm);font-size:13px}
 .pw-wrap{position:relative}.pw-wrap .fc{padding-right:38px}.pw-eye{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--gr400);font-size:16px;padding:0}
-.fy-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
-@media(max-width:768px){.fy-grid{grid-template-columns:1fr!important;}}
+.fy-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px}
+@media(max-width:1024px){.fy-grid{grid-template-columns:1fr 1fr!important;}.cr{grid-template-columns:1fr 1fr!important;}}
+@media(max-width:768px){.fy-grid{grid-template-columns:1fr!important;}.cr{grid-template-columns:1fr!important;}}
 .sov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:99}
 /* REPORT CARDS */
 .rg{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
@@ -178,7 +179,7 @@ textarea.fc{resize:vertical}
 <div id="adminNotif" style="display:none;margin-bottom:16px"></div>
 <div class="sg" id="dSt"><div class="lt">লোড হচ্ছে...</div></div>
 
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px" class="fy-grid">
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px" class="fy-grid">
 <!-- Fiscal Year Target vs Achievement -->
 <div class="card">
 <div class="cdt">🎯 অর্থবছর লক্ষ্যমাত্রা বনাম অর্জন
@@ -193,6 +194,12 @@ textarea.fc{resize:vertical}
 
 <!-- পাশে নতুন widget যোগের জায়গা -->
 <div class="card" id="dashWidget2">
+<div class="cdt">📌 শীঘ্রই আসছে</div>
+<div class="lt">নতুন widget এখানে যোগ হবে</div>
+</div>
+
+<!-- ৩য় widget -->
+<div class="card" id="dashWidget3">
 <div class="cdt">📌 শীঘ্রই আসছে</div>
 <div class="lt">নতুন widget এখানে যোগ হবে</div>
 </div>
