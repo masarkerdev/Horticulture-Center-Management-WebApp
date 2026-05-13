@@ -154,7 +154,7 @@ function applyRoleSidebar(){
 
   // সব nav item-এর access নির্ধারণ করুন
   const access={
-    admin:       ['dash','seed','prod','moth','batch','stk','dmg','sale','cust','rep','usr'],
+    admin:       ['dash','seed','prod','moth','batch','stk','dmg','sale','cust','rep','usr','cfg'],
     manager:     ['dash','seed','prod','moth','batch','stk','dmg','sale','cust','rep','usr'],
     production_officer: ['dash','seed','prod','moth','batch','stk','dmg','rep'],
     sales_operator:     ['dash','sale','cust','stk','rep'],
