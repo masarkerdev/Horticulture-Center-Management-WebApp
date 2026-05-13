@@ -148,6 +148,39 @@
 <!-- SETTINGS -->
 <div class="pg" id="pg-cfg">
 
+<!-- Theme Settings -->
+<div class="card" style="max-width:600px;margin-top:20px">
+<div class="cdt">🎨 থিম ও ডিজাইন</div>
+
+<!-- Color Theme -->
+<div style="margin-bottom:20px">
+<label style="font-size:13px;font-weight:600;display:block;margin-bottom:10px">রং / Color Theme</label>
+<div style="display:flex;gap:10px;flex-wrap:wrap">
+<button onclick="setTheme('green')" id="theme-green" style="display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:10px;border:2px solid transparent;cursor:pointer;background:#EAF3DE;color:#3B6D11;font-family:var(--fb);font-size:13px;font-weight:600">
+<div style="width:16px;height:16px;border-radius:50%;background:#3B6D11"></div> 🌿 সবুজ</button>
+<button onclick="setTheme('blue')" id="theme-blue" style="display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:10px;border:2px solid transparent;cursor:pointer;background:#EBF5FB;color:#1A5276;font-family:var(--fb);font-size:13px;font-weight:600">
+<div style="width:16px;height:16px;border-radius:50%;background:#1A5276"></div> 🌊 নীল</button>
+<button onclick="setTheme('purple')" id="theme-purple" style="display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:10px;border:2px solid transparent;cursor:pointer;background:#F4ECF7;color:#6C3483;font-family:var(--fb);font-size:13px;font-weight:600">
+<div style="width:16px;height:16px;border-radius:50%;background:#6C3483"></div> 🌸 বেগুনি</button>
+<button onclick="setTheme('orange')" id="theme-orange" style="display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:10px;border:2px solid transparent;cursor:pointer;background:#FEF5E7;color:#CA6F1E;font-family:var(--fb);font-size:13px;font-weight:600">
+<div style="width:16px;height:16px;border-radius:50%;background:#CA6F1E"></div> 🍂 কমলা</button>
+</div>
+</div>
+
+<!-- Dark Mode -->
+<div style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:var(--gr50);border-radius:10px;border:1px solid var(--bd)">
+<div>
+<div style="font-size:13px;font-weight:600">⚫ Dark Mode</div>
+<div style="font-size:11px;color:var(--tm);margin-top:2px">রাতে ব্যবহারের জন্য</div>
+</div>
+<label style="position:relative;display:inline-block;width:50px;height:26px;cursor:pointer">
+<input type="checkbox" id="darkToggle" onchange="toggleDark()" style="opacity:0;width:0;height:0">
+<span style="position:absolute;top:0;left:0;right:0;bottom:0;background:#ccc;border-radius:26px;transition:.3s" id="darkSlider"></span>
+<span style="position:absolute;top:3px;left:3px;width:20px;height:20px;background:white;border-radius:50%;transition:.3s" id="darkKnob"></span>
+</label>
+</div>
+</div>
+
 <!-- System Settings -->
 <div class="card" style="max-width:600px">
 <div class="cdt">সিস্টেম সেটিংস / System Settings</div>

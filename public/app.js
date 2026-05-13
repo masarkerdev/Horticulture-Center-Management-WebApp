@@ -967,7 +967,8 @@ function openProfile(){
 function lCfg(){
   document.getElementById('prName').value=ME.name||'';
   document.getElementById('prEmail').value=ME.email||'';
-  loadCategories(); // ✅ Category list লোড করুন
+  loadCategories();
+  applyThemeFromStorage(); // ✅ Theme buttons highlight করুন
 }
 
 // প্রোফাইল আপডেট
@@ -997,6 +998,52 @@ async function updateProfile(){
     }
   }catch(e){toast('সমস্যা',1);}
 }
+
+// ===== THEME & DARK MODE =====
+function setTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('hc_theme', theme);
+  // Active button highlight করুন
+  ['green','blue','purple','orange'].forEach(t=>{
+    const btn=document.getElementById('theme-'+t);
+    if(btn) btn.style.border=t===theme?'2px solid currentColor':'2px solid transparent';
+  });
+}
+
+function toggleDark(){
+  const isDark=document.getElementById('darkToggle')?.checked;
+  document.documentElement.setAttribute('data-dark', isDark?'true':'false');
+  localStorage.setItem('hc_dark', isDark?'true':'false');
+  // Toggle UI আপডেট করুন
+  const slider=document.getElementById('darkSlider');
+  const knob=document.getElementById('darkKnob');
+  if(slider) slider.style.background=isDark?'var(--g600)':'#ccc';
+  if(knob) knob.style.transform=isDark?'translateX(24px)':'translateX(0)';
+}
+
+function applyThemeFromStorage(){
+  const theme=localStorage.getItem('hc_theme')||'green';
+  const dark=localStorage.getItem('hc_dark')||'false';
+  // Theme apply করুন
+  document.documentElement.setAttribute('data-theme', theme);
+  document.documentElement.setAttribute('data-dark', dark);
+  // Settings পেজ খোলা থাকলে button highlight করুন
+  setTimeout(()=>{
+    ['green','blue','purple','orange'].forEach(t=>{
+      const btn=document.getElementById('theme-'+t);
+      if(btn) btn.style.border=t===theme?'2px solid currentColor':'2px solid transparent';
+    });
+    const toggle=document.getElementById('darkToggle');
+    if(toggle) toggle.checked=dark==='true';
+    const slider=document.getElementById('darkSlider');
+    const knob=document.getElementById('darkKnob');
+    if(slider) slider.style.background=dark==='true'?'var(--g600)':'#ccc';
+    if(knob) knob.style.transform=dark==='true'?'translateX(24px)':'translateX(0)';
+  }, 100);
+}
+
+// Page load-এ theme apply করুন
+applyThemeFromStorage();
 
 // ===== CATEGORY MANAGEMENT =====
 let catOptionsHTML = ''; // Cache for dropdowns
