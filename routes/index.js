@@ -43,6 +43,36 @@ router.get('/categories', authenticate, async (req, res) => {
     }
 });
 
+// নতুন ক্যাটাগরি যোগ (Admin only)
+router.post('/categories', authenticate, adminOnly, async (req, res) => {
+    const { name_bn, name_en } = req.body;
+    if (!name_bn) return res.status(400).json({ success: false, message: 'বাংলা নাম দিন।' });
+    try {
+        const exists = await db.query('SELECT id FROM categories WHERE name_bn=$1', [name_bn]);
+        if (exists.rows.length) return res.status(400).json({ success: false, message: 'এই ক্যাটাগরি আগে থেকে আছে।' });
+        const result = await db.query(
+            'INSERT INTO categories (name_bn, name_en) VALUES ($1,$2) RETURNING *',
+            [name_bn, name_en || null]
+        );
+        res.json({ success: true, message: 'ক্যাটাগরি যোগ হয়েছে।', data: result.rows[0] });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// ক্যাটাগরি মুছুন (Admin only)
+router.delete('/categories/:id', authenticate, adminOnly, async (req, res) => {
+    try {
+        const used = await db.query('SELECT COUNT(*) FROM seedlings WHERE category_id=$1', [req.params.id]);
+        if (parseInt(used.rows[0].count) > 0)
+            return res.status(400).json({ success: false, message: 'এই ক্যাটাগরিতে চারা আছে — মুছা যাবে না।' });
+        await db.query('DELETE FROM categories WHERE id=$1', [req.params.id]);
+        res.json({ success: true, message: 'ক্যাটাগরি মুছে ফেলা হয়েছে।' });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // ============================================================
 // SEEDLING ROUTES - /api/seedlings
 // ============================================================

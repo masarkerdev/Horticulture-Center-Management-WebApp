@@ -819,10 +819,15 @@ function delItem(endpoint,id,msg){
 }
 
 // ===== DROPDOWNS =====
-async function loadDD(){try{const d=await api('/seedlings?limit=200');if(d.success){const o=d.data.map(s=>`<option value="${s.id}" data-price="${s.unit_price}">${s.name_bn}${s.variety?' ('+s.variety+')':''}</option>`).join('');saleOptionsHTML=o;['pSd','dSd','mSd'].forEach(id=>{const el=document.getElementById(id);if(el){el.innerHTML=o}});resetSaleModal();}
-const m=await api('/mother-plants');if(m.success)document.getElementById('pMP').innerHTML='<option value="">--</option>'+m.data.map(x=>`<option value="${x.id}">${x.mp_code} - ${x.variety}</option>`).join('');
-const bt=await api('/production');if(bt.success)document.getElementById('dBt').innerHTML='<option value="">-- নির্বাচন করুন</option>'+bt.data.map(x=>`<option value="${x.id}">${x.batch_code}</option>`).join('');
-}catch(e){}}
+async function loadDD(){
+  try{
+    await loadCategories(); // ✅ Category dropdown সব জায়গায় আপডেট হবে
+    const d=await api('/seedlings?limit=200');
+    if(d.success){const o=d.data.map(s=>`<option value="${s.id}" data-price="${s.unit_price}">${s.name_bn}${s.variety?' ('+s.variety+')':''}</option>`).join('');saleOptionsHTML=o;['pSd','dSd','mSd'].forEach(id=>{const el=document.getElementById(id);if(el){el.innerHTML=o}});resetSaleModal();}
+    const m=await api('/mother-plants');if(m.success)document.getElementById('pMP').innerHTML='<option value="">--</option>'+m.data.map(x=>`<option value="${x.id}">${x.mp_code} - ${x.variety}</option>`).join('');
+    const bt=await api('/production');if(bt.success)document.getElementById('dBt').innerHTML='<option value="">-- নির্বাচন করুন</option>'+bt.data.map(x=>`<option value="${x.id}">${x.batch_code}</option>`).join('');
+  }catch(e){}
+}
 
 // ===== BATCH MANAGEMENT =====
 async function lBatch(){
@@ -960,9 +965,9 @@ function openProfile(){
 
 // ===== SETTINGS PAGE LOAD =====
 function lCfg(){
-  // প্রোফাইল তথ্য fill করুন
   document.getElementById('prName').value=ME.name||'';
   document.getElementById('prEmail').value=ME.email||'';
+  loadCategories(); // ✅ Category list লোড করুন
 }
 
 // প্রোফাইল আপডেট
@@ -990,6 +995,66 @@ async function updateProfile(){
     }else{
       toast(d.message||'সমস্যা হয়েছে',1);
     }
+  }catch(e){toast('সমস্যা',1);}
+}
+
+// ===== CATEGORY MANAGEMENT =====
+let catOptionsHTML = ''; // Cache for dropdowns
+
+async function loadCategories(){
+  try{
+    const d = await api('/categories');
+    if(!d.success) return;
+    const cats = d.data;
+
+    // Dropdown options cache
+    catOptionsHTML = cats.map(c=>`<option value="${c.id}">${c.name_bn}</option>`).join('');
+
+    // Filter dropdown (চারা তালিকা)
+    const sCatF = document.getElementById('sCatF');
+    if(sCatF) sCatF.innerHTML = `<option value="">সব ক্যাটাগরি</option>${catOptionsHTML}`;
+
+    // Seedling form dropdown
+    const sCat = document.getElementById('sCat');
+    if(sCat) sCat.innerHTML = catOptionsHTML;
+
+    // Settings page category list
+    const catList = document.getElementById('catList');
+    if(catList){
+      if(!cats.length){catList.innerHTML='<div class="lt">কোনো ক্যাটাগরি নেই</div>';return;}
+      catList.innerHTML=`<div class="tw"><table><thead><tr><th>#</th><th>বাংলা নাম</th><th>English</th><th>কার্যক্রম</th></tr></thead><tbody>
+      ${cats.map((c,i)=>`<tr>
+        <td>${toBnNum(i+1)}</td>
+        <td><strong>${c.name_bn}</strong></td>
+        <td style="color:var(--tm)">${c.name_en||'—'}</td>
+        <td>${ME.role==='admin'?`<button class="btn btns btnr" onclick="deleteCategory(${c.id},'${c.name_bn}')"><i class="ti ti-trash"></i></button>`:'—'}</td>
+      </tr>`).join('')}
+      </tbody></table></div>`;
+    }
+  }catch(e){}
+}
+
+async function addCategory(){
+  const bn = document.getElementById('newCatBn')?.value?.trim();
+  const en = document.getElementById('newCatEn')?.value?.trim();
+  if(!bn) return toast('বাংলা নাম দিন',1);
+  try{
+    const d = await api('/categories',{method:'POST',body:JSON.stringify({name_bn:bn,name_en:en||null})});
+    if(d.success){
+      toast('ক্যাটাগরি যোগ হয়েছে ✅');
+      document.getElementById('newCatBn').value='';
+      document.getElementById('newCatEn').value='';
+      loadCategories();
+    }else toast(d.message||'সমস্যা',1);
+  }catch(e){toast('সমস্যা',1);}
+}
+
+async function deleteCategory(id, name){
+  if(!confirm(`"${name}" মুছে ফেলবেন?`)) return;
+  try{
+    const d = await api('/categories/'+id,{method:'DELETE'});
+    if(d.success){toast('মুছে ফেলা হয়েছে');loadCategories();}
+    else toast(d.message||'সমস্যা',1);
   }catch(e){toast('সমস্যা',1);}
 }
 
