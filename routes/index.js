@@ -303,8 +303,10 @@ router.delete('/production-batches/:id', authenticate, adminOrManager, async (re
             await db.query('INSERT INTO recycle_bin (table_name,record_id,record_data,module,item_name,deleted_by) VALUES ($1,$2,$3,$4,$5,$6)',
                 ['production_batches', req.params.id, JSON.stringify(item.rows[0]), 'উৎপাদন ব্যাচ', item.rows[0].batch_code, req.user.id]);
         }
-        await db.query('DELETE FROM stock_transactions WHERE batch_id = $1', [req.params.id]);
-        await db.query('DELETE FROM production_batches WHERE id = $1', [req.params.id]);
+        // Foreign key references ঠিক করুন
+        await db.query('UPDATE sales_items SET batch_id=NULL WHERE batch_id=$1', [req.params.id]);
+        await db.query('DELETE FROM stock_transactions WHERE batch_id=$1', [req.params.id]);
+        await db.query('DELETE FROM production_batches WHERE id=$1', [req.params.id]);
         res.json({ success: true, message: 'ব্যাচ Recycle Bin-এ পাঠানো হয়েছে।' });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });

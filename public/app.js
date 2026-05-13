@@ -444,7 +444,7 @@ document.getElementById('pSTbl').innerHTML=sd.length?sd.map(b=>`<tr>
 <td><span class="b bg">${b.status}</span></td>
 <td><div style="display:flex;gap:4px">
 <button class="btn btns btne" onclick="editBatch(${JSON.stringify(b).replace(/"/g,'&quot;')})" title="সম্পাদনা"><i class="ti ti-edit"></i></button>
-<button class="btn btns btnr" onclick="delItem('production-batches',b.id,'ব্যাচ '+b.batch_code)" title="মুছুন"><i class="ti ti-trash"></i></button>
+<button class="btn btns btnr" onclick="delItem('production-batches',${b.id},'ব্যাচ ${b.batch_code}')" title="মুছুন"><i class="ti ti-trash"></i></button>
 </div></td></tr>`).join(''):'<tr><td colspan="9" class="lt">বীজ উৎপাদন নেই</td></tr>';
 document.getElementById('pATbl').innerHTML=ad.length?ad.map(b=>`<tr>
 <td><strong style="color:var(--g600)">${b.batch_code}</strong></td>
@@ -458,7 +458,7 @@ document.getElementById('pATbl').innerHTML=ad.length?ad.map(b=>`<tr>
 <td><span class="b bg">${b.status}</span></td>
 <td><div style="display:flex;gap:4px">
 <button class="btn btns btne" onclick="editBatch(${JSON.stringify(b).replace(/"/g,'&quot;')})" title="সম্পাদনা"><i class="ti ti-edit"></i></button>
-<button class="btn btns btnr" onclick="delItem('production-batches',b.id,'ব্যাচ '+b.batch_code)" title="মুছুন"><i class="ti ti-trash"></i></button>
+<button class="btn btns btnr" onclick="delItem('production-batches',${b.id},'ব্যাচ ${b.batch_code}')" title="মুছুন"><i class="ti ti-trash"></i></button>
 </div></td></tr>`).join(''):'<tr><td colspan="10" class="lt">অঙ্গজ উৎপাদন নেই</td></tr>'
 }catch(e){}}
 
@@ -518,7 +518,7 @@ function clearProdModal(){
 }
 
 // ===== MOTHER =====
-async function lMoth(){try{const d=await api('/mother-plants');document.getElementById('mTbl').innerHTML=d.data?.length?d.data.map(m=>`<tr><td><strong>${m.mp_code}</strong></td><td>${m.variety}</td><td>${m.age_years||'-'} বছর</td><td>${m.location||'-'}</td><td><span class="b ${m.health_status==='excellent'?'bg':m.health_status==='good'?'ba':'br'}">${HN[m.health_status]||m.health_status}</span></td><td><span class="b bg">সক্রিয়</span></td><td><button class="btn btns btnr" onclick="delItem('mother-plants',m.id,m.mp_code+' '+m.variety)"><i class="ti ti-trash"></i></button></td></tr>`).join(''):'<tr><td colspan="7" class="lt">মাদার প্ল্যান্ট নেই</td></tr>'}catch(e){}}
+async function lMoth(){try{const d=await api('/mother-plants');document.getElementById('mTbl').innerHTML=d.data?.length?d.data.map(m=>`<tr><td><strong>${m.mp_code}</strong></td><td>${m.variety}</td><td>${m.age_years||'-'} বছর</td><td>${m.location||'-'}</td><td><span class="b ${m.health_status==='excellent'?'bg':m.health_status==='good'?'ba':'br'}">${HN[m.health_status]||m.health_status}</span></td><td><span class="b bg">সক্রিয়</span></td><td><button class="btn btns btnr" onclick="delItem('mother-plants',${m.id},'${m.mp_code} ${m.variety}')"><i class="ti ti-trash"></i></button></td></tr>`).join(''):'<tr><td colspan="7" class="lt">মাদার প্ল্যান্ট নেই</td></tr>'}catch(e){}}
 
 async function saveMoth(){const b={variety:document.getElementById('mV').value,seedling_id:+document.getElementById('mSd').value||null,age_years:+document.getElementById('mAg').value||null,location:document.getElementById('mLo').value,health_status:document.getElementById('mH').value,notes:document.getElementById('mNt').value};if(!b.variety||!b.location)return toast('জাত ও অবস্থান দিন',1);try{const d=await api('/mother-plants',{method:'POST',body:JSON.stringify(b)});if(d.success){toast('মাদার প্ল্যান্ট যোগ ✅');cM('mMoth');lMoth()}else toast(d.message||'সমস্যা',1)}catch(e){toast('সমস্যা',1)}}
 
@@ -551,7 +551,7 @@ document.getElementById('salB').innerHTML=sl.data?.length?sl.data.map(x=>`<tr>
 <button class="btn btns" onclick="viewInv(${x.id})" title="দেখুন"><i class="ti ti-eye"></i></button>
 <button class="btn btns" onclick="printSale(${x.id})" title="প্রিন্ট"><i class="ti ti-printer"></i></button>
 <button class="btn btns btne" onclick="editSale(${JSON.stringify(x).replace(/"/g,'&quot;')})" title="সম্পাদনা"><i class="ti ti-edit"></i></button>
-<button class="btn btns btnr" onclick="delItem('sales',x.id,'চালান '+x.invoice_no)" title="মুছুন"><i class="ti ti-trash"></i></button>
+<button class="btn btns btnr" onclick="delItem('sales',${x.id},'চালান ${x.invoice_no}')" title="মুছুন"><i class="ti ti-trash"></i></button>
 </div></td></tr>`).join(''):'<tr><td colspan="7" class="lt">কোনো বিক্রয় নেই</td></tr>'
 }catch(e){}}
 
@@ -754,7 +754,7 @@ async function saveSale(){
 }
 
 // ===== CUSTOMERS =====
-async function lCust(){try{const s=document.getElementById('cSearch')?.value||'';const d=await api('/customers'+(s?'?search='+encodeURIComponent(s):''));document.getElementById('cTbl').innerHTML=d.data?.length?d.data.map(c=>`<tr><td><strong>${c.name}</strong></td><td>${c.phone||'-'}</td><td>${c.address||'-'}</td><td>${c.total_orders||0}টি</td><td>৳${parseFloat(c.total_spent||0).toLocaleString()}</td><td><div style="display:flex;gap:4px"><button class="btn btns btne" onclick="editCust(${JSON.stringify(c).replace(/"/g,'&quot;')})"><i class="ti ti-edit"></i></button><button class="btn btns btnr" onclick="delItem('customers',c.id,c.name)"><i class="ti ti-trash"></i></button></div></td></tr>`).join(''):'<tr><td colspan="6" class="lt">গ্রাহক নেই</td></tr>'}catch(e){}}
+async function lCust(){try{const s=document.getElementById('cSearch')?.value||'';const d=await api('/customers'+(s?'?search='+encodeURIComponent(s):''));document.getElementById('cTbl').innerHTML=d.data?.length?d.data.map(c=>`<tr><td><strong>${c.name}</strong></td><td>${c.phone||'-'}</td><td>${c.address||'-'}</td><td>${c.total_orders||0}টি</td><td>৳${parseFloat(c.total_spent||0).toLocaleString()}</td><td><div style="display:flex;gap:4px"><button class="btn btns btne" onclick="editCust(${JSON.stringify(c).replace(/"/g,'&quot;')})"><i class="ti ti-edit"></i></button><button class="btn btns btnr" onclick="delItem('customers',${c.id},'${c.name}')"><i class="ti ti-trash"></i></button></div></td></tr>`).join(''):'<tr><td colspan="6" class="lt">গ্রাহক নেই</td></tr>'}catch(e){}}
 
 function editCust(c){document.getElementById('mCustT').textContent='গ্রাহক সম্পাদনা';document.getElementById('cId').value=c.id;document.getElementById('cNm').value=c.name||'';document.getElementById('cPh').value=c.phone||'';document.getElementById('cAd').value=c.address||'';document.getElementById('cEm').value=c.email||'';oM('mCust')}
 
@@ -780,7 +780,7 @@ async function lUsr(){
 ${ME.role==='admin'&&u.password_request_status==='pending'?`<button class="btn btns" style="background:var(--g50);color:var(--g600)" onclick="approvePwd(${u.id})" title="অনুমোদন"><i class="ti ti-check"></i></button><button class="btn btns btnr" onclick="rejectPwd(${u.id})" title="প্রত্যাখ্যান"><i class="ti ti-x"></i></button>`:''}
 <button class="btn btns btne" onclick="editUsr(${JSON.stringify(u).replace(/"/g,'&quot;')})" title="সম্পাদনা"><i class="ti ti-edit"></i></button>
 <button class="btn btns" style="${u.is_active?'background:var(--a50);color:var(--a400)':'background:var(--g50);color:var(--g600)'}" onclick="toggleUser(${u.id},'${u.name}')" title="${u.is_active?'নিষ্ক্রিয় করুন':'সক্রিয় করুন'}"><i class="ti ti-${u.is_active?'lock':'lock-open'}"></i></button>
-<button class="btn btns btnr" onclick="delItem('users',u.id,u.name)" title="স্থায়ীভাবে মুছুন"><i class="ti ti-trash"></i></button>
+<button class="btn btns btnr" onclick="delItem('users',${u.id},'${u.name}')" title="স্থায়ীভাবে মুছুন"><i class="ti ti-trash"></i></button>
 </div></td></tr>`).join('')||''}
   catch(e){document.getElementById('uTbl').innerHTML='<tr><td colspan="5" class="lt">শুধু Admin দেখতে পারে</td></tr>'}
 }
@@ -931,7 +931,7 @@ return`<tr>
 <td>${statusBadge[b.status]||b.status}</td>
 <td><div style="display:flex;gap:4px">
 <button class="btn btns btne" onclick="editBatch(${JSON.stringify(b).replace(/"/g,'&quot;')})" title="সম্পাদনা"><i class="ti ti-edit"></i></button>
-<button class="btn btns btnr" onclick="delItem('production-batches',b.id,'ব্যাচ '+b.batch_code)" title="মুছুন"><i class="ti ti-trash"></i></button>
+<button class="btn btns btnr" onclick="delItem('production-batches',${b.id},'ব্যাচ ${b.batch_code}')" title="মুছুন"><i class="ti ti-trash"></i></button>
 </div></td></tr>`}).join(''):'<tr><td colspan="11" class="lt">কোনো ব্যাচ নেই</td></tr>';
 }catch(e){document.getElementById('bTbl').innerHTML='<tr><td colspan="11" class="lt" style="color:var(--r400)">লোড সমস্যা</td></tr>'}}
 
