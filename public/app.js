@@ -154,7 +154,7 @@ function applyRoleSidebar(){
 
   // সব nav item-এর access নির্ধারণ করুন
   const access={
-    admin:       ['dash','seed','prod','moth','batch','stk','dmg','sale','cust','rep','usr','cfg'],
+    admin:       ['dash','seed','prod','moth','batch','stk','dmg','sale','cust','rep','usr','cfg','bin'],
     manager:     ['dash','seed','prod','moth','batch','stk','dmg','sale','cust','rep','usr'],
     production_officer: ['dash','seed','prod','moth','batch','stk','dmg','rep'],
     sales_operator:     ['dash','sale','cust','stk','rep'],
@@ -293,7 +293,7 @@ document.getElementById('lp2').addEventListener('keypress',e=>{if(e.key==='Enter
 
 // NAV
 const tls={dash:'ড্যাশবোর্ড',seed:'চারা তালিকা',prod:'উৎপাদন রেজিস্টার',moth:'মাদার প্ল্যান্ট',batch:'ব্যাচ ম্যানেজমেন্ট',stk:'স্টক রেজিস্টার',dmg:'ক্ষতি / নষ্ট',sale:'বিক্রয় ও চালান',cust:'গ্রাহক তালিকা',rep:'রিপোর্ট ও বিশ্লেষণ',usr:'ব্যবহারকারী',cfg:'সেটিংস'};
-const lrs={dash:lDash,seed:lSeed,prod:lProd,moth:lMoth,batch:lBatch,stk:lStk,dmg:lDmg,sale:lSale,cust:lCust,usr:lUsr,rep:()=>{lBestSelling();lTargetAchievement();},cfg:lCfg};
+const lrs={dash:lDash,seed:lSeed,prod:lProd,moth:lMoth,batch:lBatch,stk:lStk,dmg:lDmg,sale:lSale,cust:lCust,usr:lUsr,rep:()=>{lBestSelling();lTargetAchievement();},cfg:lCfg,bin:lRecycleBin};
 function go(id,el){document.querySelectorAll('.pg').forEach(p=>p.classList.remove('active'));document.getElementById('pg-'+id).classList.add('active');document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));if(el)el.classList.add('active');document.getElementById('pt').textContent=tls[id]||id;cSB();lrs[id]?.()}
 function tSB(){document.getElementById('sb').classList.toggle('open');document.getElementById('sov').classList.toggle('open')}
 function cSB(){document.getElementById('sb').classList.remove('open');document.getElementById('sov').classList.remove('open')}
@@ -793,31 +793,95 @@ async function saveUsr(){const id=document.getElementById('uId').value;const b={
 async function loadPL(){try{const f=document.getElementById('plFr').value,t=document.getElementById('plTo').value;const d=await api('/reports/profit-loss'+(f?'?from_date='+f+(t?'&to_date='+t:''):''));if(d.success){const r=d.data;document.getElementById('plRev').textContent='৳'+parseFloat(r.total_revenue).toLocaleString();document.getElementById('plCost').textContent='৳'+parseFloat(r.total_cost).toLocaleString();document.getElementById('plNet').textContent='৳'+parseFloat(r.profit).toLocaleString();document.getElementById('plNet').style.color=r.profit>=0?'var(--g600)':'var(--r400)';document.getElementById('plMg').textContent=r.profit_margin+'%';document.getElementById('plRes').style.display='block'}}catch(e){toast('রিপোর্ট লোড সমস্যা',1)}}
 
 // ===== DELETE =====
-function delItem(endpoint,id,msg){
-  document.getElementById('delMsg').textContent=msg||'মুছবেন?';
-  document.getElementById('delBtn').onclick=async()=>{
+// ===== CUSTOM CONFIRM MODAL =====
+let confirmCallback=null;
+function showConfirm(msg, onYes){
+  document.getElementById('confirmMsg').innerHTML=msg;
+  confirmCallback=onYes;
+  oM('mConfirm');
+}
+function confirmYes(){cM('mConfirm');if(confirmCallback)confirmCallback();confirmCallback=null;}
+function confirmNo(){cM('mConfirm');confirmCallback=null;}
+
+function delItem(endpoint,id,name){
+  showConfirm(`<div style="text-align:center;margin-bottom:8px;font-size:32px">🗑️</div>
+    <strong>"${name||'এই item'}"</strong> মুছে ফেলবেন?<br>
+    <span style="font-size:12px;color:var(--tm);margin-top:8px;display:block">মুছলে Recycle Bin-এ যাবে — পরে পুনরুদ্ধার করা যাবে।</span>`,
+  async()=>{
     try{
       const d=await api('/'+endpoint+'/'+id,{method:'DELETE'});
       if(d.success){
-        toast('মুছে ফেলা হয়েছে ✅');
-        cM('mDel');
-        // ✅ সব endpoint-এর জন্য সঠিক reload function
+        toast('"'+(name||'item')+'" Recycle Bin-এ পাঠানো হয়েছে 🗑️');
         const refreshMap={
-          'seedlings':lSeed,
-          'customers':lCust,
-          'users':lUsr,
-          'mother-plants':lMoth,
-          'sales':()=>{lSale();},          // ✅ বিক্রয় তাৎক্ষণিক রিফ্রেশ
-          'production-batches':()=>{lProd();lBatch();}, // ✅ ব্যাচ রিফ্রেশ
-          'damages':lDmg,                  // ✅ ক্ষতি রিফ্রেশ
+          'seedlings':lSeed,'customers':lCust,'users':lUsr,
+          'mother-plants':lMoth,'sales':lSale,
+          'production-batches':()=>{lProd();lBatch();},'damages':lDmg,
+          'categories':loadCategories,'targets':lTargetAchievement
         };
         refreshMap[endpoint]?.();
-      }else{
-        toast(d.message||'মুছতে সমস্যা হয়েছে',1);
-      }
+      }else toast(d.message||'মুছতে সমস্যা',1);
     }catch(e){toast('সার্ভার সমস্যা',1);}
-  };
-  oM('mDel');
+  });
+}
+
+// ===== RECYCLE BIN =====
+async function lRecycleBin(){
+  const el=document.getElementById('recycleBinList');
+  if(el) el.innerHTML='<div class="lt">লোড হচ্ছে...</div>';
+  try{
+    const d=await api('/recycle-bin');
+    if(!d.success||!d.data.length){
+      if(el) el.innerHTML='<div style="text-align:center;padding:40px;color:var(--tm)"><div style="font-size:48px;margin-bottom:10px">🗑️</div><div>Recycle Bin খালি</div></div>';
+      return;
+    }
+    if(el) el.innerHTML=`<div class="tw"><table><thead><tr>
+      <th>আইটেম</th><th>মডিউল</th><th>মুছেছেন</th><th>তারিখ</th><th>কার্যক্রম</th>
+    </tr></thead><tbody>
+    ${d.data.map(r=>`<tr>
+      <td><strong>${r.item_name||'—'}</strong></td>
+      <td><span class="b bg">${r.module||r.table_name}</span></td>
+      <td>${r.deleted_by_name||'—'}</td>
+      <td>${fmtDMY(r.deleted_at)}</td>
+      <td><div style="display:flex;gap:4px">
+        <button class="btn btns" style="background:var(--g50);color:var(--g600)" onclick="restoreItem(${r.id},'${r.item_name||''}')"><i class="ti ti-restore"></i> পুনরুদ্ধার</button>
+        <button class="btn btns btnr" onclick="permDelete(${r.id},'${r.item_name||''}')"><i class="ti ti-trash"></i></button>
+      </div></td>
+    </tr>`).join('')}
+    </tbody></table></div>
+    <div style="margin-top:12px;text-align:right">
+      <button class="btn btnr" onclick="emptyBin()"><i class="ti ti-trash"></i> সব মুছুন</button>
+    </div>`;
+  }catch(e){if(el)el.innerHTML='<div class="lt">লোড সমস্যা</div>';}
+}
+
+async function restoreItem(id, name){
+  showConfirm(`♻️ "${name}" পুনরুদ্ধার করবেন?`, async()=>{
+    try{
+      const d=await api('/recycle-bin/'+id+'/restore',{method:'POST'});
+      if(d.success){toast('"'+name+'" পুনরুদ্ধার হয়েছে ✅');lRecycleBin();}
+      else toast(d.message||'সমস্যা',1);
+    }catch(e){toast('সমস্যা',1);}
+  });
+}
+
+async function permDelete(id, name){
+  showConfirm(`⚠️ "${name}" চিরতরে মুছে ফেলবেন?\nএটা পুনরুদ্ধার করা যাবে না!`, async()=>{
+    try{
+      const d=await api('/recycle-bin/'+id,{method:'DELETE'});
+      if(d.success){toast('স্থায়ীভাবে মুছে ফেলা হয়েছে');lRecycleBin();}
+      else toast(d.message||'সমস্যা',1);
+    }catch(e){toast('সমস্যা',1);}
+  });
+}
+
+async function emptyBin(){
+  showConfirm('⚠️ Recycle Bin সম্পূর্ণ খালি করবেন?\nসব item চিরতরে মুছে যাবে!', async()=>{
+    try{
+      const d=await api('/recycle-bin',{method:'DELETE'});
+      if(d.success){toast('Recycle Bin খালি করা হয়েছে');lRecycleBin();}
+      else toast(d.message||'সমস্যা',1);
+    }catch(e){toast('সমস্যা',1);}
+  });
 }
 
 // ===== DROPDOWNS =====

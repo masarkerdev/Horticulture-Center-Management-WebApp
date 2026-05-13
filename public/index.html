@@ -43,6 +43,7 @@
 <div class="ni" onclick="go('rep',this)"><i class="ti ti-chart-bar"></i> রিপোর্ট ও বিশ্লেষণ</div>
 <div class="ss">সিস্টেম</div>
 <div class="ni" onclick="go('usr',this)"><i class="ti ti-shield-check"></i> ব্যবহারকারী</div>
+<div class="ni" onclick="go('bin',this)"><i class="ti ti-trash"></i> Recycle Bin</div>
 <div class="ni" onclick="go('cfg',this)"><i class="ti ti-settings"></i> সেটিংস</div>
 </div>
 <div class="sbu"><div class="av0" id="uav">MA</div><div><div style="font-size:12px;color:#fff;font-weight:500" id="unn">Admin</div><div style="font-size:10px;color:var(--st);opacity:.7" id="url">admin</div></div>
@@ -421,6 +422,24 @@
 </div></div>
 
 <!-- পাসওয়ার্ড পরিবর্তন অনুরোধ Modal (🔑 বাটনের জন্য) -->
+<!-- CUSTOM CONFIRM MODAL -->
+<div class="mo" id="mConfirm"><div class="md" style="max-width:400px;text-align:center">
+<div style="padding:20px 10px"><div id="confirmMsg" style="font-size:14px;line-height:1.8;color:var(--tp)"></div></div>
+<div style="display:flex;gap:10px;justify-content:center;padding-bottom:16px">
+<button class="btn" onclick="confirmNo()" style="min-width:100px">বাতিল</button>
+<button class="btn btnr" onclick="confirmYes()" style="min-width:100px"><i class="ti ti-check"></i> হ্যাঁ, মুছুন</button>
+</div>
+</div></div>
+
+<!-- RECYCLE BIN PAGE -->
+<div class="pg" id="pg-bin">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+<div style="font-size:13px;color:var(--tm)">🗑️ মুছে ফেলা items — পুনরুদ্ধার করা যাবে</div>
+<button class="btn btns btnr" onclick="emptyBin()"><i class="ti ti-trash"></i> সব মুছুন</button>
+</div>
+<div id="recycleBinList"><div class="lt">লোড হচ্ছে...</div></div>
+</div>
+
 <div class="mo" id="mPwdReq"><div class="md" style="max-width:420px">
 <div class="mh"><h3>পাসওয়ার্ড পরিবর্তনের অনুরোধ</h3><button class="mx" onclick="cM('mPwdReq')"><i class="ti ti-x"></i></button></div>
 <div style="background:var(--b50);border-radius:8px;padding:12px;margin-bottom:16px;font-size:13px;color:var(--b600)"><i class="ti ti-info-circle"></i> আপনার নতুন পাসওয়ার্ড Admin অনুমোদন করলে কার্যকর হবে।</div>

@@ -81,7 +81,17 @@ router.get   ('/seedlings',            authenticate,                   getAllSee
 router.get   ('/seedlings/:id',        authenticate,                   getSeedlingById);
 router.post  ('/seedlings',            authenticate, canProduce,        createSeedling);
 router.put   ('/seedlings/:id',        authenticate, canProduce,        updateSeedling);
-router.delete('/seedlings/:id',        authenticate, adminOrManager,    deleteSeedling);
+router.delete('/seedlings/:id', authenticate, adminOrManager, async (req, res) => {
+    try {
+        const item = await db.query('SELECT * FROM seedlings WHERE id=$1', [req.params.id]);
+        if (item.rows.length) {
+            await db.query('INSERT INTO recycle_bin (table_name,record_id,record_data,module,item_name,deleted_by) VALUES ($1,$2,$3,$4,$5,$6)',
+                ['seedlings', req.params.id, JSON.stringify(item.rows[0]), 'চারা তালিকা', item.rows[0].name_bn, req.user.id]);
+        }
+        await db.query('DELETE FROM seedlings WHERE id=$1', [req.params.id]);
+        res.json({ success: true, message: 'চারা Recycle Bin-এ পাঠানো হয়েছে।' });
+    } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+});
 
 // ============================================================
 // PRODUCTION ROUTES - /api/production
@@ -272,12 +282,15 @@ router.put('/sales/:id', authenticate, canSell, async (req, res) => {
 // ============================================================
 router.delete('/sales/:id', authenticate, adminOrManager, async (req, res) => {
     try {
+        const item = await db.query('SELECT * FROM sales WHERE id=$1', [req.params.id]);
+        if (item.rows.length) {
+            await db.query('INSERT INTO recycle_bin (table_name,record_id,record_data,module,item_name,deleted_by) VALUES ($1,$2,$3,$4,$5,$6)',
+                ['sales', req.params.id, JSON.stringify(item.rows[0]), 'বিক্রয়', item.rows[0].invoice_no, req.user.id]);
+        }
         await db.query('DELETE FROM sales_items WHERE sale_id = $1', [req.params.id]);
         await db.query('DELETE FROM sales WHERE id = $1', [req.params.id]);
-        res.json({ success: true, message: 'বিক্রয় মুছে ফেলা হয়েছে।' });
-    } catch (err) {
-        res.status(500).json({ success: false, error: err.message });
-    }
+        res.json({ success: true, message: 'বিক্রয় Recycle Bin-এ পাঠানো হয়েছে।' });
+    } catch (err) { res.status(500).json({ success: false, error: err.message }); }
 });
 
 // ============================================================
@@ -568,6 +581,61 @@ router.get('/reports/fiscal-achievement', authenticate, async (req, res) => {
             }
         });
     } catch(err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// ============================================================
+// RECYCLE BIN ROUTES
+// ============================================================
+router.get('/recycle-bin', authenticate, adminOnly, async (req, res) => {
+    try {
+        const result = await db.query(
+            `SELECT rb.*, u.name AS deleted_by_name
+             FROM recycle_bin rb
+             LEFT JOIN users u ON rb.deleted_by = u.id
+             ORDER BY rb.deleted_at DESC`
+        );
+        res.json({ success: true, data: result.rows });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Restore করুন
+router.post('/recycle-bin/:id/restore', authenticate, adminOnly, async (req, res) => {
+    try {
+        const item = await db.query('SELECT * FROM recycle_bin WHERE id=$1', [req.params.id]);
+        if (!item.rows.length) return res.status(404).json({ success: false, message: 'পাওয়া যায়নি।' });
+        const { table_name, record_data } = item.rows[0];
+        const data = record_data;
+        const keys = Object.keys(data).join(',');
+        const vals = Object.values(data);
+        const phs = vals.map((_,i) => `$${i+1}`).join(',');
+        await db.query(`INSERT INTO ${table_name} (${keys}) VALUES (${phs}) ON CONFLICT DO NOTHING`, vals);
+        await db.query('DELETE FROM recycle_bin WHERE id=$1', [req.params.id]);
+        res.json({ success: true, message: 'সফলভাবে পুনরুদ্ধার হয়েছে।' });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// চিরতরে মুছুন
+router.delete('/recycle-bin/:id', authenticate, adminOnly, async (req, res) => {
+    try {
+        await db.query('DELETE FROM recycle_bin WHERE id=$1', [req.params.id]);
+        res.json({ success: true, message: 'স্থায়ীভাবে মুছে ফেলা হয়েছে।' });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// সব Recycle Bin খালি করুন
+router.delete('/recycle-bin', authenticate, adminOnly, async (req, res) => {
+    try {
+        await db.query('DELETE FROM recycle_bin');
+        res.json({ success: true, message: 'Recycle Bin খালি করা হয়েছে।' });
+    } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
 });
