@@ -693,6 +693,8 @@ function removeSaleItem(idx){
 }
 
 function onSeedChange(idx){
+  // Edit mode-এ price override করবে না
+  if(document.getElementById('mSale').dataset.editId) return;
   const sel=document.getElementById('slSd_'+idx);
   const price=sel?.options[sel.selectedIndex]?.dataset?.price||0;
   document.getElementById('slRt_'+idx).value=price;
@@ -905,14 +907,25 @@ async function editSale(s){
       detail.data.items.forEach(item=>{
         addSaleItem();
         const idx=saleItemCount-1;
+        // ✅ চারা সিলেক্ট করুন
         const sel=document.getElementById('slSd_'+idx);
-        if(sel){for(let i=0;i<sel.options.length;i++){if(parseInt(sel.options[i].value)===item.seedling_id){sel.selectedIndex=i;break;}}}
-        document.getElementById('slQt_'+idx).value=item.quantity||1;
-        document.getElementById('slRt_'+idx).value=item.unit_price||0;
+        if(sel){
+          for(let i=0;i<sel.options.length;i++){
+            if(parseInt(sel.options[i].value)===item.seedling_id){
+              sel.selectedIndex=i;break;
+            }
+          }
+        }
+        // ✅ পরিমাণ ও দর — সরাসরি set করুন (onchange override রোধ করুন)
+        const qtEl=document.getElementById('slQt_'+idx);
+        const rtEl=document.getElementById('slRt_'+idx);
+        if(qtEl) qtEl.value=item.quantity||1;
+        if(rtEl) rtEl.value=item.unit_price||0;
       });
-      calcAllItems();
+      // ✅ সব set হওয়ার পর মোট হিসাব করুন
+      setTimeout(()=>calcAllItems(), 50);
     }
-  }catch(e){}
+  }catch(e){console.log('editSale error:',e);}
   oM('mSale');
 }
 
