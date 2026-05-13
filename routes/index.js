@@ -327,13 +327,6 @@ router.delete('/mother-plants/:id', authenticate, adminOrManager, async (req, re
         res.status(500).json({ success: false, error: err.message });
     }
 });
-    try {
-        await db.query('UPDATE mother_plants SET is_active = FALSE WHERE id = $1', [req.params.id]);
-        res.json({ success: true, message: 'মাদার প্ল্যান্ট নিষ্ক্রিয় করা হয়েছে।' });
-    } catch (err) {
-        res.status(500).json({ success: false, error: err.message });
-    }
-});
 
 // ============================================================
 // DAMAGE DELETE - /api/damages/:id
