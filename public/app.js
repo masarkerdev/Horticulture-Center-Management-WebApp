@@ -834,7 +834,12 @@ async function lRecycleBin(){
       if(el) el.innerHTML='<div style="text-align:center;padding:60px;color:var(--tm)"><div style="font-size:64px;margin-bottom:12px">🗑️</div><div style="font-size:16px;font-weight:600">Recycle Bin খালি</div><div style="font-size:13px;margin-top:6px">মুছে ফেলা items এখানে দেখাবে</div></div>';
       return;
     }
-    if(el) el.innerHTML=`<div class="tw"><table><thead><tr>
+    if(el) el.innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="font-size:13px;color:var(--tm)">মোট ${toBnNum(d.data.length)}টি item — পুনরুদ্ধার করা যাবে</div>
+      <button class="btn btns btnr" onclick="emptyBin()"><i class="ti ti-trash"></i> সব মুছুন</button>
+    </div>
+    <div class="tw"><table><thead><tr>
       <th>আইটেমের নাম</th><th>মডিউল</th><th>মুছেছেন</th><th>তারিখ</th><th>কার্যক্রম</th>
     </tr></thead><tbody>
     ${d.data.map(r=>`<tr>
