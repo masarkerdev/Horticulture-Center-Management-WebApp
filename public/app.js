@@ -293,7 +293,7 @@ document.getElementById('lp2').addEventListener('keypress',e=>{if(e.key==='Enter
 
 // NAV
 const tls={dash:'ড্যাশবোর্ড',seed:'চারা তালিকা',prod:'উৎপাদন রেজিস্টার',moth:'মাদার প্ল্যান্ট',batch:'ব্যাচ ম্যানেজমেন্ট',stk:'স্টক রেজিস্টার',dmg:'ক্ষতি / নষ্ট',sale:'বিক্রয় ও চালান',cust:'গ্রাহক তালিকা',rep:'রিপোর্ট ও বিশ্লেষণ',usr:'ব্যবহারকারী',cfg:'সেটিংস',bin:'🗑️ Recycle Bin'};
-const lrs={dash:lDash,seed:lSeed,prod:lProd,moth:lMoth,batch:lBatch,stk:lStk,dmg:lDmg,sale:lSale,cust:lCust,usr:lUsr,rep:()=>{lBestSelling();lTargetAchievement();},cfg:lCfg,bin:lRecycleBin};
+const lrs={dash:lDash,seed:lSeed,prod:lProd,moth:lMoth,batch:lBatch,stk:lStk,dmg:lDmg,sale:lSale,cust:lCust,usr:lUsr,rep:()=>{lBestSelling();lTargetAchievement();},cfg:lCfg,bin:()=>lRecycleBin()};
 function go(id,el){document.querySelectorAll('.pg').forEach(p=>p.classList.remove('active'));document.getElementById('pg-'+id).classList.add('active');document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));if(el)el.classList.add('active');document.getElementById('pt').textContent=tls[id]||id;cSB();lrs[id]?.()}
 function tSB(){document.getElementById('sb').classList.toggle('open');document.getElementById('sov').classList.toggle('open')}
 function cSB(){document.getElementById('sb').classList.remove('open');document.getElementById('sov').classList.remove('open')}
@@ -831,7 +831,7 @@ async function lRecycleBin(){
   try{
     const d=await api('/recycle-bin');
     if(!d.success||!d.data.length){
-      if(el) el.innerHTML='<div style="text-align:center;padding:60px;color:var(--tm)"><div style="font-size:64px;margin-bottom:12px">🗑️</div><div style="font-size:16px;font-weight:600">Recycle Bin খালি</div><div style="font-size:13px;margin-top:6px">মুছে ফেলা items এখানে দেখাবে</div></div>';
+      if(el) el.innerHTML='<div style="text-align:center;padding:30px 20px;color:var(--tm)"><div style="font-size:48px;margin-bottom:10px">🗑️</div><div style="font-size:15px;font-weight:600">Recycle Bin খালি</div><div style="font-size:12px;margin-top:6px">মুছে ফেলা items এখানে দেখাবে</div></div>';
       return;
     }
     if(el) el.innerHTML=`
