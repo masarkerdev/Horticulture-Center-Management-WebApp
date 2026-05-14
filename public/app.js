@@ -427,6 +427,25 @@ try{
   }
 }catch(e){toast('সার্ভার সমস্যা',1)}}
 
+// নতুন চারা Modal খুলুন — category cache check করুন
+async function openSeedModal(){
+  // Category আগে থেকে loaded থাকলে সাথে সাথে দেখান
+  if(catOptionsHTML){
+    const sCat=document.getElementById('sCat');
+    if(sCat) sCat.innerHTML=catOptionsHTML;
+  }else{
+    // না থাকলে এখন load করুন
+    await loadCategories();
+  }
+  // Form reset
+  document.getElementById('sId').value='';
+  document.getElementById('mSeedT').textContent='নতুন চারা';
+  ['sNB','sNE','sV','sD'].forEach(x=>document.getElementById(x).value='');
+  document.getElementById('sP').value='';
+  document.getElementById('sC').value='';
+  oM('mSeed');
+}
+
 // ===== PRODUCTION =====
 async function lProd(){
 try{const d=await api('/production');if(!d.success)return;const all=d.data||[];const ac=all.filter(x=>x.status==='active').length,so=all.filter(x=>x.status==='sold_out').length;const av=all.reduce((s,x)=>{const r=+(x.success_percent||x.germination_percent||0);return s+r},0)/(all.length||1);
