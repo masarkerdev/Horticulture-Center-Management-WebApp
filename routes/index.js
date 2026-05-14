@@ -630,6 +630,8 @@ router.get('/reports/fiscal-achievement', authenticate, async (req, res) => {
                     target: parseFloat(curMonthTarget.rows[0]?.qty)||0,
                     actual: parseFloat(curMonthActual.rows[0]?.total)||0
                 },
+                production: {
+                    target: prodTarget,
                     monthly_target_sum: parseFloat(prodTargets.rows[0].total)||0,
                     actual: parseFloat(prodTotal.rows[0].total)||0
                 },
