@@ -548,9 +548,44 @@ async function saveMoth(){const b={variety:document.getElementById('mV').value,s
 async function lStk(){try{const d=await api('/stock');document.getElementById('sTblB').innerHTML=d.data?.length?d.data.map(s=>`<tr><td><strong>${s.name_bn}</strong>${s.variety?`<br><span style="font-size:12px;color:var(--tm)">${s.variety}</span>`:''}</td><td style="color:var(--g600)">+${toBnNum(s.total_in)}</td><td style="color:var(--c400)">-${toBnNum(s.total_out)}</td><td><strong style="${s.is_low_stock?'color:var(--c400)':''}">${toBnNum(s.current_stock)}</strong></td><td>${toBnMoney(s.current_stock*s.unit_price)}</td><td>${s.is_low_stock?'<span class="b br">সংকটজনক</span>':'<span class="b bg">ভালো</span>'}</td></tr>`).join(''):'<tr><td colspan="6" class="lt">নেই</td></tr>'}catch(e){}}
 
 // ===== DAMAGE =====
-async function lDmg(){try{const d=await api('/damages');document.getElementById('dTbl').innerHTML=d.data?.length?d.data.map(x=>`<tr><td>${fmtDMY(x.damage_date)}</td><td>${x.name_bn||'-'}</td><td>${x.batch_code||'-'}</td><td><strong>${x.quantity}</strong></td><td><span class="b br">${DN[x.reason]||x.reason}</span></td><td>${x.remarks||'-'}</td><td>${x.reporter||'-'}</td></tr>`).join(''):'<tr><td colspan="7" class="lt">নেই</td></tr>'}catch(e){}}
+async function lDmg(){try{const d=await api('/damages');document.getElementById('dTbl').innerHTML=d.data?.length?d.data.map(x=>`<tr>
+<td>${fmtDMY(x.damage_date)}</td>
+<td>${x.name_bn||'-'}</td>
+<td>${x.batch_code||'-'}</td>
+<td><strong>${toBnNum(x.quantity)}</strong></td>
+<td><span class="b br">${DN[x.reason]||x.reason}</span></td>
+<td>${x.remarks||'-'}</td>
+<td>${x.reporter||'-'}</td>
+<td><div style="display:flex;gap:4px">
+<button class="btn btns btne" onclick='editDmg(${JSON.stringify(x).replace(/'/g,"&#39;")})' title="সম্পাদনা"><i class="ti ti-edit"></i></button>
+<button class="btn btns btnr" onclick="delItem('damages',${x.id},'ক্ষতি ${x.name_bn||''}')" title="মুছুন"><i class="ti ti-trash"></i></button>
+</div></td>
+</tr>`).join(''):'<tr><td colspan="8" class="lt">নেই</td></tr>'}catch(e){}}
 
-async function saveDmg(){const b={seedling_id:+document.getElementById('dSd').value,batch_id:+document.getElementById('dBt').value||null,damage_date:document.getElementById('dDt').value,quantity:+document.getElementById('dQt').value||0,reason:document.getElementById('dRs').value,remarks:document.getElementById('dRm').value};if(!b.quantity||!b.damage_date)return toast('তারিখ ও পরিমাণ দিন',1);try{const d=await api('/damages',{method:'POST',body:JSON.stringify(b)});if(d.success){toast('রিপোর্ট জমা ✅');cM('mDmg');lDmg()}else toast(d.error||'সমস্যা',1)}catch(e){toast('সমস্যা',1)}}
+function editDmg(x){
+  document.getElementById('mDmgT').textContent='ক্ষতি রিপোর্ট সম্পাদনা';
+  document.getElementById('dDmgId').value=x.id;
+  document.getElementById('dSd').value=x.seedling_id||'';
+  document.getElementById('dBt').value=x.batch_id||'';
+  document.getElementById('dDt').value=fmtDateInput(x.damage_date);
+  document.getElementById('dQt').value=x.quantity||'';
+  document.getElementById('dRs').value=x.reason||'other';
+  document.getElementById('dRm').value=x.remarks||'';
+  oM('mDmg');
+}
+
+async function saveDmg(){
+  const editId=document.getElementById('dDmgId')?.value;
+  const b={seedling_id:+document.getElementById('dSd').value,batch_id:+document.getElementById('dBt').value||null,damage_date:document.getElementById('dDt').value,quantity:+document.getElementById('dQt').value||0,reason:document.getElementById('dRs').value,remarks:document.getElementById('dRm').value};
+  if(!b.quantity||!b.damage_date)return toast('তারিখ ও পরিমাণ দিন',1);
+  try{
+    const url=editId?'/damages/'+editId:'/damages';
+    const method=editId?'PUT':'POST';
+    const d=await api(url,{method,body:JSON.stringify(b)});
+    if(d.success){toast(editId?'আপডেট হয়েছে ✅':'রিপোর্ট জমা ✅');cM('mDmg');lDmg();}
+    else toast(d.error||'সমস্যা',1);
+  }catch(e){toast('সমস্যা',1);}
+}
 
 // ===== SALES =====
 async function lSale(){

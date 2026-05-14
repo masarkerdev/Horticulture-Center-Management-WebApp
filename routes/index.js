@@ -351,6 +351,20 @@ router.delete('/mother-plants/:id', authenticate, adminOrManager, async (req, re
 });
 
 // ============================================================
+// DAMAGE UPDATE - /api/damages/:id
+router.put('/damages/:id', authenticate, adminOrManager, async (req, res) => {
+    const { seedling_id, batch_id, damage_date, quantity, reason, remarks } = req.body;
+    try {
+        await db.query(
+            `UPDATE damages SET seedling_id=$1, batch_id=$2, damage_date=$3, quantity=$4, reason=$5, remarks=$6 WHERE id=$7`,
+            [seedling_id, batch_id||null, damage_date, quantity, reason, remarks||null, req.params.id]
+        );
+        res.json({ success: true, message: 'ক্ষতি রিপোর্ট আপডেট হয়েছে।' });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // DAMAGE DELETE - /api/damages/:id
 // ============================================================
 router.delete('/damages/:id', authenticate, adminOrManager, async (req, res) => {
