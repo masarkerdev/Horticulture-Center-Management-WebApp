@@ -81,7 +81,24 @@ router.get   ('/seedlings',            authenticate,                   getAllSee
 router.get   ('/seedlings/:id',        authenticate,                   getSeedlingById);
 router.post  ('/seedlings',            authenticate, canProduce,        createSeedling);
 router.put   ('/seedlings/:id',        authenticate, canProduce,        updateSeedling);
-router.delete('/seedlings/:id',        authenticate, adminOrManager,    deleteSeedling);
+router.delete('/seedlings/:id', authenticate, adminOrManager, async (req, res) => {
+    try {
+        const item = await db.query('SELECT * FROM seedlings WHERE id=$1', [req.params.id]);
+        if (item.rows.length) {
+            await db.query('INSERT INTO recycle_bin (table_name,record_id,record_data,module,item_name,deleted_by) VALUES ($1,$2,$3,$4,$5,$6)',
+                ['seedlings', req.params.id, JSON.stringify(item.rows[0]), 'চারা তালিকা', item.rows[0].name_bn, req.user.id]);
+        }
+        // NOT NULL constraint আছে — DELETE করতে হবে
+        await db.query('DELETE FROM sales_items WHERE seedling_id=$1', [req.params.id]);
+        await db.query('DELETE FROM stock_transactions WHERE seedling_id=$1', [req.params.id]);
+        // NULL করা যায় এমন columns
+        await db.query('UPDATE mother_plants SET seedling_id=NULL WHERE seedling_id=$1', [req.params.id]);
+        await db.query('UPDATE production_batches SET seedling_id=NULL WHERE seedling_id=$1', [req.params.id]);
+        await db.query('UPDATE damages SET seedling_id=NULL WHERE seedling_id=$1', [req.params.id]);
+        await db.query('DELETE FROM seedlings WHERE id=$1', [req.params.id]);
+        res.json({ success: true, message: 'চারা Recycle Bin-এ পাঠানো হয়েছে।' });
+    } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+});
 
 // ============================================================
 // PRODUCTION ROUTES - /api/production
@@ -272,12 +289,15 @@ router.put('/sales/:id', authenticate, canSell, async (req, res) => {
 // ============================================================
 router.delete('/sales/:id', authenticate, adminOrManager, async (req, res) => {
     try {
+        const item = await db.query('SELECT * FROM sales WHERE id=$1', [req.params.id]);
+        if (item.rows.length) {
+            await db.query('INSERT INTO recycle_bin (table_name,record_id,record_data,module,item_name,deleted_by) VALUES ($1,$2,$3,$4,$5,$6)',
+                ['sales', req.params.id, JSON.stringify(item.rows[0]), 'বিক্রয়', item.rows[0].invoice_no, req.user.id]);
+        }
         await db.query('DELETE FROM sales_items WHERE sale_id = $1', [req.params.id]);
         await db.query('DELETE FROM sales WHERE id = $1', [req.params.id]);
-        res.json({ success: true, message: 'বিক্রয় মুছে ফেলা হয়েছে।' });
-    } catch (err) {
-        res.status(500).json({ success: false, error: err.message });
-    }
+        res.json({ success: true, message: 'বিক্রয় Recycle Bin-এ পাঠানো হয়েছে।' });
+    } catch (err) { res.status(500).json({ success: false, error: err.message }); }
 });
 
 // ============================================================
@@ -285,8 +305,21 @@ router.delete('/sales/:id', authenticate, adminOrManager, async (req, res) => {
 // ============================================================
 router.delete('/production-batches/:id', authenticate, adminOrManager, async (req, res) => {
     try {
-        await db.query('DELETE FROM stock_transactions WHERE batch_id = $1', [req.params.id]);
-        await db.query('DELETE FROM production_batches WHERE id = $1', [req.params.id]);
+        // Recycle bin-এ save করার চেষ্টা করুন (fail হলেও delete চলবে)
+        try {
+            const item = await db.query('SELECT * FROM production_batches WHERE id=$1', [req.params.id]);
+            if (item.rows.length) {
+                await db.query('INSERT INTO recycle_bin (table_name,record_id,record_data,module,item_name,deleted_by) VALUES ($1,$2,$3,$4,$5,$6)',
+                    ['production_batches', req.params.id, JSON.stringify(item.rows[0]), 'উৎপাদন ব্যাচ', item.rows[0].batch_code, req.user.id]);
+            }
+        } catch(rbErr) {
+            console.log('Recycle bin save skipped:', rbErr.message);
+        }
+        // Foreign key references ঠিক করুন তারপর delete করুন
+        await db.query('UPDATE damages SET batch_id=NULL WHERE batch_id=$1', [req.params.id]);
+        await db.query('UPDATE sales_items SET batch_id=NULL WHERE batch_id=$1', [req.params.id]);
+        await db.query('DELETE FROM stock_transactions WHERE batch_id=$1', [req.params.id]);
+        await db.query('DELETE FROM production_batches WHERE id=$1', [req.params.id]);
         res.json({ success: true, message: 'ব্যাচ মুছে ফেলা হয়েছে।' });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
@@ -298,8 +331,13 @@ router.delete('/production-batches/:id', authenticate, adminOrManager, async (re
 // ============================================================
 router.delete('/mother-plants/:id', authenticate, adminOrManager, async (req, res) => {
     try {
-        await db.query('UPDATE mother_plants SET is_active = FALSE WHERE id = $1', [req.params.id]);
-        res.json({ success: true, message: 'মাদার প্ল্যান্ট নিষ্ক্রিয় করা হয়েছে।' });
+        const item = await db.query('SELECT * FROM mother_plants WHERE id=$1', [req.params.id]);
+        if (item.rows.length) {
+            await db.query('INSERT INTO recycle_bin (table_name,record_id,record_data,module,item_name,deleted_by) VALUES ($1,$2,$3,$4,$5,$6)',
+                ['mother_plants', req.params.id, JSON.stringify(item.rows[0]), 'মাদার প্ল্যান্ট', item.rows[0].mp_code+' '+item.rows[0].variety, req.user.id]);
+        }
+        await db.query('DELETE FROM mother_plants WHERE id=$1', [req.params.id]);
+        res.json({ success: true, message: 'মাদার প্ল্যান্ট Recycle Bin-এ পাঠানো হয়েছে।' });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
@@ -310,8 +348,13 @@ router.delete('/mother-plants/:id', authenticate, adminOrManager, async (req, re
 // ============================================================
 router.delete('/damages/:id', authenticate, adminOrManager, async (req, res) => {
     try {
+        const item = await db.query('SELECT * FROM damages WHERE id=$1', [req.params.id]);
+        if (item.rows.length) {
+            await db.query('INSERT INTO recycle_bin (table_name,record_id,record_data,module,item_name,deleted_by) VALUES ($1,$2,$3,$4,$5,$6)',
+                ['damages', req.params.id, JSON.stringify(item.rows[0]), 'ক্ষতি/নষ্ট', 'ক্ষতি #'+req.params.id, req.user.id]);
+        }
         await db.query('DELETE FROM damages WHERE id = $1', [req.params.id]);
-        res.json({ success: true, message: 'ক্ষতি রিপোর্ট মুছে ফেলা হয়েছে।' });
+        res.json({ success: true, message: 'ক্ষতি রিপোর্ট Recycle Bin-এ পাঠানো হয়েছে।' });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
@@ -530,37 +573,69 @@ router.get('/reports/fiscal-achievement', authenticate, async (req, res) => {
             GROUP BY c.id, c.name_bn
             ORDER BY total_qty DESC`, [fyStart, fyEnd]);
 
-        // FY-র জন্য target (জুলাই-জুন মাসগুলো)
-        const fyMonths = [7,8,9,10,11,12,1,2,3,4,5,6];
-        const fyYears  = [fy,fy,fy,fy,fy,fy,fy+1,fy+1,fy+1,fy+1,fy+1,fy+1];
+        // চলতি মাসের target ও actual
+        const now = new Date();
+        const curMonth = now.getMonth() + 1;
+        const curYear = now.getFullYear();
+
+        const curMonthTarget = await db.query(`
+            SELECT COALESCE(target_quantity,0) AS qty
+            FROM targets WHERE target_type='production'
+            AND target_month=$1 AND target_year=$2`, [curMonth, curYear]);
+
+        const curMonthActual = await db.query(`
+            SELECT COALESCE(SUM(produced_quantity),0) AS total
+            FROM production_batches
+            WHERE EXTRACT(MONTH FROM created_at)=$1
+            AND EXTRACT(YEAR FROM created_at)=$2`, [curMonth, curYear]);
+        const prodAnnualTgt = await db.query(
+            `SELECT target_quantity FROM targets WHERE target_type='production' AND target_year=$1 AND target_month=0`, [fy]
+        );
+        const saleAnnualTgt = await db.query(
+            `SELECT target_amount FROM targets WHERE target_type='sales' AND target_year=$1 AND target_month=0`, [fy]
+        );
 
         const prodTargets = await db.query(`
             SELECT COALESCE(SUM(target_quantity),0) AS total
             FROM targets
-            WHERE target_type='production'
-            AND (target_year=$1 AND target_month=ANY($2)
-                 OR target_year=$3 AND target_month=ANY($4))`,
+            WHERE target_type='production' AND target_month>0
+            AND ((target_year=$1 AND target_month=ANY($2))
+                 OR (target_year=$3 AND target_month=ANY($4)))`,
             [fy,[7,8,9,10,11,12],fy+1,[1,2,3,4,5,6]]);
 
         const saleTargets = await db.query(`
             SELECT COALESCE(SUM(target_amount),0) AS total
             FROM targets
-            WHERE target_type='sales'
-            AND (target_year=$1 AND target_month=ANY($2)
-                 OR target_year=$3 AND target_month=ANY($4))`,
+            WHERE target_type='sales' AND target_month>0
+            AND ((target_year=$1 AND target_month=ANY($2))
+                 OR (target_year=$3 AND target_month=ANY($4)))`,
             [fy,[7,8,9,10,11,12],fy+1,[1,2,3,4,5,6]]);
+
+        // Annual target থাকলে সেটাই, না থাকলে মাসিক sum
+        const prodTarget = prodAnnualTgt.rows.length 
+            ? parseFloat(prodAnnualTgt.rows[0].target_quantity) 
+            : parseFloat(prodTargets.rows[0].total)||0;
+        const saleTarget = saleAnnualTgt.rows.length 
+            ? parseFloat(saleAnnualTgt.rows[0].target_amount) 
+            : parseFloat(saleTargets.rows[0].total)||0;
 
         res.json({
             success: true,
             data: {
                 fy: `${fy}-${fy+1}`,
                 fyStart, fyEnd,
-                production: {
-                    target: parseFloat(prodTargets.rows[0].total)||0,
+                current_month: {
+                    month: curMonth,
+                    year: curYear,
+                    target: parseFloat(curMonthTarget.rows[0]?.qty)||0,
+                    actual: parseFloat(curMonthActual.rows[0]?.total)||0
+                },
+                    monthly_target_sum: parseFloat(prodTargets.rows[0].total)||0,
                     actual: parseFloat(prodTotal.rows[0].total)||0
                 },
                 sales: {
-                    target: parseFloat(saleTargets.rows[0].total)||0,
+                    target: saleTarget,
+                    monthly_target_sum: parseFloat(saleTargets.rows[0].total)||0,
                     actual: parseFloat(saleTotal.rows[0].total)||0,
                     invoices: parseInt(saleTotal.rows[0].invoices)||0
                 },
@@ -568,6 +643,61 @@ router.get('/reports/fiscal-achievement', authenticate, async (req, res) => {
             }
         });
     } catch(err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// ============================================================
+// RECYCLE BIN ROUTES
+// ============================================================
+router.get('/recycle-bin', authenticate, adminOnly, async (req, res) => {
+    try {
+        const result = await db.query(
+            `SELECT rb.*, u.name AS deleted_by_name
+             FROM recycle_bin rb
+             LEFT JOIN users u ON rb.deleted_by = u.id
+             ORDER BY rb.deleted_at DESC`
+        );
+        res.json({ success: true, data: result.rows });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Restore করুন
+router.post('/recycle-bin/:id/restore', authenticate, adminOnly, async (req, res) => {
+    try {
+        const item = await db.query('SELECT * FROM recycle_bin WHERE id=$1', [req.params.id]);
+        if (!item.rows.length) return res.status(404).json({ success: false, message: 'পাওয়া যায়নি।' });
+        const { table_name, record_data } = item.rows[0];
+        const data = record_data;
+        const keys = Object.keys(data).join(',');
+        const vals = Object.values(data);
+        const phs = vals.map((_,i) => `$${i+1}`).join(',');
+        await db.query(`INSERT INTO ${table_name} (${keys}) VALUES (${phs}) ON CONFLICT DO NOTHING`, vals);
+        await db.query('DELETE FROM recycle_bin WHERE id=$1', [req.params.id]);
+        res.json({ success: true, message: 'সফলভাবে পুনরুদ্ধার হয়েছে।' });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// চিরতরে মুছুন
+router.delete('/recycle-bin/:id', authenticate, adminOnly, async (req, res) => {
+    try {
+        await db.query('DELETE FROM recycle_bin WHERE id=$1', [req.params.id]);
+        res.json({ success: true, message: 'স্থায়ীভাবে মুছে ফেলা হয়েছে।' });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// সব Recycle Bin খালি করুন
+router.delete('/recycle-bin', authenticate, adminOnly, async (req, res) => {
+    try {
+        await db.query('DELETE FROM recycle_bin');
+        res.json({ success: true, message: 'Recycle Bin খালি করা হয়েছে।' });
+    } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
 });
@@ -642,13 +772,15 @@ router.get('/reports/target-achievement', authenticate, async (req, res) => {
 // সব target দেখুন (FY support)
 router.get('/targets', authenticate, async (req, res) => {
     const fy = parseInt(req.query.fy) || new Date().getFullYear();
-    // FY: জুলাই (fy) → জুন (fy+1)
     try {
         const result = await db.query(`
             SELECT * FROM targets
-            WHERE (target_year=$1 AND target_month>=7)
-               OR (target_year=$2 AND target_month<=6)
-            ORDER BY target_month`, [fy, fy+1]
+            WHERE (target_year=$1 AND target_month=0)
+               OR (target_year=$1 AND target_month>=7)
+               OR (target_year=$2 AND target_month BETWEEN 1 AND 6)
+            ORDER BY 
+                CASE WHEN target_month=0 THEN 0 ELSE 1 END,
+                target_type, target_month`, [fy, fy+1]
         );
         res.json({ success: true, data: result.rows });
     } catch (err) {

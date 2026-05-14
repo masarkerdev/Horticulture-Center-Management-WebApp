@@ -573,7 +573,21 @@ router.get('/reports/fiscal-achievement', authenticate, async (req, res) => {
             GROUP BY c.id, c.name_bn
             ORDER BY total_qty DESC`, [fyStart, fyEnd]);
 
-        // FY-র জন্য target — annual (month=0) আগে, না থাকলে মাসিক sum
+        // চলতি মাসের target ও actual
+        const now = new Date();
+        const curMonth = now.getMonth() + 1;
+        const curYear = now.getFullYear();
+
+        const curMonthTarget = await db.query(`
+            SELECT COALESCE(target_quantity,0) AS qty
+            FROM targets WHERE target_type='production'
+            AND target_month=$1 AND target_year=$2`, [curMonth, curYear]);
+
+        const curMonthActual = await db.query(`
+            SELECT COALESCE(SUM(produced_quantity),0) AS total
+            FROM production_batches
+            WHERE EXTRACT(MONTH FROM created_at)=$1
+            AND EXTRACT(YEAR FROM created_at)=$2`, [curMonth, curYear]);
         const prodAnnualTgt = await db.query(
             `SELECT target_quantity FROM targets WHERE target_type='production' AND target_year=$1 AND target_month=0`, [fy]
         );
@@ -610,8 +624,12 @@ router.get('/reports/fiscal-achievement', authenticate, async (req, res) => {
             data: {
                 fy: `${fy}-${fy+1}`,
                 fyStart, fyEnd,
-                production: {
-                    target: prodTarget,
+                current_month: {
+                    month: curMonth,
+                    year: curYear,
+                    target: parseFloat(curMonthTarget.rows[0]?.qty)||0,
+                    actual: parseFloat(curMonthActual.rows[0]?.total)||0
+                },
                     monthly_target_sum: parseFloat(prodTargets.rows[0].total)||0,
                     actual: parseFloat(prodTotal.rows[0].total)||0
                 },
