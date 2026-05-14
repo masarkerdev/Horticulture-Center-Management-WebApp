@@ -355,6 +355,21 @@ router.delete('/mother-plants/:id', authenticate, adminOrManager, async (req, re
 router.put('/damages/:id', authenticate, adminOrManager, async (req, res) => {
     const { seedling_id, batch_id, damage_date, quantity, reason, remarks } = req.body;
     try {
+        // পুরনো damage quantity নিন
+        const old = await db.query('SELECT quantity, seedling_id FROM damages WHERE id=$1', [req.params.id]);
+        if (old.rows.length) {
+            const oldQty = parseInt(old.rows[0].quantity) || 0;
+            const newQty = parseInt(quantity) || 0;
+            const diff = newQty - oldQty; // পার্থক্য
+
+            // current_stock আপডেট করুন
+            if (diff !== 0 && old.rows[0].seedling_id) {
+                await db.query(
+                    'UPDATE seedlings SET current_stock = GREATEST(0, current_stock - $1) WHERE id = $2',
+                    [diff, old.rows[0].seedling_id]
+                );
+            }
+        }
         await db.query(
             `UPDATE damages SET seedling_id=$1, batch_id=$2, damage_date=$3, quantity=$4, reason=$5, remarks=$6 WHERE id=$7`,
             [seedling_id, batch_id||null, damage_date, quantity, reason, remarks||null, req.params.id]
@@ -371,8 +386,18 @@ router.delete('/damages/:id', authenticate, adminOrManager, async (req, res) => 
     try {
         const item = await db.query('SELECT * FROM damages WHERE id=$1', [req.params.id]);
         if (item.rows.length) {
+            // Recycle bin-এ সংরক্ষণ
             await db.query('INSERT INTO recycle_bin (table_name,record_id,record_data,module,item_name,deleted_by) VALUES ($1,$2,$3,$4,$5,$6)',
                 ['damages', req.params.id, JSON.stringify(item.rows[0]), 'ক্ষতি/নষ্ট', 'ক্ষতি #'+req.params.id, req.user.id]);
+
+            // ✅ current_stock ফিরিয়ে দিন
+            const qty = parseInt(item.rows[0].quantity) || 0;
+            if (item.rows[0].seedling_id && qty > 0) {
+                await db.query(
+                    'UPDATE seedlings SET current_stock = current_stock + $1 WHERE id = $2',
+                    [qty, item.rows[0].seedling_id]
+                );
+            }
         }
         await db.query('DELETE FROM damages WHERE id = $1', [req.params.id]);
         res.json({ success: true, message: 'ক্ষতি রিপোর্ট Recycle Bin-এ পাঠানো হয়েছে।' });
