@@ -573,25 +573,37 @@ router.get('/reports/fiscal-achievement', authenticate, async (req, res) => {
             GROUP BY c.id, c.name_bn
             ORDER BY total_qty DESC`, [fyStart, fyEnd]);
 
-        // FY-র জন্য target (জুলাই-জুন মাসগুলো)
-        const fyMonths = [7,8,9,10,11,12,1,2,3,4,5,6];
-        const fyYears  = [fy,fy,fy,fy,fy,fy,fy+1,fy+1,fy+1,fy+1,fy+1,fy+1];
+        // FY-র জন্য target — annual (month=0) আগে, না থাকলে মাসিক sum
+        const prodAnnualTgt = await db.query(
+            `SELECT target_quantity FROM targets WHERE target_type='production' AND target_year=$1 AND target_month=0`, [fy]
+        );
+        const saleAnnualTgt = await db.query(
+            `SELECT target_amount FROM targets WHERE target_type='sales' AND target_year=$1 AND target_month=0`, [fy]
+        );
 
         const prodTargets = await db.query(`
             SELECT COALESCE(SUM(target_quantity),0) AS total
             FROM targets
-            WHERE target_type='production'
-            AND (target_year=$1 AND target_month=ANY($2)
-                 OR target_year=$3 AND target_month=ANY($4))`,
+            WHERE target_type='production' AND target_month>0
+            AND ((target_year=$1 AND target_month=ANY($2))
+                 OR (target_year=$3 AND target_month=ANY($4)))`,
             [fy,[7,8,9,10,11,12],fy+1,[1,2,3,4,5,6]]);
 
         const saleTargets = await db.query(`
             SELECT COALESCE(SUM(target_amount),0) AS total
             FROM targets
-            WHERE target_type='sales'
-            AND (target_year=$1 AND target_month=ANY($2)
-                 OR target_year=$3 AND target_month=ANY($4))`,
+            WHERE target_type='sales' AND target_month>0
+            AND ((target_year=$1 AND target_month=ANY($2))
+                 OR (target_year=$3 AND target_month=ANY($4)))`,
             [fy,[7,8,9,10,11,12],fy+1,[1,2,3,4,5,6]]);
+
+        // Annual target থাকলে সেটাই, না থাকলে মাসিক sum
+        const prodTarget = prodAnnualTgt.rows.length 
+            ? parseFloat(prodAnnualTgt.rows[0].target_quantity) 
+            : parseFloat(prodTargets.rows[0].total)||0;
+        const saleTarget = saleAnnualTgt.rows.length 
+            ? parseFloat(saleAnnualTgt.rows[0].target_amount) 
+            : parseFloat(saleTargets.rows[0].total)||0;
 
         res.json({
             success: true,
@@ -599,11 +611,13 @@ router.get('/reports/fiscal-achievement', authenticate, async (req, res) => {
                 fy: `${fy}-${fy+1}`,
                 fyStart, fyEnd,
                 production: {
-                    target: parseFloat(prodTargets.rows[0].total)||0,
+                    target: prodTarget,
+                    monthly_target_sum: parseFloat(prodTargets.rows[0].total)||0,
                     actual: parseFloat(prodTotal.rows[0].total)||0
                 },
                 sales: {
-                    target: parseFloat(saleTargets.rows[0].total)||0,
+                    target: saleTarget,
+                    monthly_target_sum: parseFloat(saleTargets.rows[0].total)||0,
                     actual: parseFloat(saleTotal.rows[0].total)||0,
                     invoices: parseInt(saleTotal.rows[0].invoices)||0
                 },
@@ -740,13 +754,15 @@ router.get('/reports/target-achievement', authenticate, async (req, res) => {
 // সব target দেখুন (FY support)
 router.get('/targets', authenticate, async (req, res) => {
     const fy = parseInt(req.query.fy) || new Date().getFullYear();
-    // FY: জুলাই (fy) → জুন (fy+1)
     try {
         const result = await db.query(`
             SELECT * FROM targets
-            WHERE (target_year=$1 AND target_month>=7)
-               OR (target_year=$2 AND target_month<=6)
-            ORDER BY target_month`, [fy, fy+1]
+            WHERE (target_year=$1 AND target_month=0)
+               OR (target_year=$1 AND target_month>=7)
+               OR (target_year=$2 AND target_month BETWEEN 1 AND 6)
+            ORDER BY 
+                CASE WHEN target_month=0 THEN 0 ELSE 1 END,
+                target_type, target_month`, [fy, fy+1]
         );
         res.json({ success: true, data: result.rows });
     } catch (err) {

@@ -1285,10 +1285,11 @@ async function lFiscalAchievement(){
         <div style="font-size:12px;font-weight:600;color:var(--g600);margin-bottom:10px"><i class="ti ti-plant"></i> উৎপাদন লক্ষ্যমাত্রা</div>
         <div style="display:flex;align-items:center;gap:16px">
           ${fyDonut(p.actual, p.target, pColor)}
-          <div style="font-size:13px">
+          <div style="font-size:13px;flex:1">
             <div style="color:var(--tm);margin-bottom:4px">লক্ষ্য: <strong>${toBnNum(p.target)}টি</strong></div>
             <div style="color:${pColor};font-weight:600;margin-bottom:4px">অর্জন: ${toBnNum(p.actual)}টি</div>
             ${p.target>0?`<div style="font-size:12px;color:var(--tm)">${p.actual>=p.target?'✅ লক্ষ্য অর্জিত!':'⬇ বাকি: '+toBnNum(p.target-p.actual)+'টি'}</div>`:'<div style="font-size:12px;color:var(--tm)">লক্ষ্যমাত্রা নির্ধারণ করুন</div>'}
+            ${p.monthly_target_sum>0&&p.monthly_target_sum!==p.target?`<div style="font-size:11px;color:var(--tm);margin-top:6px;padding-top:6px;border-top:1px dashed var(--bd)">মাসিক বরাদ্দ: ${toBnNum(p.monthly_target_sum)}টি</div>`:''}
           </div>
         </div>
       </div>
@@ -1302,12 +1303,22 @@ async function lFiscalAchievement(){
 // ===== TARGET vs ACHIEVEMENT =====
 const bnMonths2=['','জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
 
+// মাসিক/বার্ষিক toggle
+function toggleTargetPeriod(){
+  const period=document.getElementById('tgPeriod').value;
+  document.getElementById('tgMonthBox').style.display=period==='monthly'?'block':'none';
+}
+
 function openTargetModal(tgt=null){
   document.getElementById('tgEditId').value=tgt?tgt.id:'';
   document.getElementById('mTargetTitle').textContent=tgt?'লক্ষ্যমাত্রা সম্পাদনা':'লক্ষ্যমাত্রা যোগ করুন';
   document.getElementById('tgType').value=tgt?tgt.target_type:'production';
-  document.getElementById('tgFY').value=tgt?tgt.target_year:document.getElementById('targetFY').value;
-  document.getElementById('tgMonth').value=tgt?tgt.target_month:7;
+  // target_month=0 মানে অর্থবছর মোট
+  const isAnnual=tgt?tgt.target_month===0:true;
+  document.getElementById('tgPeriod').value=isAnnual?'annual':'monthly';
+  toggleTargetPeriod();
+  document.getElementById('tgFY').value=tgt?(tgt.target_month>=7?tgt.target_year:tgt.target_year-1):document.getElementById('targetFY').value;
+  document.getElementById('tgMonth').value=tgt&&tgt.target_month>0?tgt.target_month:7;
   document.getElementById('tgQty').value=tgt?tgt.target_quantity:'';
   document.getElementById('tgAmt').value=tgt?tgt.target_amount:'';
   document.getElementById('tgNotes').value=tgt?tgt.notes||'':'';
@@ -1317,17 +1328,25 @@ function openTargetModal(tgt=null){
 async function saveTarget(){
   const editId=document.getElementById('tgEditId').value;
   const type=document.getElementById('tgType').value;
+  const period=document.getElementById('tgPeriod').value;
   const fy=+document.getElementById('tgFY').value;
-  const month=+document.getElementById('tgMonth').value;
-  // FY অনুযায়ী year নির্ধারণ করুন
-  const year=month>=7?fy:fy+1;
+  // অর্থবছর মোট হলে month=0, year=fy
+  // মাসিক হলে month অনুযায়ী year নির্ধারণ
+  let month, year;
+  if(period==='annual'){
+    month=0;
+    year=fy;
+  }else{
+    month=+document.getElementById('tgMonth').value;
+    year=month>=7?fy:fy+1;
+  }
   const qty=+document.getElementById('tgQty').value||0;
   const amt=+document.getElementById('tgAmt').value||0;
   const notes=document.getElementById('tgNotes').value;
   if(!qty&&!amt) return toast('পরিমাণ বা আয় দিন',1);
   try{
     const d=await api('/targets',{method:'POST',body:JSON.stringify({target_type:type,target_month:month,target_year:year,target_quantity:qty,target_amount:amt,notes})});
-    if(d.success){toast(editId?'লক্ষ্যমাত্রা আপডেট হয়েছে ✅':'লক্ষ্যমাত্রা যোগ হয়েছে ✅');cM('mTarget');lTargetAchievement();}
+    if(d.success){toast(editId?'লক্ষ্যমাত্রা আপডেট হয়েছে ✅':'লক্ষ্যমাত্রা যোগ হয়েছে ✅');cM('mTarget');lTargetAchievement();lFiscalAchievement();}
     else toast(d.message||'সমস্যা',1);
   }catch(e){toast('সমস্যা',1);}
 }
@@ -1393,16 +1412,20 @@ async function lTargetAchievement(){
       </div>
     </div>`;
 
-    // Monthly targets table
+    // Monthly targets table — annual row আলাদাভাবে দেখাই
     if(targets.length>0){
       html+=`<div style="font-size:12px;font-weight:600;color:var(--tm);margin-bottom:8px">মাসভিত্তিক লক্ষ্যমাত্রা</div>
       <div class="tw"><table><thead><tr>
-        <th>মাস</th><th>ধরন</th><th>লক্ষ্য (পরিমাণ)</th><th>লক্ষ্য (৳)</th><th>মন্তব্য</th>
+        <th>সময়কাল</th><th>ধরন</th><th>লক্ষ্য (পরিমাণ)</th><th>লক্ষ্য (৳)</th><th>মন্তব্য</th>
         ${ME.role==='admin'?'<th>কার্যক্রম</th>':''}
       </tr></thead><tbody>`;
       targets.forEach(t=>{
-        html+=`<tr>
-          <td>${bnMonths2[t.target_month]} ${t.target_year}</td>
+        const isAnnual=t.target_month===0;
+        const periodLabel=isAnnual
+          ? `<strong style="color:var(--g600)">🎯 অর্থবছর মোট ${toBn(t.target_year)}-${toBn(t.target_year+1)}</strong>`
+          : `${bnMonths2[t.target_month]} ${toBn(t.target_year)}`;
+        html+=`<tr ${isAnnual?'style="background:var(--g50)"':''}>
+          <td>${periodLabel}</td>
           <td><span class="b ${t.target_type==='production'?'bg':'b-t'}">${t.target_type==='production'?'উৎপাদন':'বিক্রয়'}</span></td>
           <td>${toBnNum(t.target_quantity)}টি</td>
           <td>${toBnMoney(t.target_amount)}</td>

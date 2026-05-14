@@ -274,20 +274,27 @@
 <div class="fr">
 <div class="fg"><label>ধরন *</label>
 <select class="fc" id="tgType"><option value="production">উৎপাদন</option><option value="sales">বিক্রয়</option></select></div>
-<div class="fg"><label>অর্থবছর *</label>
-<select class="fc" id="tgFY"></select></div>
+<div class="fg"><label>সময়কাল *</label>
+<select class="fc" id="tgPeriod" onchange="toggleTargetPeriod()">
+<option value="annual">🎯 অর্থবছর মোট</option>
+<option value="monthly">📅 নির্দিষ্ট মাস</option>
+</select></div>
 </div>
 <div class="fr">
-<div class="fg"><label>মাস *</label>
+<div class="fg"><label>অর্থবছর *</label>
+<select class="fc" id="tgFY"></select></div>
+<div class="fg" id="tgMonthBox" style="display:none"><label>মাস *</label>
 <select class="fc" id="tgMonth">
 <option value="7">জুলাই</option><option value="8">আগস্ট</option><option value="9">সেপ্টেম্বর</option>
 <option value="10">অক্টোবর</option><option value="11">নভেম্বর</option><option value="12">ডিসেম্বর</option>
 <option value="1">জানুয়ারি</option><option value="2">ফেব্রুয়ারি</option><option value="3">মার্চ</option>
 <option value="4">এপ্রিল</option><option value="5">মে</option><option value="6">জুন</option>
 </select></div>
-<div class="fg"><label>পরিমাণ (টি)</label><input class="fc" type="number" id="tgQty" placeholder="০"></div>
 </div>
+<div class="fr">
+<div class="fg"><label>পরিমাণ (টি)</label><input class="fc" type="number" id="tgQty" placeholder="০"></div>
 <div class="fg"><label>আয় লক্ষ্যমাত্রা (৳)</label><input class="fc" type="number" id="tgAmt" placeholder="০"></div>
+</div>
 <div class="fg"><label>মন্তব্য</label><input class="fc" id="tgNotes" placeholder="ঐচ্ছিক"></div>
 <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
 <button class="btn" onclick="cM('mTarget')">বাতিল</button>
