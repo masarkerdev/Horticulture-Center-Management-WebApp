@@ -1268,7 +1268,7 @@ async function lFiscalAchievement(){
   try{
     const d=await api('/reports/fiscal-achievement?fy='+fy);
     if(!d.success){if(el)el.innerHTML='<div class="lt">ডেটা আনতে সমস্যা</div>';return;}
-    const {production:p, sales:s, categories:cats, fy:fyLabel}=d.data;
+    const {production:p, sales:s, categories:cats, fy:fyLabel, current_month:cm}=d.data;
 
     const pPct=p.target>0?Math.min(Math.round((p.actual/p.target)*100),100):0;
     const sPct=s.target>0?Math.min(Math.round((s.actual/s.target)*100),100):0;
@@ -1279,18 +1279,43 @@ async function lFiscalAchievement(){
     const maxCat=Math.max(...cats.map(c=>parseFloat(c.total_qty)||0),1);
 
     let html=`
-    <!-- Donut Charts -->
-    <div style="display:grid;grid-template-columns:1fr;gap:16px;margin-bottom:10px">
-      <div style="background:var(--g50);border-radius:10px;padding:16px">
-        <div style="font-size:12px;font-weight:600;color:var(--g600);margin-bottom:10px"><i class="ti ti-plant"></i> উৎপাদন লক্ষ্যমাত্রা</div>
-        <div style="display:flex;align-items:center;gap:16px">
+    <div style="background:var(--g50);border-radius:10px;padding:16px">
+      <div style="font-size:12px;font-weight:600;color:var(--g600);margin-bottom:12px"><i class="ti ti-plant"></i> উৎপাদন লক্ষ্যমাত্রা</div>
+      <div style="display:grid;grid-template-columns:1fr 1px 1fr;gap:16px;align-items:center">
+
+        <!-- বাম: বার্ষিক -->
+        <div style="display:flex;align-items:center;gap:12px">
           ${fyDonut(p.actual, p.target, pColor)}
-          <div style="font-size:13px;flex:1">
-            <div style="color:var(--tm);margin-bottom:4px">লক্ষ্য: <strong>${toBnNum(p.target)}টি</strong></div>
-            <div style="color:${pColor};font-weight:600;margin-bottom:4px">অর্জন: ${toBnNum(p.actual)}টি</div>
-            ${p.target>0?`<div style="font-size:12px;color:var(--tm)">${p.actual>=p.target?'✅ লক্ষ্য অর্জিত!':'⬇ বাকি: '+toBnNum(p.target-p.actual)+'টি'}</div>`:'<div style="font-size:12px;color:var(--tm)">লক্ষ্যমাত্রা নির্ধারণ করুন</div>'}
-            ${p.monthly_target_sum>0&&p.monthly_target_sum!==p.target?`<div style="font-size:11px;color:var(--tm);margin-top:6px;padding-top:6px;border-top:1px dashed var(--bd)">মাসিক বরাদ্দ: ${toBnNum(p.monthly_target_sum)}টি</div>`:''}
+          <div style="font-size:12px">
+            <div style="font-size:10px;color:var(--tm);margin-bottom:4px;font-weight:600">বার্ষিক লক্ষ্যমাত্রা</div>
+            <div style="color:var(--tm);margin-bottom:3px">লক্ষ্য: <strong>${toBnNum(p.target)}টি</strong></div>
+            <div style="color:${pColor};font-weight:600;margin-bottom:3px">অর্জন: ${toBnNum(p.actual)}টি</div>
+            <div style="font-size:11px;color:var(--tm)">${p.actual>=p.target?'✅ অর্জিত!':'⬇ বাকি: '+toBnNum(p.target-p.actual)+'টি'}</div>
           </div>
+        </div>
+
+        <!-- Divider -->
+        <div style="background:var(--bd);height:80px;width:1px"></div>
+
+        <!-- ডান: চলতি মাস -->
+        <div style="font-size:12px">
+          <div style="font-size:10px;color:var(--tm);margin-bottom:8px;font-weight:600">চলতি মাস — ${bnMonths2[cm?.month||new Date().getMonth()+1]}</div>
+          ${cm?.target>0?`
+          <div style="margin-bottom:6px">
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+              <span style="color:var(--tm)">মাসিক লক্ষ্য:</span>
+              <strong>${toBnNum(cm.target)}টি</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+              <span style="color:var(--tm)">অর্জন:</span>
+              <strong style="color:${cm.actual>=cm.target?'var(--g600)':'var(--r400)'}">${toBnNum(cm.actual||0)}টি</strong>
+            </div>
+            <div style="height:8px;background:var(--gr100);border-radius:4px;overflow:hidden">
+              <div style="height:100%;width:${Math.min(Math.round(((cm.actual||0)/cm.target)*100),100)}%;background:${(cm.actual||0)>=cm.target?'var(--g600)':'var(--g400)'};border-radius:4px"></div>
+            </div>
+            <div style="font-size:11px;color:var(--tm);margin-top:4px;text-align:right">${toBn(Math.min(Math.round(((cm.actual||0)/cm.target)*100),100))}%</div>
+          </div>`:`
+          <div style="color:var(--tm);font-size:11px">এই মাসের লক্ষ্যমাত্রা নির্ধারণ করা হয়নি</div>`}
         </div>
       </div>
     </div>`;
