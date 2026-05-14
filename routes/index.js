@@ -88,11 +88,12 @@ router.delete('/seedlings/:id', authenticate, adminOrManager, async (req, res) =
             await db.query('INSERT INTO recycle_bin (table_name,record_id,record_data,module,item_name,deleted_by) VALUES ($1,$2,$3,$4,$5,$6)',
                 ['seedlings', req.params.id, JSON.stringify(item.rows[0]), 'চারা তালিকা', item.rows[0].name_bn, req.user.id]);
         }
-        // সব foreign key references NULL করুন
-        await db.query('UPDATE production_batches SET seedling_id=NULL WHERE seedling_id=$1', [req.params.id]);
+        // সব foreign key references ঠিক করুন
         await db.query('UPDATE sales_items SET seedling_id=NULL WHERE seedling_id=$1', [req.params.id]);
-        await db.query('UPDATE stock_transactions SET seedling_id=NULL WHERE seedling_id=$1', [req.params.id]);
+        await db.query('UPDATE mother_plants SET seedling_id=NULL WHERE seedling_id=$1', [req.params.id]);
+        await db.query('UPDATE production_batches SET seedling_id=NULL WHERE seedling_id=$1', [req.params.id]);
         await db.query('UPDATE damages SET seedling_id=NULL WHERE seedling_id=$1', [req.params.id]);
+        await db.query('DELETE FROM stock_transactions WHERE seedling_id=$1', [req.params.id]);
         await db.query('DELETE FROM seedlings WHERE id=$1', [req.params.id]);
         res.json({ success: true, message: 'চারা Recycle Bin-এ পাঠানো হয়েছে।' });
     } catch (err) { res.status(500).json({ success: false, error: err.message }); }
