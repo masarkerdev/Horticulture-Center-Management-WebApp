@@ -199,60 +199,50 @@ const reportDamage = async (req, res) => {
 
 const getDashboardStats = async (req, res) => {
     try {
-        const [seedlingCount, stockTotal, todayProd, todaySales, monthSales, lowStock, successRates] = await Promise.all([
-            // মোট চারার ধরন
-            db.query('SELECT COUNT(*) FROM seedlings WHERE is_active = TRUE'),
+        // সব stats একটি query-তে — Serverless-এ দ্রুত কাজ করে
+        const result = await db.query(`
+            SELECT
+                (SELECT COUNT(*) FROM seedlings WHERE is_active = TRUE) AS seedling_types,
+                (SELECT COALESCE(SUM(
+                    CASE WHEN st.transaction_type='in' THEN st.quantity ELSE -st.quantity END
+                ), 0) FROM stock_transactions st
+                JOIN seedlings s ON s.id=st.seedling_id WHERE s.is_active=TRUE) AS total_stock,
+                (SELECT COALESCE(SUM(produced_quantity), 0) FROM production_batches WHERE DATE(created_at) = CURRENT_DATE) AS today_production,
+                (SELECT COUNT(*) FROM sales WHERE sale_date = CURRENT_DATE) AS today_invoices,
+                (SELECT COALESCE(SUM(total_amount), 0) FROM sales WHERE sale_date = CURRENT_DATE) AS today_revenue,
+                (SELECT COALESCE(SUM(total_amount), 0) FROM sales WHERE EXTRACT(MONTH FROM sale_date) = EXTRACT(MONTH FROM NOW()) AND EXTRACT(YEAR FROM sale_date) = EXTRACT(YEAR FROM NOW())) AS monthly_revenue,
+                (SELECT COUNT(*) FROM seedlings WHERE is_active = TRUE AND current_stock <= min_stock_alert) AS low_stock_count
+        `);
 
-            // মোট স্টক
-            db.query('SELECT COALESCE(SUM(current_stock), 0) AS total FROM seedlings WHERE is_active = TRUE'),
+        const d = result.rows[0];
 
-            // আজকের উৎপাদন
-            db.query(`SELECT COALESCE(SUM(produced_quantity), 0) AS total FROM production_batches WHERE DATE(created_at) = CURRENT_DATE`),
-
-            // আজকের বিক্রয়
-            db.query(`SELECT COUNT(*) AS invoices, COALESCE(SUM(total_amount), 0) AS revenue FROM sales WHERE sale_date = CURRENT_DATE`),
-
-            // মাসিক আয়
-            db.query(`SELECT COALESCE(SUM(total_amount), 0) AS revenue FROM sales WHERE EXTRACT(MONTH FROM sale_date) = EXTRACT(MONTH FROM NOW()) AND EXTRACT(YEAR FROM sale_date) = EXTRACT(YEAR FROM NOW())`),
-
-            // কম স্টক
-            db.query('SELECT COUNT(*) FROM seedlings WHERE is_active = TRUE AND current_stock <= min_stock_alert'),
-
-            // পদ্ধতি অনুযায়ী সাফল্যের হার — COALESCE দিয়ে seed ও asexual উভয়ই ধরা হচ্ছে
-            db.query(`
-                SELECT
-                    production_type,
-                    ROUND(AVG(
-                        COALESCE(
-                            success_percent,
-                            germination_percent,
-                            CASE
-                                WHEN seed_quantity > 0
-                                THEN (produced_quantity::NUMERIC / seed_quantity) * 100
-                                WHEN produced_quantity > 0 AND (produced_quantity + COALESCE(failed_quantity,0)) > 0
-                                THEN (produced_quantity::NUMERIC / (produced_quantity + COALESCE(failed_quantity,0))) * 100
-                                ELSE NULL
-                            END
-                        )
-                    ), 1) AS avg_success_percent,
+        // Success rates আলাদাভাবে (optional — timeout হলে empty দেখাবে)
+        let successRates = [];
+        try {
+            const srResult = await db.query(`
+                SELECT production_type,
+                    ROUND(AVG(COALESCE(success_percent, germination_percent,
+                        CASE WHEN seed_quantity > 0 THEN LEAST(100, (produced_quantity::NUMERIC/seed_quantity)*100)
+                             ELSE 0 END)), 1) AS avg_success_percent,
                     COUNT(*) AS batch_count
                 FROM production_batches
                 GROUP BY production_type
                 HAVING COUNT(*) > 0
-            `)
-        ]);
+            `);
+            successRates = srResult.rows;
+        } catch(e) { /* success rates না আসলেও চলবে */ }
 
         res.json({
             success: true,
             data: {
-                seedling_types:    parseInt(seedlingCount.rows[0].count),
-                total_stock:       parseInt(stockTotal.rows[0].total),
-                today_production:  parseInt(todayProd.rows[0].total),
-                today_invoices:    parseInt(todaySales.rows[0].invoices),
-                today_revenue:     parseFloat(todaySales.rows[0].revenue),
-                monthly_revenue:   parseFloat(monthSales.rows[0].revenue),
-                low_stock_count:   parseInt(lowStock.rows[0].count),
-                success_rates:     successRates.rows
+                seedling_types:   parseInt(d.seedling_types) || 0,
+                total_stock:      parseInt(d.total_stock) || 0,
+                today_production: parseInt(d.today_production) || 0,
+                today_invoices:   parseInt(d.today_invoices) || 0,
+                today_revenue:    parseFloat(d.today_revenue) || 0,
+                monthly_revenue:  parseFloat(d.monthly_revenue) || 0,
+                low_stock_count:  parseInt(d.low_stock_count) || 0,
+                success_rates:    successRates
             }
         });
     } catch (err) {
