@@ -96,11 +96,12 @@ const createSeedling = async (req, res) => {
     }
 
     try {
-        // Auto generate seedling code
+        // Auto generate seedling code — MAX দিয়ে যেন duplicate না হয়
         const codeResult = await db.query(
-            `SELECT COUNT(*) FROM seedlings`
+            `SELECT COALESCE(MAX(CAST(SUBSTRING(seedling_code FROM 4) AS INTEGER)), 0) AS max_num
+             FROM seedlings WHERE seedling_code ~ '^SL-[0-9]+$'`
         );
-        const nextNum = parseInt(codeResult.rows[0].count) + 1;
+        const nextNum = parseInt(codeResult.rows[0].max_num) + 1;
         const seedling_code = 'SL-' + String(nextNum).padStart(3, '0');
 
         const image_url = req.file ? `/uploads/${req.file.filename}` : null;
