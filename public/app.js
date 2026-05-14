@@ -380,7 +380,7 @@ document.getElementById('sTbl').innerHTML=d.data.length?d.data.map(x=>`<tr>
 <td>৳${x.unit_price}</td>
 <td><strong style="${x.current_stock<=x.min_stock_alert?'color:var(--c400)':''}">${x.current_stock}</strong></td>
 <td>${x.current_stock<=x.min_stock_alert?'<span class="b br">কম স্টক</span>':'<span class="b bg">সক্রিয়</span>'}</td>
-<td><div style="display:flex;gap:4px"><button class="btn btns btne" onclick="editSeed(${JSON.stringify(x).replace(/"/g,'&quot;')})"><i class="ti ti-edit"></i></button><button class="btn btns btnr" onclick="delItem('seedlings',x.id,x.name_bn)"><i class="ti ti-trash"></i></button></div></td></tr>`).join(''):'<tr><td colspan="8" class="lt">কোনো চারা নেই</td></tr>';
+<td><div style="display:flex;gap:4px"><button class="btn btns btne" onclick="editSeed(${JSON.stringify(x).replace(/"/g,'&quot;')})"><i class="ti ti-edit"></i></button><button class="btn btns btnr" onclick="delItem('seedlings',${x.id},'${x.name_bn}')"><i class="ti ti-trash"></i></button></div></td></tr>`).join(''):'<tr><td colspan="8" class="lt">কোনো চারা নেই</td></tr>';
 const tp=Math.ceil(sTotal/10);
 document.getElementById('sPg').textContent=`${sTotal}টির মধ্যে ${(sPage-1)*10+1}–${Math.min(sPage*10,sTotal)} দেখানো হচ্ছে`;
 let pb='';if(sPage>1)pb+=`<button class="btn btns" onclick="sPage--;lSeed()"><i class="ti ti-chevron-left"></i></button>`;for(let i=1;i<=tp;i++)pb+=`<button class="btn btns${i===sPage?' btnp':''}" onclick="sPage=${i};lSeed()">${i}</button>`;if(sPage<tp)pb+=`<button class="btn btns" onclick="sPage++;lSeed()"><i class="ti ti-chevron-right"></i></button>`;
