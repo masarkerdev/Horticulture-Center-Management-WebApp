@@ -39,7 +39,10 @@ function fmtDate(d){
   try{
     const dt=new Date(d);
     if(isNaN(dt.getTime()))return d;
-    return dt.toLocaleDateString('bn-BD',{day:'2-digit',month:'short',year:'numeric'});
+    const day=String(dt.getDate()).padStart(2,'0');
+    const month=String(dt.getMonth()+1).padStart(2,'0');
+    const year=dt.getFullYear();
+    return toBn(`${day}/${month}/${year}`);
   }catch(e){return d;}
 }
 function fmtDateInput(d){
@@ -359,7 +362,7 @@ if(d.low_stock_count>0){const ls=await api('/seedlings/low-stock');document.getE
 const[sa,pr]=await Promise.all([api('/sales?limit=3'),api('/production?limit=3')]);
 let acts=[];
 if(sa.data)sa.data.forEach(x=>acts.push({time:fmtDMY(x.sale_date),txt:`চালান ${x.invoice_no} — ${x.customer_name||'-'} — ৳${parseFloat(x.total_amount).toLocaleString()}`,mod:'বিক্রয়',st:'paid'}));
-if(pr.data)pr.data.forEach(x=>acts.push({time:x.created_at?.split('T')[0]||'-',txt:`ব্যাচ ${x.batch_code} — ${x.seedling_bn||'-'} (${x.produced_quantity}টি)`,mod:'উৎপাদন',st:'done'}));
+if(pr.data)pr.data.forEach(x=>acts.push({time:fmtDMY(x.created_at),txt:`ব্যাচ ${x.batch_code} — ${x.seedling_bn||'-'} (${x.produced_quantity}টি)`,mod:'উৎপাদন',st:'done'}));
 acts=acts.slice(0,5);
 document.getElementById('dAct').innerHTML=acts.length?acts.map(a=>`<tr><td style="color:var(--tm)">${a.time}</td><td>${a.txt}</td><td><span class="tag">${a.mod}</span></td><td><span class="b ${a.st==='paid'?'bg':'bt'}">${a.st==='paid'?'পরিশোধিত':'সম্পন্ন'}</span></td></tr>`).join(''):'<tr><td colspan="4" class="lt">ডেটা নেই</td></tr>';
 }catch(e){
@@ -650,7 +653,7 @@ async function viewInv(id){
       <div style="border-top:1px solid #eee;padding-top:14px;display:flex;justify-content:space-between;font-size:11px;color:#888">
         <div>
           <div style="margin-bottom:4px">ধন্যবাদ আপনার ক্রয়ের জন্য 🌿</div>
-          <div>Generated: ${new Date().toLocaleDateString('bn-BD')}</div>
+          <div>Generated: ${fmtDMY(new Date())}</div>
         </div>
         <div style="text-align:right">
           <div style="margin-bottom:30px">কর্তৃপক্ষের স্বাক্ষর</div>
@@ -1537,7 +1540,7 @@ async function toggleUser(id,name){
 async function approvePwd(id){try{const d=await api('/users/'+id+'/approve-password',{method:'POST'});if(d.success){toast('পাসওয়ার্ড অনুমোদিত ✅');lUsr();checkAdminNotif();}else toast(d.message||'সমস্যা',1)}catch(e){toast('সমস্যা',1)}}
 async function rejectPwd(id){try{const d=await api('/users/'+id+'/reject-password',{method:'POST'});if(d.success){toast('অনুরোধ প্রত্যাখ্যান করা হয়েছে');lUsr();checkAdminNotif();}else toast(d.message||'সমস্যা',1)}catch(e){toast('সমস্যা',1)}}
 
-async function exportCSV(type){const fns={stock:'/stock',sale:'/sales',prod:'/production',dmg:'/damages'};if(!fns[type])return;try{const d=await api(fns[type]);let rows=[],hdrs=[],data=[];if(type==='stock'&&d.data){hdrs=['চারা','মোট ইন','মোট আউট','স্টক','মূল্য'];data=d.data.map(x=>[x.name_bn,x.total_in,x.total_out,x.current_stock,x.current_stock*x.unit_price])}else if(type==='sale'&&d.data){hdrs=['চালান','গ্রাহক','তারিখ','মোট','পরিশোধ'];data=d.data.map(x=>[x.invoice_no,x.customer_name,x.sale_date,x.total_amount,x.payment_method])}else if(type==='prod'&&d.data){hdrs=['ব্যাচ','চারা','পদ্ধতি','উৎপাদিত','সফল','সাফল্য%'];data=d.data.map(x=>[x.batch_code,x.seedling_bn,x.production_type,x.produced_quantity,x.success_quantity,x.success_percent||x.germination_percent||0])}else if(type==='dmg'&&d.data){hdrs=['তারিখ','চারা','পরিমাণ','কারণ'];data=d.data.map(x=>[x.damage_date,x.name_bn,x.quantity,x.reason])}
+async function exportCSV(type){const fns={stock:'/stock',sale:'/sales',prod:'/production',dmg:'/damages'};if(!fns[type])return;try{const d=await api(fns[type]);let rows=[],hdrs=[],data=[];if(type==='stock'&&d.data){hdrs=['চারা','মোট ইন','মোট আউট','স্টক','মূল্য'];data=d.data.map(x=>[x.name_bn,x.total_in,x.total_out,x.current_stock,x.current_stock*x.unit_price])}else if(type==='sale'&&d.data){hdrs=['চালান','গ্রাহক','তারিখ','মোট','পরিশোধ'];data=d.data.map(x=>[x.invoice_no,x.customer_name,fmtDMY(x.sale_date),x.total_amount,x.payment_method])}else if(type==='prod'&&d.data){hdrs=['ব্যাচ','চারা','পদ্ধতি','উৎপাদিত','সফল','সাফল্য%'];data=d.data.map(x=>[x.batch_code,x.seedling_bn,x.production_type,x.produced_quantity,x.success_quantity,x.success_percent||x.germination_percent||0])}else if(type==='dmg'&&d.data){hdrs=['তারিখ','চারা','পরিমাণ','কারণ'];data=d.data.map(x=>[fmtDMY(x.damage_date),x.name_bn,x.quantity,x.reason])}
 const csv=[hdrs.join(','),...data.map(r=>r.join(','))].join('\n');const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);a.download=type+'_report.csv';a.click();toast('CSV ডাউনলোড হচ্ছে ✅')}catch(e){toast('সমস্যা',1)}}
 
 function printPage(){window.print()}
