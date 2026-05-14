@@ -309,6 +309,7 @@ router.delete('/production-batches/:id', authenticate, adminOrManager, async (re
             console.log('Recycle bin save skipped:', rbErr.message);
         }
         // Foreign key references ঠিক করুন তারপর delete করুন
+        await db.query('UPDATE damages SET batch_id=NULL WHERE batch_id=$1', [req.params.id]);
         await db.query('UPDATE sales_items SET batch_id=NULL WHERE batch_id=$1', [req.params.id]);
         await db.query('DELETE FROM stock_transactions WHERE batch_id=$1', [req.params.id]);
         await db.query('DELETE FROM production_batches WHERE id=$1', [req.params.id]);
