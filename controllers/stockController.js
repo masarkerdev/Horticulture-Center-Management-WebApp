@@ -204,10 +204,10 @@ const getDashboardStats = async (req, res) => {
             SELECT
                 (SELECT COUNT(*) FROM seedlings WHERE is_active = TRUE) AS seedling_types,
                 (SELECT COALESCE(SUM(current_stock), 0) FROM seedlings WHERE is_active = TRUE) AS total_stock,
-                (SELECT COALESCE(SUM(produced_quantity), 0) FROM production_batches WHERE DATE(created_at) = CURRENT_DATE) AS today_production,
+                (SELECT COALESCE(SUM(produced_quantity), 0) FROM production_batches) AS today_production,
                 (SELECT COUNT(*) FROM sales WHERE sale_date = CURRENT_DATE) AS today_invoices,
                 (SELECT COALESCE(SUM(total_amount), 0) FROM sales WHERE sale_date = CURRENT_DATE) AS today_revenue,
-                (SELECT COALESCE(SUM(total_amount), 0) FROM sales WHERE EXTRACT(MONTH FROM sale_date) = EXTRACT(MONTH FROM NOW()) AND EXTRACT(YEAR FROM sale_date) = EXTRACT(YEAR FROM NOW())) AS monthly_revenue,
+                (SELECT COALESCE(SUM(total_amount), 0) FROM sales) AS monthly_revenue,
                 (SELECT COUNT(*) FROM seedlings WHERE is_active = TRUE AND current_stock <= min_stock_alert) AS low_stock_count
         `);
 
