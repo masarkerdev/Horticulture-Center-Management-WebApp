@@ -305,22 +305,29 @@ router.delete('/sales/:id', authenticate, adminOrManager, async (req, res) => {
 // ============================================================
 router.delete('/production-batches/:id', authenticate, adminOrManager, async (req, res) => {
     try {
-        // Recycle bin-এ save করার চেষ্টা করুন (fail হলেও delete চলবে)
-        try {
-            const item = await db.query('SELECT * FROM production_batches WHERE id=$1', [req.params.id]);
-            if (item.rows.length) {
+        // batch info নিন
+        const item = await db.query('SELECT * FROM production_batches WHERE id=$1', [req.params.id]);
+        if (item.rows.length) {
+            // Recycle bin-এ save করুন
+            try {
                 await db.query('INSERT INTO recycle_bin (table_name,record_id,record_data,module,item_name,deleted_by) VALUES ($1,$2,$3,$4,$5,$6)',
                     ['production_batches', req.params.id, JSON.stringify(item.rows[0]), 'উৎপাদন ব্যাচ', item.rows[0].batch_code, req.user.id]);
+            } catch(rbErr) { console.log('Recycle bin skip:', rbErr.message); }
+
+            // ✅ current_stock আপডেট করুন
+            const produced = parseInt(item.rows[0].produced_quantity) || 0;
+            if (item.rows[0].seedling_id && produced > 0) {
+                await db.query(
+                    'UPDATE seedlings SET current_stock = GREATEST(0, current_stock - $1) WHERE id = $2',
+                    [produced, item.rows[0].seedling_id]
+                );
             }
-        } catch(rbErr) {
-            console.log('Recycle bin save skipped:', rbErr.message);
         }
-        // Foreign key references ঠিক করুন তারপর delete করুন
         await db.query('UPDATE damages SET batch_id=NULL WHERE batch_id=$1', [req.params.id]);
         await db.query('UPDATE sales_items SET batch_id=NULL WHERE batch_id=$1', [req.params.id]);
         await db.query('DELETE FROM stock_transactions WHERE batch_id=$1', [req.params.id]);
         await db.query('DELETE FROM production_batches WHERE id=$1', [req.params.id]);
-        res.json({ success: true, message: 'ব্যাচ মুছে ফেলা হয়েছে।' });
+        res.json({ success: true, message: 'ব্যাচ Recycle Bin-এ পাঠানো হয়েছে।' });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }

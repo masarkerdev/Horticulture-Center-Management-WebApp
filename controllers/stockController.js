@@ -203,10 +203,7 @@ const getDashboardStats = async (req, res) => {
         const result = await db.query(`
             SELECT
                 (SELECT COUNT(*) FROM seedlings WHERE is_active = TRUE) AS seedling_types,
-                (SELECT COALESCE(SUM(
-                    CASE WHEN st.transaction_type='in' THEN st.quantity ELSE -st.quantity END
-                ), 0) FROM stock_transactions st
-                JOIN seedlings s ON s.id=st.seedling_id WHERE s.is_active=TRUE) AS total_stock,
+                (SELECT COALESCE(SUM(current_stock), 0) FROM seedlings WHERE is_active = TRUE) AS total_stock,
                 (SELECT COALESCE(SUM(produced_quantity), 0) FROM production_batches WHERE DATE(created_at) = CURRENT_DATE) AS today_production,
                 (SELECT COUNT(*) FROM sales WHERE sale_date = CURRENT_DATE) AS today_invoices,
                 (SELECT COALESCE(SUM(total_amount), 0) FROM sales WHERE sale_date = CURRENT_DATE) AS today_revenue,
