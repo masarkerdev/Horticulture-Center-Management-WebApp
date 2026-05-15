@@ -510,19 +510,19 @@ try{
       if(!b.propagation_date||!b.produced_quantity)return toast('তারিখ ও পরিমাণ দিন',1);
       if(!document.getElementById('pPSrc').value)return toast('বিক্রেতার নাম দিন',1);
       const d=await api('/production/asexual',{method:'POST',body:JSON.stringify(b)});
-      if(d.success){toast('ক্রয় রেকর্ড সংরক্ষিত ✅');cM('mProd');clearProdModal();lProd();setTimeout(()=>lBatch(),300);}
+      if(d.success){toast('ক্রয় রেকর্ড সংরক্ষিত ✅');cM('mProd');clearProdModal();await lProd();await lBatch();}
       else toast(d.error||d.message||'সমস্যা',1);
     }else if(m==='seed'){
       const b={seedling_id:+document.getElementById('pSd').value,seed_source:document.getElementById('pSrc').value,seed_quantity:+document.getElementById('pSQ').value||0,sowing_date:document.getElementById('pSw').value,produced_quantity:+document.getElementById('pPQ').value||0,remarks:document.getElementById('pRm').value};
       if(!b.sowing_date||!b.produced_quantity)return toast('তারিখ ও পরিমাণ দিন',1);
       const d=await api('/production/seed',{method:'POST',body:JSON.stringify(b)});
-      if(d.success){toast('বীজ ব্যাচ তৈরি ✅');cM('mProd');clearProdModal();lProd();setTimeout(()=>lBatch(),300);}
+      if(d.success){toast('বীজ ব্যাচ তৈরি ✅');cM('mProd');clearProdModal();await lProd();await lBatch();}
       else toast(d.error||d.message||'সমস্যা',1);
     }else{
       const b={seedling_id:+document.getElementById('pSd').value,production_type:m,mother_plant_id:+document.getElementById('pMP').value||null,propagation_date:document.getElementById('pPD').value,produced_quantity:+document.getElementById('pAQ').value||0,success_quantity:+document.getElementById('pSu').value||0,failed_quantity:(+document.getElementById('pAQ').value||0)-(+document.getElementById('pSu').value||0),remarks:document.getElementById('pRm').value};
       if(!b.propagation_date||!b.produced_quantity)return toast('তারিখ ও পরিমাণ দিন',1);
       const d=await api('/production/asexual',{method:'POST',body:JSON.stringify(b)});
-      if(d.success){toast('অঙ্গজ ব্যাচ তৈরি ✅');cM('mProd');clearProdModal();lProd();setTimeout(()=>lBatch(),300);}
+      if(d.success){toast('অঙ্গজ ব্যাচ তৈরি ✅');cM('mProd');clearProdModal();await lProd();await lBatch();}
       else toast(d.error||d.message||'সমস্যা',1);
     }
   }
