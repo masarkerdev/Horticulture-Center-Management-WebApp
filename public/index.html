@@ -86,10 +86,21 @@
 <div class="fy-grid">
 <div class="card"><div class="cdt">⚠ কম স্টক সতর্কতা <span id="dLowC"></span></div><div id="dLow"><div class="lt">লোড হচ্ছে...</div></div></div>
 <div class="card"><div class="cdt">উৎপাদন সাফল্যের হার</div><div id="dRate"><div class="lt">লোড হচ্ছে...</div></div></div>
-<div class="card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:150px">
-<div style="font-size:36px;margin-bottom:10px">🚀</div>
-<div style="font-weight:600;font-size:14px;color:var(--tp);margin-bottom:6px">নতুন ফিচার আসছে</div>
-<div style="font-size:12px;color:var(--tm);text-align:center">New Feature Coming Soon</div>
+<div class="card" style="display:flex;flex-direction:column;justify-content:center">
+<div class="cdt">🌱 উৎপাদন রেজিস্টার</div>
+<div style="display:grid;grid-template-columns:1fr 1px 1fr;gap:12px;align-items:center;margin-top:10px">
+  <div style="text-align:center">
+    <div style="font-size:11px;color:var(--tm);font-weight:600;margin-bottom:8px">বীজ থেকে</div>
+    <div id="prodSeed" style="font-size:24px;font-weight:700;color:var(--g600)">০</div>
+    <div style="font-size:11px;color:var(--tm);margin-top:4px">টি রুট স্টক/চারা</div>
+  </div>
+  <div style="background:var(--bd);height:60px"></div>
+  <div style="text-align:center">
+    <div style="font-size:11px;color:var(--tm);font-weight:600;margin-bottom:8px">কলমের চারা</div>
+    <div id="prodAsex" style="font-size:24px;font-weight:700;color:var(--t600)">০</div>
+    <div style="font-size:11px;color:var(--tm);margin-top:4px">টি অঙ্গজ পদ্ধতি</div>
+  </div>
+</div>
 </div>
 </div>
 
@@ -119,6 +130,21 @@
 <div class="sc"><div class="sl">সক্রিয়</div><div class="sv" id="pAct">-</div></div>
 <div class="sc"><div class="sl">বিক্রি শেষ</div><div class="sv" id="pSold">-</div></div>
 <div class="sc"><div class="sl">গড় সাফল্য</div><div class="sv" id="pAvg">-</div></div>
+<div class="sc">
+  <div style="display:grid;grid-template-columns:1fr 1px 1fr;gap:8px;align-items:center;width:100%">
+    <div style="text-align:center">
+      <div style="font-size:10px;color:var(--tm);font-weight:600;margin-bottom:4px">🌱 বীজ থেকে</div>
+      <div id="pSeedTot" style="font-size:18px;font-weight:700;color:var(--g600)">-</div>
+      <div style="font-size:10px;color:var(--tm)">রুট স্টক/চারা</div>
+    </div>
+    <div style="background:var(--bd);height:40px"></div>
+    <div style="text-align:center">
+      <div style="font-size:10px;color:var(--tm);font-weight:600;margin-bottom:4px">✂️ কলম</div>
+      <div id="pAsexTot" style="font-size:18px;font-weight:700;color:var(--t600)">-</div>
+      <div style="font-size:10px;color:var(--tm)">অঙ্গজ পদ্ধতি</div>
+    </div>
+  </div>
+</div>
 </div>
 <div class="tabs"><button class="tab active" onclick="swTab(this,'pSeedF','pAsexF')">🌱 বীজ উৎপাদন</button><button class="tab" onclick="swTab(this,'pAsexF','pSeedF')">🌿 অঙ্গজ বংশবিস্তার</button></div>
 <div id="pSeedF"><div class="card" style="padding:0"><div class="tw"><table><thead><tr><th>ব্যাচ ID</th><th>চারা</th><th>বীজ পরিমাণ</th><th>বপন তারিখ</th><th>উৎপাদিত</th><th>ব্যর্থ</th><th>অঙ্কু.%</th><th>অবস্থা</th><th>কার্যক্রম</th></tr></thead><tbody id="pSTbl"><tr><td colspan="9" class="lt">লোড হচ্ছে...</td></tr></tbody></table></div></div></div>

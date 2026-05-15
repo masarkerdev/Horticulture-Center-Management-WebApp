@@ -310,27 +310,13 @@ document.getElementById('dSt').innerHTML=`
 <div class="sc"><div class="si" style="background:var(--g50)"><i class="ti ti-plant" style="color:var(--g600);font-size:18px"></i></div><div class="sl">চারার ধরন</div><div class="sv">${toBnNum(d.seedling_types)}</div><div class="ss2">প্রকার নিবন্ধিত</div></div>
 <div class="sc"><div class="si" style="background:var(--t50)"><i class="ti ti-stack-2" style="color:var(--t600);font-size:18px"></i></div><div class="sl">মোট স্টক</div><div class="sv">${toBnNum(d.total_stock)}</div><div class="ss2">টি চারা/কলম</div></div>
 <div class="sc"><div class="si" style="background:var(--a50)"><i class="ti ti-sun" style="color:var(--a400);font-size:18px"></i></div><div class="sl">মোট উৎপাদন</div><div class="sv">${toBnNum(d.today_production)}</div></div>
-<div class="sc" style="min-width:0">
-  <div style="display:flex;gap:10px;align-items:center;height:100%">
-    <div style="text-align:center;flex:1">
-      <div style="font-size:10px;color:var(--tm);margin-bottom:4px">🌱 বীজ থেকে</div>
-      <div style="font-size:18px;font-weight:700;color:var(--g600)" id="prodSeed">${toBnNum(d.prod_seed||0)}</div>
-      <div style="font-size:10px;color:var(--tm)">রুট স্টক/চারা</div>
-    </div>
-    <div style="width:1px;height:40px;background:var(--bd)"></div>
-    <div style="text-align:center;flex:1">
-      <div style="font-size:10px;color:var(--tm);margin-bottom:4px">✂️ কলম</div>
-      <div style="font-size:18px;font-weight:700;color:var(--t600)" id="prodAsex">${toBnNum(d.prod_asex||0)}</div>
-      <div style="font-size:10px;color:var(--tm)">অঙ্গজ পদ্ধতি</div>
-    </div>
-  </div>
-</div>
 <div class="sc"><div class="si" style="background:var(--c50)"><i class="ti ti-receipt" style="color:var(--c400);font-size:18px"></i></div><div class="sl">আজকের বিক্রয়</div><div class="sv">${toBnMoney(d.today_revenue)}</div><div class="ss2">${toBnNum(d.today_invoices)}টি চালান</div></div>
 <div class="sc"><div class="si" style="background:var(--b50)"><i class="ti ti-coin" style="color:var(--b600);font-size:18px"></i></div><div class="sl">মোট রাজস্ব</div><div class="sv">${toBnMoney(d.monthly_revenue)}</div><div class="ss2">সর্বমোট বিক্রি</div></div>`;
-// উৎপাদন breakdown widget আপডেট
-const ps=document.getElementById('prodSeed');const pa=document.getElementById('prodAsex');
-if(ps)ps.textContent=toBnNum(d.prod_seed||0);
-if(pa)pa.textContent=toBnNum(d.prod_asex||0);
+// উৎপাদন breakdown widget
+const ps=document.getElementById('prodSeed');
+const pa=document.getElementById('prodAsex');
+if(ps) ps.textContent=toBnNum(d.prod_seed||0);
+if(pa) pa.textContent=toBnNum(d.prod_asex||0);
 // Bar chart — আলাদাভাবে call করুন
 lFiscalAchievement(); // ✅ auto-refresh এও চলবে, কিন্তু "লোড হচ্ছে" দেখাবে না
 const bnMonths={Jan:'জান',Feb:'ফেব',Mar:'মার্চ',Apr:'এপ্রি',May:'মে',Jun:'জুন',Jul:'জুলা',Aug:'আগস্ট',Sep:'সেপ্টে',Oct:'অক্টো',Nov:'নভে',Dec:'ডিসে'};
@@ -473,6 +459,13 @@ async function lProd(){
 try{const d=await api('/production');if(!d.success)return;const all=d.data||[];const ac=all.filter(x=>x.status==='active').length,so=all.filter(x=>x.status==='sold_out').length;const av=all.reduce((s,x)=>{const r=+(x.success_percent||x.germination_percent||0);return s+r},0)/(all.length||1);
 ['pTot','pAct','pSold'].forEach((id,i)=>document.getElementById(id).textContent=[all.length,ac,so][i]);
 document.getElementById('pAvg').textContent=av.toFixed(1)+'%';
+// বীজ ও কলম breakdown
+const seedTot=all.filter(b=>b.production_type==='seed').reduce((s,b)=>s+(parseInt(b.produced_quantity)||0),0);
+const asexTot=all.filter(b=>b.production_type!=='seed').reduce((s,b)=>s+(parseInt(b.produced_quantity)||0),0);
+const pSeedEl=document.getElementById('pSeedTot');
+const pAsexEl=document.getElementById('pAsexTot');
+if(pSeedEl) pSeedEl.textContent=toBnNum(seedTot);
+if(pAsexEl) pAsexEl.textContent=toBnNum(asexTot);
 const sd=all.filter(x=>x.production_type==='seed');const ad=all.filter(x=>x.production_type!=='seed');
 document.getElementById('pSTbl').innerHTML=sd.length?sd.map(b=>`<tr>
 <td><strong style="color:var(--g600)">${b.batch_code}</strong></td>
