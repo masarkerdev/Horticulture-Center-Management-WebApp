@@ -224,7 +224,13 @@
 
 <!-- DAMAGE -->
 <div class="pg" id="pg-dmg">
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px"><div style="font-size:13px;color:var(--tm)">ক্ষতিগ্রস্ত ও নষ্ট চারার রেকর্ড</div><button class="btn btnp" onclick="oM('mDmg')"><i class="ti ti-plus"></i> ক্ষতি রিপোর্ট</button></div>
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><div style="font-size:13px;color:var(--tm)">ক্ষতিগ্রস্ত ও নষ্ট চারার রেকর্ড</div><button class="btn btnp" onclick="oM('mDmg')"><i class="ti ti-plus"></i> ক্ষতি রিপোর্ট</button></div>
+<!-- Summary Cards -->
+<div id="dmgStats" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px">
+<div class="sc"><div class="si" style="background:var(--r50)"><i class="ti ti-plant-off" style="color:var(--r400);font-size:18px"></i></div><div class="sl">সর্বমোট ক্ষতি</div><div class="sv" id="dmgTotal">০</div><div class="ss2">টি চারা/কলম</div></div>
+<div class="sc"><div class="si" style="background:var(--g50)"><i class="ti ti-plant" style="color:var(--g600);font-size:18px"></i></div><div class="sl">মোট উৎপাদন</div><div class="sv" id="dmgProd">০</div><div class="ss2">টি চারা/কলম</div></div>
+<div class="sc"><div class="si" style="background:var(--a50)"><i class="ti ti-percentage" style="color:var(--a400);font-size:18px"></i></div><div class="sl">ক্ষতির হার</div><div class="sv" id="dmgRate">০%</div><div class="ss2">উৎপাদনের তুলনায়</div></div>
+</div>
 <div class="card" style="padding:0"><div class="tw"><table><thead><tr><th>তারিখ</th><th>চারা</th><th>ব্যাচ</th><th>পরিমাণ</th><th>কারণ</th><th>মন্তব্য</th><th>রিপোর্টকারী</th><th>কার্যক্রম</th></tr></thead><tbody id="dTbl"><tr><td colspan="8" class="lt">লোড হচ্ছে...</td></tr></tbody></table></div></div>
 </div>
 

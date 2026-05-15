@@ -548,7 +548,31 @@ async function saveMoth(){const b={variety:document.getElementById('mV').value,s
 async function lStk(){try{const d=await api('/stock');document.getElementById('sTblB').innerHTML=d.data?.length?d.data.map(s=>`<tr><td><strong>${s.name_bn}</strong>${s.variety?`<br><span style="font-size:12px;color:var(--tm)">${s.variety}</span>`:''}</td><td style="color:var(--g600)">+${toBnNum(s.total_in)}</td><td style="color:var(--c400)">-${toBnNum(s.total_out)}</td><td><strong style="${s.is_low_stock?'color:var(--c400)':''}">${toBnNum(s.current_stock)}</strong></td><td>${toBnMoney(s.current_stock*s.unit_price)}</td><td>${s.is_low_stock?'<span class="b br">সংকটজনক</span>':'<span class="b bg">ভালো</span>'}</td></tr>`).join(''):'<tr><td colspan="6" class="lt">নেই</td></tr>'}catch(e){}}
 
 // ===== DAMAGE =====
-async function lDmg(){try{const d=await api('/damages');document.getElementById('dTbl').innerHTML=d.data?.length?d.data.map(x=>`<tr>
+async function lDmg(){
+  try{
+    const [d, pd] = await Promise.all([
+      api('/damages'),
+      api('/production?limit=9999')
+    ]);
+
+    // Summary calculate করুন
+    const totalDmg = d.data?.reduce((sum, x) => sum + (parseInt(x.quantity)||0), 0) || 0;
+    const totalProd = pd.data?.reduce((sum, x) => sum + (parseInt(x.produced_quantity)||0), 0) || 0;
+    const rate = totalProd > 0 ? ((totalDmg / totalProd) * 100).toFixed(1) : 0;
+
+    // Cards আপডেট করুন
+    const dmgEl = document.getElementById('dmgTotal');
+    const prodEl = document.getElementById('dmgProd');
+    const rateEl = document.getElementById('dmgRate');
+    if(dmgEl) dmgEl.textContent = toBnNum(totalDmg);
+    if(prodEl) prodEl.textContent = toBnNum(totalProd);
+    if(rateEl){
+      rateEl.textContent = toBn(rate) + '%';
+      rateEl.style.color = rate > 20 ? 'var(--r400)' : rate > 10 ? 'var(--a400)' : 'var(--g600)';
+    }
+
+    // Table render করুন
+    document.getElementById('dTbl').innerHTML=d.data?.length?d.data.map(x=>`<tr>
 <td>${fmtDMY(x.damage_date)}</td>
 <td>${x.name_bn||'-'}</td>
 <td>${x.batch_code||'-'}</td>
@@ -560,7 +584,9 @@ async function lDmg(){try{const d=await api('/damages');document.getElementById(
 <button class="btn btns btne" onclick='editDmg(${JSON.stringify(x).replace(/'/g,"&#39;")})' title="সম্পাদনা"><i class="ti ti-edit"></i></button>
 <button class="btn btns btnr" onclick="delItem('damages',${x.id},'ক্ষতি ${x.name_bn||''}')" title="মুছুন"><i class="ti ti-trash"></i></button>
 </div></td>
-</tr>`).join(''):'<tr><td colspan="8" class="lt">নেই</td></tr>'}catch(e){}}
+</tr>`).join(''):'<tr><td colspan="8" class="lt">নেই</td></tr>';
+  }catch(e){}
+}
 
 function editDmg(x){
   document.getElementById('mDmgT').textContent='ক্ষতি রিপোর্ট সম্পাদনা';
