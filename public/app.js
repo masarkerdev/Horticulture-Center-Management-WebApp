@@ -26,7 +26,7 @@ const API='https://horticulturecenterasambasti.vercel.app/api';
 let TK=sessionStorage.getItem('hc_tk')||'';
 let ME=JSON.parse(sessionStorage.getItem('hc_me')||'{}');
 let sPage=1,sTotal=0;
-const MN={seed:'বীজ',grafting:'গ্রাফটিং',cutting:'কাটিং',budding:'বাডিং',layering:'লেয়ারিং',tissue_culture:'টিস্যু কালচার'};
+const MN={seed:'বীজ',grafting:'গ্রাফটিং',cutting:'কাটিং',budding:'বাডিং',layering:'লেয়ারিং',tissue_culture:'টিস্যু কালচার',purchase:'ক্রয়'};
 const RN={admin:'Admin',manager:'Manager',production_officer:'Prod.Officer',sales_operator:'Sales Operator',viewer:'Viewer'};
 const PN={cash:'নগদ',bkash:'বিকাশ',bank:'ব্যাংক',cheque:'চেক'};
 const SN={paid:'পরিশোধিত',pending:'বকেয়া',partial:'আংশিক'};
@@ -496,7 +496,12 @@ document.getElementById('pATbl').innerHTML=ad.length?ad.map(b=>`<tr>
 </div></td></tr>`).join(''):'<tr><td colspan="10" class="lt">অঙ্গজ উৎপাদন নেই</td></tr>'
 }catch(e){}}
 
-function togP(){const m=document.getElementById('pMt').value;document.getElementById('pSF').style.display=m==='seed'?'block':'none';document.getElementById('pAF').style.display=m!=='seed'?'block':'none'}
+function togP(){
+  const m=document.getElementById('pMt').value;
+  document.getElementById('pSF').style.display=m==='seed'?'block':'none';
+  document.getElementById('pAF').style.display=(m!=='seed'&&m!=='purchase')?'block':'none';
+  document.getElementById('pPF').style.display=m==='purchase'?'block':'none';
+}
 
 async function saveProd(){
 const editId=document.getElementById('mProd').dataset.editId||'';
@@ -524,8 +529,14 @@ try{
     else{toast('আপডেট হয়েছে ✅');}
     cM('mProd');clearProdModal();lProd();lBatch();
   }else{
-    // ===== CREATE NEW =====
-    if(m==='seed'){
+    if(m==='purchase'){
+      const b={seedling_id:+document.getElementById('pSd').value,production_type:'purchase',propagation_date:document.getElementById('pPDt').value,produced_quantity:+document.getElementById('pPQty').value||0,success_quantity:+document.getElementById('pPQty').value||0,failed_quantity:0,remarks:`ক্রয় উৎস: ${document.getElementById('pPSrc').value||'-'} | একক মূল্য: ৳${document.getElementById('pPPrice').value||0}`};
+      if(!b.propagation_date||!b.produced_quantity)return toast('তারিখ ও পরিমাণ দিন',1);
+      if(!document.getElementById('pPSrc').value)return toast('বিক্রেতার নাম দিন',1);
+      const d=await api('/production/asexual',{method:'POST',body:JSON.stringify(b)});
+      if(d.success){toast('ক্রয় রেকর্ড সংরক্ষিত ✅');cM('mProd');clearProdModal();lProd();lBatch();}
+      else toast(d.error||d.message||'সমস্যা',1);
+    }else if(m==='seed'){
       const b={seedling_id:+document.getElementById('pSd').value,seed_source:document.getElementById('pSrc').value,seed_quantity:+document.getElementById('pSQ').value||0,sowing_date:document.getElementById('pSw').value,produced_quantity:+document.getElementById('pPQ').value||0,remarks:document.getElementById('pRm').value};
       if(!b.sowing_date||!b.produced_quantity)return toast('তারিখ ও পরিমাণ দিন',1);
       const d=await api('/production/seed',{method:'POST',body:JSON.stringify(b)});
