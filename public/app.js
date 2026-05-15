@@ -384,18 +384,17 @@ document.getElementById('sTbl').innerHTML=d.data.length?d.data.map(x=>`<tr>
 <td style="color:var(--tm)">${x.seedling_code}</td>
 <td><strong>${x.name_bn}</strong>${x.variety?`<br><span style="font-size:11px;color:var(--tm)">${x.variety}</span>`:''}</td>
 <td><span class="b bg">${x.category_bn||'-'}</span></td>
-<td><span class="b bt">${MN[x.production_type]||x.production_type}</span></td>
 <td>৳${x.unit_price}</td>
 <td><strong style="${x.current_stock<=x.min_stock_alert?'color:var(--c400)':''}">${x.current_stock}</strong></td>
 <td>${x.current_stock<=x.min_stock_alert?'<span class="b br">কম স্টক</span>':'<span class="b bg">সক্রিয়</span>'}</td>
-<td><div style="display:flex;gap:4px"><button class="btn btns btne" onclick="editSeed(${JSON.stringify(x).replace(/"/g,'&quot;')})"><i class="ti ti-edit"></i></button><button class="btn btns btnr" onclick="delItem('seedlings',${x.id},'${x.name_bn}')"><i class="ti ti-trash"></i></button></div></td></tr>`).join(''):'<tr><td colspan="8" class="lt">কোনো চারা নেই</td></tr>';
+<td><div style="display:flex;gap:4px"><button class="btn btns btne" onclick="editSeed(${JSON.stringify(x).replace(/"/g,'&quot;')})"><i class="ti ti-edit"></i></button><button class="btn btns btnr" onclick="delItem('seedlings',${x.id},'${x.name_bn}')"><i class="ti ti-trash"></i></button></div></td></tr>`).join(''):'<tr><td colspan="7" class="lt">কোনো চারা নেই</td></tr>';
 const tp=Math.ceil(sTotal/10);
 document.getElementById('sPg').textContent=`${sTotal}টির মধ্যে ${(sPage-1)*10+1}–${Math.min(sPage*10,sTotal)} দেখানো হচ্ছে`;
 let pb='';if(sPage>1)pb+=`<button class="btn btns" onclick="sPage--;lSeed()"><i class="ti ti-chevron-left"></i></button>`;for(let i=1;i<=tp;i++)pb+=`<button class="btn btns${i===sPage?' btnp':''}" onclick="sPage=${i};lSeed()">${i}</button>`;if(sPage<tp)pb+=`<button class="btn btns" onclick="sPage++;lSeed()"><i class="ti ti-chevron-right"></i></button>`;
 document.getElementById('sPgBtns').innerHTML=pb;
 }catch(e){}}
 
-function editSeed(s){document.getElementById('mSeedT').textContent='চারা সম্পাদনা';document.getElementById('sId').value=s.id;document.getElementById('sNB').value=s.name_bn||'';document.getElementById('sNE').value=s.name_en||'';document.getElementById('sV').value=s.variety||'';document.getElementById('sCat').value=s.category_id||1;document.getElementById('sTp').value=s.production_type||'seed';document.getElementById('sP').value=s.unit_price||0;document.getElementById('sC').value=s.production_cost||0;document.getElementById('sD').value=s.description||'';oM('mSeed')}
+function editSeed(s){document.getElementById('mSeedT').textContent='চারা সম্পাদনা';document.getElementById('sId').value=s.id;document.getElementById('sNB').value=s.name_bn||'';document.getElementById('sNE').value=s.name_en||'';document.getElementById('sV').value=s.variety||'';document.getElementById('sCat').value=s.category_id||1;document.getElementById('sP').value=s.unit_price||0;document.getElementById('sC').value=s.production_cost||0;document.getElementById('sD').value=s.description||'';oM('mSeed')}
 
 async function saveSeed(){
 const id=document.getElementById('sId').value;
