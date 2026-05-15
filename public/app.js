@@ -26,7 +26,7 @@ const API='https://horticulturecenterasambasti.vercel.app/api';
 let TK=sessionStorage.getItem('hc_tk')||'';
 let ME=JSON.parse(sessionStorage.getItem('hc_me')||'{}');
 let sPage=1,sTotal=0;
-const MN={seed:'বীজ',grafting:'গ্রাফটিং',cutting:'কাটিং',budding:'বাডিং',layering:'লেয়ারিং',tissue_culture:'টিস্যু কালচার',purchase:'ক্রয়'};
+const MN={seed:'বীজ',cutting:'কাটিং',layering:'লেয়ারিং',grafting:'গ্রাফটিং / জোড়কলম',budding:'বাডিং',tissue_culture:'টিস্যু কালচার',purchase:'ক্রয়'};
 const RN={admin:'Admin',manager:'Manager',production_officer:'Prod.Officer',sales_operator:'Sales Operator',viewer:'Viewer'};
 const PN={cash:'নগদ',bkash:'বিকাশ',bank:'ব্যাংক',cheque:'চেক'};
 const SN={paid:'পরিশোধিত',pending:'বকেয়া',partial:'আংশিক'};
