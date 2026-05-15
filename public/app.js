@@ -693,10 +693,16 @@ async function viewInv(id){
     document.getElementById('invBody').innerHTML=`
     <div id="invoicePrint" style="font-family:'Noto Sans Bengali',Arial,sans-serif;color:#222;background:#fff;padding:10px">
       <!-- Header -->
-      <div style="text-align:center;border-bottom:3px solid #3B6D11;padding-bottom:14px;margin-bottom:16px">
-        <div style="font-size:22px;font-weight:700;color:#3B6D11">🌿 ${orgName}</div>
-        <div style="font-size:12px;color:#666">${orgSub} | ${orgAddr}</div>
-        <div style="font-size:11px;color:#888">বাংলাদেশ কৃষি মন্ত্রণালয়</div>
+      <div style="border-bottom:3px solid #3B6D11;padding-bottom:14px;margin-bottom:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <img src="./images/govt logo.png" style="width:70px;height:70px;object-fit:contain" alt="govt logo">
+          <div style="text-align:center;flex:1;padding:0 12px">
+            <div style="font-size:22px;font-weight:700;color:#3B6D11">${orgName}</div>
+            <div style="font-size:12px;color:#666">${orgSub} | ${orgAddr}</div>
+            <div style="font-size:11px;color:#888">বাংলাদেশ কৃষি মন্ত্রণালয়</div>
+          </div>
+          <img src="./images/favicon.jpg" style="width:70px;height:70px;object-fit:contain;border-radius:50%" alt="center logo">
+        </div>
       </div>
       <!-- Invoice Info -->
       <div style="display:flex;justify-content:space-between;margin-bottom:16px;font-size:13px">
