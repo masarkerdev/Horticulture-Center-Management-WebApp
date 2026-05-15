@@ -361,10 +361,10 @@ if(d.low_stock_count>0){const ls=await api('/seedlings/low-stock');document.getE
 // Recent activities
 const[sa,pr]=await Promise.all([api('/sales?limit=3'),api('/production?limit=3')]);
 let acts=[];
-if(sa.data)sa.data.forEach(x=>acts.push({time:fmtDMY(x.sale_date),txt:`চালান ${x.invoice_no} — ${x.customer_name||'-'} — ৳${parseFloat(x.total_amount).toLocaleString()}`,mod:'বিক্রয়',st:'paid'}));
-if(pr.data)pr.data.forEach(x=>acts.push({time:fmtDMY(x.created_at),txt:`ব্যাচ ${x.batch_code} — ${x.seedling_bn||'-'} (${x.produced_quantity}টি)`,mod:'উৎপাদন',st:'done'}));
+if(sa.data)sa.data.forEach(x=>acts.push({time:fmtDMY(x.sale_date),txt:`চালান ${x.invoice_no} — ${x.customer_name||'-'} — ৳${parseFloat(x.total_amount).toLocaleString()}`,mod:'বিক্রয়',st:'paid',user:x.created_by_name||'—'}));
+if(pr.data)pr.data.forEach(x=>acts.push({time:fmtDMY(x.created_at),txt:`ব্যাচ ${x.batch_code} — ${x.seedling_bn||'-'} (${x.produced_quantity}টি)`,mod:'উৎপাদন',st:'done',user:x.created_by_name||'—'}));
 acts=acts.slice(0,5);
-document.getElementById('dAct').innerHTML=acts.length?acts.map(a=>`<tr><td style="color:var(--tm)">${a.time}</td><td>${a.txt}</td><td><span class="tag">${a.mod}</span></td><td><span class="b ${a.st==='paid'?'bg':'bt'}">${a.st==='paid'?'পরিশোধিত':'সম্পন্ন'}</span></td></tr>`).join(''):'<tr><td colspan="4" class="lt">ডেটা নেই</td></tr>';
+document.getElementById('dAct').innerHTML=acts.length?acts.map(a=>`<tr><td style="color:var(--tm)">${a.time}</td><td>${a.txt}</td><td><span class="tag">${a.mod}</span></td><td style="font-size:12px;color:var(--tp)"><i class="ti ti-user" style="font-size:11px"></i> ${a.user}</td><td><span class="b ${a.st==='paid'?'bg':'bt'}">${a.st==='paid'?'পরিশোধিত':'সম্পন্ন'}</span></td></tr>`).join(''):'<tr><td colspan="5" class="lt">ডেটা নেই</td></tr>';
 }catch(e){
   document.getElementById('dSt').innerHTML='<div class="lt" style="color:var(--a400)">⏳ সংযোগ হচ্ছে, একটু অপেক্ষা করুন...</div>';
   setTimeout(()=>lDash(), 3000);

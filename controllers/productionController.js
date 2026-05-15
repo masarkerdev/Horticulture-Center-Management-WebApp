@@ -21,10 +21,12 @@ const getAllBatches = async (req, res) => {
         params.push(limit, offset);
         const result = await db.query(
             `SELECT pb.*, s.name_bn AS seedling_bn, s.name_en AS seedling_en, s.seedling_code,
-                    mp.mp_code, mp.variety AS mother_variety
+                    mp.mp_code, mp.variety AS mother_variety,
+                    u.name AS created_by_name
              FROM production_batches pb
              LEFT JOIN seedlings s ON pb.seedling_id = s.id
              LEFT JOIN mother_plants mp ON pb.mother_plant_id = mp.id
+             LEFT JOIN users u ON pb.created_by = u.id
              ${where}
              ORDER BY pb.created_at DESC
              LIMIT $${params.length - 1} OFFSET $${params.length}`,
