@@ -385,11 +385,17 @@
 <div class="mo" id="mDmg"><div class="md"><div class="mh"><h3 id="mDmgT">ক্ষতি / নষ্ট রিপোর্ট</h3><button class="mx" onclick="cM('mDmg');document.getElementById('dDmgId').value=''"><i class="ti ti-x"></i></button></div><input type="hidden" id="dDmgId"><div class="fr"><div class="fg"><label>তারিখ*</label><input class="fc" type="date" id="dDt"></div><div class="fg"><label>চারা*</label><select class="fc" id="dSd"></select></div></div><div class="fr"><div class="fg"><label>ব্যাচ</label><select class="fc" id="dBt"><option value="">-- নির্বাচন করুন</option></select></div><div class="fg"><label>পরিমাণ*</label><input class="fc" type="number" id="dQt" placeholder="0"></div></div><div class="fg"><label>কারণ*</label><select class="fc" id="dRs"><option value="disease">রোগ</option><option value="drought">খরা</option><option value="flood">বন্যা</option><option value="pest">পোকামাকড়</option><option value="cold">ঠান্ডা</option><option value="other">অন্যান্য</option></select></div><div class="fg"><label>বিস্তারিত মন্তব্য</label><textarea class="fc" id="dRm" rows="2" placeholder="বিস্তারিত লিখুন..."></textarea></div><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" onclick="cM('mDmg');document.getElementById('dDmgId').value=''">বাতিল</button><button class="btn btnp" onclick="saveDmg()"><i class="ti ti-check"></i> সংরক্ষণ</button></div></div></div>
 
 <!-- INCOME MODAL -->
-<div class="mo" id="mIncome"><div class="md"><div class="mh"><h3>অন্যান্য আয় যোগ</h3><button class="mx" onclick="cM('mIncome')"><i class="ti ti-x"></i></button></div>
-<div class="fr"><div class="fg"><label>তারিখ*</label><input class="fc" type="date" id="incDate"></div><div class="fg"><label>আয়ের ধরন*</label><select class="fc" id="incType" onchange="toggleIncCat()"><option value="agriculture">🌿 কৃষি পণ্য বিক্রয়</option><option value="dormitory">🏠 ডরমিটরি ভাড়া</option><option value="other">💰 অন্যান্য আয়</option></select></div></div>
+<div class="mo" id="mIncome"><div class="md"><div class="mh"><h3 id="incModalTitle">অন্যান্য আয় যোগ</h3><button class="mx" onclick="cM('mIncome');document.getElementById('incId').value='';document.getElementById('incModalTitle').textContent='অন্যান্য আয় যোগ'"><i class="ti ti-x"></i></button></div>
+<input type="hidden" id="incId">
+<div class="fr"><div class="fg"><label>তারিখ*</label><input class="fc" type="date" id="incDate"></div><div class="fg"><label>আয়ের ধরন*</label><select class="fc" id="incType"><option value="agriculture">🌿 কৃষি পণ্য বিক্রয়</option><option value="dormitory">🏠 ডরমিটরি ভাড়া</option><option value="other">💰 অন্যান্য আয়</option></select></div></div>
 <div class="fg"><label>বিভাগ / বিবরণ</label><input class="fc" id="incCat" placeholder="যেমন: সবজি বিক্রয়, কক্ষ নং ৩, ইত্যাদি"></div>
 <div class="fr"><div class="fg"><label>পরিমাণ (৳)*</label><input class="fc" type="number" id="incAmt" placeholder="০"></div><div class="fg"><label>বিস্তারিত</label><input class="fc" id="incDesc" placeholder="ঐচ্ছিক"></div></div>
-<div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" onclick="cM('mIncome')">বাতিল</button><button class="btn btnp" onclick="saveIncome()"><i class="ti ti-check"></i> সংরক্ষণ</button></div>
+<div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" onclick="cM('mIncome');document.getElementById('incId').value=''">বাতিল</button><button class="btn btnp" onclick="saveIncome()"><i class="ti ti-check"></i> সংরক্ষণ</button></div>
+</div></div>
+
+<!-- INCOME VIEW MODAL -->
+<div class="mo" id="mIncView"><div class="md" style="max-width:420px"><div class="mh"><h3>আয়ের বিবরণ</h3><button class="mx" onclick="cM('mIncView')"><i class="ti ti-x"></i></button></div>
+<div id="incViewContent"></div>
 </div></div>
 
 <!-- MOTHER PLANT MODAL -->

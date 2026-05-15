@@ -1028,6 +1028,17 @@ router.post('/other-income', authenticate, async (req, res) => {
     } catch (err) { res.status(500).json({ success: false, error: err.message }); }
 });
 
+router.put('/other-income/:id', authenticate, adminOrManager, async (req, res) => {
+    const { income_type, category, amount, income_date, description } = req.body;
+    try {
+        await db.query(
+            `UPDATE other_income SET income_type=$1, category=$2, amount=$3, income_date=$4, description=$5 WHERE id=$6`,
+            [income_type, category||null, amount, income_date, description||null, req.params.id]
+        );
+        res.json({ success: true, message: 'আপডেট হয়েছে।' });
+    } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+});
+
 router.delete('/other-income/:id', authenticate, adminOrManager, async (req, res) => {
     try {
         await db.query('DELETE FROM other_income WHERE id=$1', [req.params.id]);

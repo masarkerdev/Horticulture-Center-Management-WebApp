@@ -1724,17 +1724,60 @@ async function lIncome(){
       <td>${x.category||'-'}</td>
       <td><strong style="color:var(--g600)">৳${parseFloat(x.amount).toLocaleString()}</strong></td>
       <td style="font-size:12px;color:var(--tm)">${x.description||'-'}</td>
-      <td><button class="btn btns btnr" onclick="delIncome(${x.id})" title="মুছুন"><i class="ti ti-trash"></i></button></td>
+      <td><div style="display:flex;gap:4px">
+        <button class="btn btns btne" onclick='editIncome(${JSON.stringify(x).replace(/"/g,"&quot;")})' title="সম্পাদনা"><i class="ti ti-edit"></i></button>
+        <button class="btn btns" style="background:var(--t50);color:var(--t600)" onclick='viewIncome(${JSON.stringify(x).replace(/"/g,"&quot;")})' title="বিস্তারিত"><i class="ti ti-eye"></i></button>
+        <button class="btn btns btnr" onclick="delIncome(${x.id})" title="মুছুন"><i class="ti ti-trash"></i></button>
+      </div></td>
     </tr>`).join(''):'<tr><td colspan="6" class="lt">কোনো রেকর্ড নেই</td></tr>';
   }catch(e){console.error('lIncome:',e);}
 }
 
+function editIncome(x){
+  document.getElementById('incId').value=x.id;
+  document.getElementById('incModalTitle').textContent='আয় সম্পাদনা';
+  document.getElementById('incDate').value=x.income_date?.split('T')[0]||'';
+  document.getElementById('incType').value=x.income_type||'agriculture';
+  document.getElementById('incCat').value=x.category||'';
+  document.getElementById('incAmt').value=x.amount||'';
+  document.getElementById('incDesc').value=x.description||'';
+  oM('mIncome');
+}
+
+function viewIncome(x){
+  document.getElementById('incViewContent').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+      <div><div style="font-size:11px;color:var(--tm)">তারিখ</div><div style="font-weight:600">${fmtDMY(x.income_date)}</div></div>
+      <div><div style="font-size:11px;color:var(--tm)">আয়ের ধরন</div><div><span class="b bg">${INC_TYPE[x.income_type]||x.income_type}</span></div></div>
+      <div><div style="font-size:11px;color:var(--tm)">বিভাগ</div><div style="font-weight:600">${x.category||'-'}</div></div>
+      <div><div style="font-size:11px;color:var(--tm)">পরিমাণ</div><div style="font-weight:700;color:var(--g600);font-size:20px">৳${parseFloat(x.amount).toLocaleString()}</div></div>
+    </div>
+    ${x.description?`<div style="background:var(--gr50);border-radius:8px;padding:12px;font-size:13px;color:var(--tm)">${x.description}</div>`:''}
+    <div style="margin-top:16px;display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btns" onclick="printIncome()"><i class="ti ti-printer"></i> প্রিন্ট</button>
+      <button class="btn" onclick="cM('mIncView')">বন্ধ করুন</button>
+    </div>`;
+  oM('mIncView');
+}
+
+function printIncome(){
+  const content=document.getElementById('incViewContent').innerHTML;
+  const w=window.open('','_blank');
+  w.document.write(`<html><head><title>আয় বিবরণ</title>
+    <style>body{font-family:sans-serif;padding:20px}.b{display:inline-block;padding:2px 8px;background:#eaf3de;border-radius:20px;font-size:12px}</style>
+    </head><body>${content}<script>window.print();window.close();<\/script></body></html>`);
+  w.document.close();
+}
+
 async function saveIncome(){
+  const id=document.getElementById('incId')?.value;
   const b={income_type:document.getElementById('incType').value,category:document.getElementById('incCat').value,amount:+document.getElementById('incAmt').value||0,income_date:document.getElementById('incDate').value,description:document.getElementById('incDesc').value};
   if(!b.income_date||!b.amount)return toast('তারিখ ও পরিমাণ দিন',1);
   try{
-    const d=await api('/other-income',{method:'POST',body:JSON.stringify(b)});
-    if(d.success){toast('আয় সংরক্ষিত ✅');cM('mIncome');await lIncome();}
+    const url=id?'/other-income/'+id:'/other-income';
+    const method=id?'PUT':'POST';
+    const d=await api(url,{method,body:JSON.stringify(b)});
+    if(d.success){toast(id?'আপডেট হয়েছে ✅':'আয় সংরক্ষিত ✅');cM('mIncome');document.getElementById('incId').value='';document.getElementById('incModalTitle').textContent='অন্যান্য আয় যোগ';await lIncome();}
     else toast(d.message||'সমস্যা',1);
   }catch(e){toast('সমস্যা',1);}
 }
