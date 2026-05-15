@@ -89,6 +89,7 @@ router.delete('/seedlings/:id', authenticate, adminOrManager, async (req, res) =
                 ['seedlings', req.params.id, JSON.stringify(item.rows[0]), 'চারা তালিকা', item.rows[0].name_bn, req.user.id]);
         }
         // NOT NULL constraint আছে — DELETE করতে হবে
+        await db.query('DELETE FROM damages WHERE seedling_id=$1', [req.params.id]);
         await db.query('DELETE FROM sales_items WHERE seedling_id=$1', [req.params.id]);
         await db.query('DELETE FROM stock_transactions WHERE seedling_id=$1', [req.params.id]);
         // NULL করা যায় এমন columns
@@ -1000,6 +1001,38 @@ router.post('/users/:id/reject-password', authenticate, adminOnly, async (req, r
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
+});
+
+// ===== অন্যান্য আয় =====
+router.get('/other-income', authenticate, async (req, res) => {
+    try {
+        const result = await db.query(
+            `SELECT oi.*, u.name AS created_by_name
+             FROM other_income oi
+             LEFT JOIN users u ON u.id = oi.created_by
+             ORDER BY oi.income_date DESC, oi.created_at DESC`
+        );
+        res.json({ success: true, data: result.rows });
+    } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+});
+
+router.post('/other-income', authenticate, async (req, res) => {
+    const { income_type, category, amount, income_date, description } = req.body;
+    try {
+        const result = await db.query(
+            `INSERT INTO other_income (income_type, category, amount, income_date, description, created_by)
+             VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
+            [income_type, category||null, amount, income_date, description||null, req.user.id]
+        );
+        res.json({ success: true, data: result.rows[0], message: 'আয় সংরক্ষিত হয়েছে।' });
+    } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+});
+
+router.delete('/other-income/:id', authenticate, adminOrManager, async (req, res) => {
+    try {
+        await db.query('DELETE FROM other_income WHERE id=$1', [req.params.id]);
+        res.json({ success: true, message: 'মুছে ফেলা হয়েছে।' });
+    } catch (err) { res.status(500).json({ success: false, error: err.message }); }
 });
 
 module.exports = router;
