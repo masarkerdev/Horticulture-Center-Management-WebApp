@@ -1055,12 +1055,17 @@ if(srch)all=all.filter(x=>(x.batch_code||'').toLowerCase().includes(srch)||(x.se
 if(stf)all=all.filter(x=>x.status===stf);
 const ac=all.filter(x=>x.status==='active').length,so=all.filter(x=>x.status==='sold_out').length;
 const av=all.reduce((s,x)=>{const r=+(x.success_percent||x.germination_percent||0);return s+r},0)/(all.length||1);
-document.getElementById('bTot').textContent=all.length;
-document.getElementById('bAct').textContent=ac;
-document.getElementById('bSld').textContent=so;
-document.getElementById('bAvg').textContent=av.toFixed(1)+'%';
+const bTot=document.getElementById('bTot');
+const bAct=document.getElementById('bAct');
+const bSld=document.getElementById('bSld');
+const bAvg=document.getElementById('bAvg');
+const bTbl=document.getElementById('bTbl');
+if(bTot)bTot.textContent=all.length;
+if(bAct)bAct.textContent=ac;
+if(bSld)bSld.textContent=so;
+if(bAvg)bAvg.textContent=av.toFixed(1)+'%';
 const statusBadge={active:'<span class="b bg">সক্রিয়</span>',partial:'<span class="b ba">আংশিক</span>',sold_out:'<span class="b br">বিক্রি শেষ</span>',closed:'<span class="b">বন্ধ</span>'};
-document.getElementById('bTbl').innerHTML=all.length?all.map(b=>{
+if(bTbl)bTbl.innerHTML=all.length?all.map(b=>{
 const dt=b.production_type==='seed'?b.sowing_date:b.propagation_date;
 const sp=b.success_percent||b.germination_percent||0;
 const avail=b.available_quantity??b.produced_quantity;
@@ -1080,7 +1085,7 @@ return`<tr>
 <button class="btn btns btne" onclick="editBatch(${JSON.stringify(b).replace(/"/g,'&quot;')})" title="সম্পাদনা"><i class="ti ti-edit"></i></button>
 <button class="btn btns btnr" onclick="delItem('production-batches',${b.id},'ব্যাচ ${b.batch_code}')" title="মুছুন"><i class="ti ti-trash"></i></button>
 </div></td></tr>`}).join(''):'<tr><td colspan="11" class="lt">কোনো ব্যাচ নেই</td></tr>';
-}catch(e){document.getElementById('bTbl').innerHTML='<tr><td colspan="11" class="lt" style="color:var(--r400)">লোড সমস্যা</td></tr>'}}
+}catch(e){console.error('lBatch error:',e);}}
 
 // EDIT BATCH
 function editBatch(b){
