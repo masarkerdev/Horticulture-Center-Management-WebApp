@@ -34,17 +34,6 @@ const DN={disease:'রোগ',drought:'খরা',flood:'বন্যা',pest:'
 const HN={excellent:'চমৎকার',good:'ভালো',weak:'দুর্বল'};
 
 // ===== DATE FORMAT HELPER =====
-function fmtDate(d){
-  if(!d)return '-';
-  try{
-    const dt=new Date(d);
-    if(isNaN(dt.getTime()))return d;
-    const day=String(dt.getDate()).padStart(2,'0');
-    const month=String(dt.getMonth()+1).padStart(2,'0');
-    const year=dt.getFullYear();
-    return toBn(`${day}/${month}/${year}`);
-  }catch(e){return d;}
-}
 function fmtDateInput(d){
   // Convert any date string to YYYY-MM-DD for input[type=date]
   if(!d)return '';
@@ -312,11 +301,6 @@ document.getElementById('dSt').innerHTML=`
 <div class="sc"><div class="si" style="background:var(--a50)"><i class="ti ti-sun" style="color:var(--a400);font-size:18px"></i></div><div class="sl">মোট উৎপাদন</div><div class="sv">${toBnNum(d.today_production)}</div></div>
 <div class="sc"><div class="si" style="background:var(--c50)"><i class="ti ti-receipt" style="color:var(--c400);font-size:18px"></i></div><div class="sl">আজকের বিক্রয়</div><div class="sv">${toBnMoney(d.today_revenue)}</div><div class="ss2">${toBnNum(d.today_invoices)}টি চালান</div></div>
 <div class="sc"><div class="si" style="background:var(--b50)"><i class="ti ti-coin" style="color:var(--b600);font-size:18px"></i></div><div class="sl">মোট রাজস্ব</div><div class="sv">${toBnMoney(d.monthly_revenue)}</div><div class="ss2">সর্বমোট বিক্রি</div></div>`;
-// উৎপাদন breakdown widget
-const ps=document.getElementById('prodSeed');
-const pa=document.getElementById('prodAsex');
-if(ps) ps.textContent=toBnNum(d.prod_seed||0);
-if(pa) pa.textContent=toBnNum(d.prod_asex||0);
 // Bar chart — আলাদাভাবে call করুন
 lFiscalAchievement(); // ✅ auto-refresh এও চলবে, কিন্তু "লোড হচ্ছে" দেখাবে না
 const bnMonths={Jan:'জান',Feb:'ফেব',Mar:'মার্চ',Apr:'এপ্রি',May:'মে',Jun:'জুন',Jul:'জুলা',Aug:'আগস্ট',Sep:'সেপ্টে',Oct:'অক্টো',Nov:'নভে',Dec:'ডিসে'};
@@ -458,13 +442,6 @@ async function lProd(){
 try{const d=await api('/production');if(!d.success)return;const all=d.data||[];const ac=all.filter(x=>x.status==='active').length,so=all.filter(x=>x.status==='sold_out').length;const av=all.reduce((s,x)=>{const r=+(x.success_percent||x.germination_percent||0);return s+r},0)/(all.length||1);
 ['pTot','pAct','pSold'].forEach((id,i)=>document.getElementById(id).textContent=[all.length,ac,so][i]);
 document.getElementById('pAvg').textContent=av.toFixed(1)+'%';
-// বীজ ও কলম breakdown
-const seedTot=all.filter(b=>b.production_type==='seed').reduce((s,b)=>s+(parseInt(b.produced_quantity)||0),0);
-const asexTot=all.filter(b=>b.production_type!=='seed').reduce((s,b)=>s+(parseInt(b.produced_quantity)||0),0);
-const pSeedEl=document.getElementById('pSeedTot');
-const pAsexEl=document.getElementById('pAsexTot');
-if(pSeedEl) pSeedEl.textContent=toBnNum(seedTot);
-if(pAsexEl) pAsexEl.textContent=toBnNum(asexTot);
 const sd=all.filter(x=>x.production_type==='seed');const ad=all.filter(x=>x.production_type!=='seed');
 document.getElementById('pSTbl').innerHTML=sd.length?sd.map(b=>`<tr>
 <td><strong style="color:var(--g600)">${b.batch_code}</strong></td>
@@ -533,19 +510,19 @@ try{
       if(!b.propagation_date||!b.produced_quantity)return toast('তারিখ ও পরিমাণ দিন',1);
       if(!document.getElementById('pPSrc').value)return toast('বিক্রেতার নাম দিন',1);
       const d=await api('/production/asexual',{method:'POST',body:JSON.stringify(b)});
-      if(d.success){toast('ক্রয় রেকর্ড সংরক্ষিত ✅');cM('mProd');clearProdModal();lProd();lBatch();}
+      if(d.success){toast('ক্রয় রেকর্ড সংরক্ষিত ✅');cM('mProd');clearProdModal();lProd();setTimeout(()=>lBatch(),300);}
       else toast(d.error||d.message||'সমস্যা',1);
     }else if(m==='seed'){
       const b={seedling_id:+document.getElementById('pSd').value,seed_source:document.getElementById('pSrc').value,seed_quantity:+document.getElementById('pSQ').value||0,sowing_date:document.getElementById('pSw').value,produced_quantity:+document.getElementById('pPQ').value||0,remarks:document.getElementById('pRm').value};
       if(!b.sowing_date||!b.produced_quantity)return toast('তারিখ ও পরিমাণ দিন',1);
       const d=await api('/production/seed',{method:'POST',body:JSON.stringify(b)});
-      if(d.success){toast('বীজ ব্যাচ তৈরি ✅');cM('mProd');clearProdModal();lProd();lBatch();}
+      if(d.success){toast('বীজ ব্যাচ তৈরি ✅');cM('mProd');clearProdModal();lProd();setTimeout(()=>lBatch(),300);}
       else toast(d.error||d.message||'সমস্যা',1);
     }else{
       const b={seedling_id:+document.getElementById('pSd').value,production_type:m,mother_plant_id:+document.getElementById('pMP').value||null,propagation_date:document.getElementById('pPD').value,produced_quantity:+document.getElementById('pAQ').value||0,success_quantity:+document.getElementById('pSu').value||0,failed_quantity:(+document.getElementById('pAQ').value||0)-(+document.getElementById('pSu').value||0),remarks:document.getElementById('pRm').value};
       if(!b.propagation_date||!b.produced_quantity)return toast('তারিখ ও পরিমাণ দিন',1);
       const d=await api('/production/asexual',{method:'POST',body:JSON.stringify(b)});
-      if(d.success){toast('অঙ্গজ ব্যাচ তৈরি ✅');cM('mProd');clearProdModal();lProd();lBatch();}
+      if(d.success){toast('অঙ্গজ ব্যাচ তৈরি ✅');cM('mProd');clearProdModal();lProd();setTimeout(()=>lBatch(),300);}
       else toast(d.error||d.message||'সমস্যা',1);
     }
   }
