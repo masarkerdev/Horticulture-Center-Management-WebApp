@@ -218,6 +218,11 @@
 <!-- STOCK -->
 <div class="pg" id="pg-stk">
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><div style="font-size:13px;color:var(--tm)">স্বয়ংক্রিয় স্টক হিসাব</div><div style="display:flex;gap:8px"><button class="btn btns" onclick="printPage()"><i class="ti ti-printer"></i> প্রিন্ট</button><button class="btn btns" onclick="exportCSV('stock')"><i class="ti ti-download"></i> CSV</button></div></div>
+<!-- Search & Filter -->
+<div style="display:flex;gap:8px;margin-bottom:16px">
+<input class="fc" id="stkSearch" placeholder="🔍 চারা খুঁজুন..." style="flex:1" oninput="filterStk()">
+<select class="fc" id="stkCat" style="width:160px" onchange="filterStk()"><option value="">সব ক্যাটাগরি</option></select>
+</div>
 <div class="card" style="margin-bottom:16px"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px"><div style="background:var(--g50);color:var(--g800);padding:6px 12px;border-radius:6px;font-weight:600">প্রারম্ভিক</div><span style="font-size:18px;color:var(--tm)">+</span><div style="background:var(--t50);color:var(--t600);padding:6px 12px;border-radius:6px;font-weight:600">উৎপাদন</div><span style="font-size:18px;color:var(--tm)">−</span><div style="background:var(--c50);color:var(--c600);padding:6px 12px;border-radius:6px;font-weight:600">বিক্রয়</div><span style="font-size:18px;color:var(--tm)">−</span><div style="background:var(--a50);color:var(--a400);padding:6px 12px;border-radius:6px;font-weight:600">ক্ষতি</div><span style="font-size:18px;color:var(--tm)">=</span><div style="background:var(--g400);color:#fff;padding:6px 14px;border-radius:6px;font-weight:700">পাওয়া স্টক</div></div></div>
 <div class="card" style="padding:0"><div class="tw"><table id="stkTbl"><thead><tr><th>চারা</th><th>মোট ইন</th><th>মোট আউট</th><th>বর্তমান স্টক</th><th>মূল্য (৳)</th><th>অবস্থা</th></tr></thead><tbody id="sTblB"><tr><td colspan="6" class="lt">লোড হচ্ছে...</td></tr></tbody></table></div></div>
 </div>

@@ -545,7 +545,49 @@ async function lMoth(){try{const d=await api('/mother-plants');document.getEleme
 async function saveMoth(){const b={variety:document.getElementById('mV').value,seedling_id:+document.getElementById('mSd').value||null,age_years:+document.getElementById('mAg').value||null,location:document.getElementById('mLo').value,health_status:document.getElementById('mH').value,notes:document.getElementById('mNt').value};if(!b.variety||!b.location)return toast('জাত ও অবস্থান দিন',1);try{const d=await api('/mother-plants',{method:'POST',body:JSON.stringify(b)});if(d.success){toast('মাদার প্ল্যান্ট যোগ ✅');cM('mMoth');lMoth()}else toast(d.message||'সমস্যা',1)}catch(e){toast('সমস্যা',1)}}
 
 // ===== STOCK =====
-async function lStk(){try{const d=await api('/stock');document.getElementById('sTblB').innerHTML=d.data?.length?d.data.map(s=>`<tr><td><strong>${s.name_bn}</strong>${s.variety?`<br><span style="font-size:12px;color:var(--tm)">${s.variety}</span>`:''}</td><td style="color:var(--g600)">+${toBnNum(s.total_in)}</td><td style="color:var(--c400)">-${toBnNum(s.total_out)}</td><td><strong style="${s.is_low_stock?'color:var(--c400)':''}">${toBnNum(s.current_stock)}</strong></td><td>${toBnMoney(s.current_stock*s.unit_price)}</td><td>${s.is_low_stock?'<span class="b br">সংকটজনক</span>':'<span class="b bg">ভালো</span>'}</td></tr>`).join(''):'<tr><td colspan="6" class="lt">নেই</td></tr>'}catch(e){}}
+let stkAllData = [];
+async function lStk(){
+  try{
+    const d = await api('/stock');
+    stkAllData = d.data || [];
+
+    // Category dropdown — catOptionsHTML থেকে নিন
+    const catSel = document.getElementById('stkCat');
+    if(catSel && catSel.options.length <= 1 && catOptionsHTML){
+      catSel.innerHTML = '<option value="">সব ক্যাটাগরি</option>' + catOptionsHTML;
+    }
+
+    renderStkTable(stkAllData);
+  }catch(e){}
+}
+
+function filterStk(){
+  const search = (document.getElementById('stkSearch')?.value||'').toLowerCase();
+  const catId = document.getElementById('stkCat')?.value||'';
+
+  const filtered = stkAllData.filter(s=>{
+    const matchSearch = !search ||
+      (s.name_bn||'').toLowerCase().includes(search) ||
+      (s.variety||'').toLowerCase().includes(search) ||
+      (s.seedling_code||'').toLowerCase().includes(search);
+    const matchCat = !catId || String(s.category_id) === String(catId);
+    return matchSearch && matchCat;
+  });
+  renderStkTable(filtered);
+}
+
+function renderStkTable(data){
+  document.getElementById('sTblB').innerHTML = data.length
+    ? data.map(s=>`<tr>
+        <td><strong>${s.name_bn}</strong>${s.variety?`<br><span style="font-size:12px;color:var(--tm)">${s.variety}</span>`:''}</td>
+        <td style="color:var(--g600)">+${toBnNum(s.total_in)}</td>
+        <td style="color:var(--c400)">-${toBnNum(s.total_out)}</td>
+        <td><strong style="${s.is_low_stock?'color:var(--c400)':''}">${toBnNum(s.current_stock)}</strong></td>
+        <td>${toBnMoney(s.current_stock*s.unit_price)}</td>
+        <td>${s.is_low_stock?'<span class="b br">সংকটজনক</span>':'<span class="b bg">ভালো</span>'}</td>
+      </tr>`).join('')
+    : '<tr><td colspan="6" class="lt">কোনো ফলাফল নেই</td></tr>';
+}
 
 // ===== DAMAGE =====
 async function lDmg(){
