@@ -1037,10 +1037,8 @@ async function loadDD(){
 // ===== BATCH MANAGEMENT =====
 async function lBatch(){
 try{
-const d=await api('/production');
-if(!d.success){document.getElementById('bTbl').innerHTML='<tr><td colspan="11" class="lt">API error</td></tr>';return;}
+const d=await api('/production');if(!d.success)return;
 let all=d.data||[];
-if(!all.length){document.getElementById('bTbl').innerHTML='<tr><td colspan="11" class="lt">কোনো ব্যাচ নেই</td></tr>';return;}
 const srch=document.getElementById('btSearch')?.value?.toLowerCase()||'';
 const stf=document.getElementById('btStatus')?.value||'';
 if(srch)all=all.filter(x=>(x.batch_code||'').toLowerCase().includes(srch)||(x.seedling_bn||'').toLowerCase().includes(srch));
