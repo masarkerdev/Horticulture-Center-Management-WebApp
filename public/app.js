@@ -403,7 +403,7 @@ const b={
   name_en:document.getElementById('sNE').value,
   variety:document.getElementById('sV').value,
   category_id:+document.getElementById('sCat').value,
-  production_type:document.getElementById('sTp').value,
+  production_type:'seed',
   unit_price:+document.getElementById('sP').value||0,
   production_cost:+document.getElementById('sC').value||0,
   description:document.getElementById('sD').value,
