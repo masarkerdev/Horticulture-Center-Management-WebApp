@@ -20,7 +20,7 @@ const getAllBatches = async (req, res) => {
 
         params.push(limit, offset);
         const result = await db.query(
-            `SELECT pb.*, s.name_bn AS seedling_bn, s.name_en AS seedling_en, s.seedling_code,
+            `SELECT pb.*, s.name_bn AS seedling_bn, s.name_en AS seedling_en, s.seedling_code, s.variety AS seedling_variety,
                     mp.mp_code, mp.variety AS mother_variety
              FROM production_batches pb
              LEFT JOIN seedlings s ON pb.seedling_id = s.id

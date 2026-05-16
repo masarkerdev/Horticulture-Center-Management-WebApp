@@ -448,7 +448,7 @@ const ad=all.filter(x=>x.production_type!=='seed'&&x.production_type!=='purchase
 const pd=all.filter(x=>x.production_type==='purchase');
 document.getElementById('pSTbl').innerHTML=sd.length?sd.map(b=>`<tr>
 <td><strong style="color:var(--g600)">${b.batch_code}</strong></td>
-<td>${b.seedling_bn||'-'}</td>
+<td><strong>${b.seedling_bn||"-"}</strong>${b.seedling_variety?"<br><span style='font-size:11px;color:var(--tm)'>"+b.seedling_variety+"</span>":""}</td>
 <td>${b.seed_quantity||'-'}</td>
 <td>${fmtDMY(b.sowing_date)}</td>
 <td>${b.produced_quantity}</td>
@@ -461,7 +461,7 @@ document.getElementById('pSTbl').innerHTML=sd.length?sd.map(b=>`<tr>
 </div></td></tr>`).join(''):'<tr><td colspan="9" class="lt">বীজ উৎপাদন নেই</td></tr>';
 document.getElementById('pATbl').innerHTML=ad.length?ad.map(b=>`<tr>
 <td><strong style="color:var(--g600)">${b.batch_code}</strong></td>
-<td>${b.seedling_bn||'-'}</td>
+<td><strong>${b.seedling_bn||"-"}</strong>${b.seedling_variety?"<br><span style='font-size:11px;color:var(--tm)'>"+b.seedling_variety+"</span>":""}</td>
 <td><span class="b bt">${MN[b.production_type]||b.production_type}</span></td>
 <td>${b.mother_variety||'-'}</td>
 <td>${fmtDMY(b.propagation_date||b.created_at)}</td>
@@ -479,7 +479,7 @@ if(pPTbl)pPTbl.innerHTML=pd.length?pd.map(b=>{
 const src=(b.remarks||'').replace(/ক্রয় উৎস: /,'').split(' | ')[0];
 return`<tr>
 <td><strong style="color:var(--g600)">${b.batch_code}</strong></td>
-<td>${b.seedling_bn||'-'}</td>
+<td><strong>${b.seedling_bn||"-"}</strong>${b.seedling_variety?"<br><span style='font-size:11px;color:var(--tm)'>"+b.seedling_variety+"</span>":""}</td>
 <td>${src||'-'}</td>
 <td>${fmtDMY(b.propagation_date||b.created_at)}</td>
 <td><strong>${b.produced_quantity}</strong></td>
@@ -1073,7 +1073,7 @@ const avail=b.available_quantity??b.produced_quantity;
 const sold=b.produced_quantity-avail-(b.failed_quantity||0);
 return`<tr>
 <td><strong style="color:var(--g600)">${b.batch_code}</strong></td>
-<td>${b.seedling_bn||'-'}</td>
+<td><strong>${b.seedling_bn||"-"}</strong>${b.seedling_variety?"<br><span style='font-size:11px;color:var(--tm)'>"+b.seedling_variety+"</span>":""}</td>
 <td><span class="b bt">${MN[b.production_type]||b.production_type}</span></td>
 <td>${fmtDMY(dt||b.created_at)}</td>
 <td>${b.produced_quantity}</td>
