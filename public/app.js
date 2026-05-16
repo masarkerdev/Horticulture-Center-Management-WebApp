@@ -147,10 +147,10 @@ function applyRoleSidebar(){
   // সব nav item-এর access নির্ধারণ করুন
   const access={
     admin:       ['dash','seed','prod','moth','batch','stk','dmg','sale','cust','income','rep','usr','cfg','bin'],
-    manager:     ['dash','seed','prod','moth','batch','stk','dmg','sale','cust','income','rep','usr'],
-    production_officer: ['dash','seed','prod','moth','batch','stk','dmg','rep'],
-    sales_operator:     ['dash','sale','cust','income','stk','rep'],
-    viewer:             ['dash','rep']
+    manager:     ['dash','seed','prod','moth','batch','stk','dmg','sale','cust','income','rep','usr','cfg'],
+    production_officer: ['dash','seed','prod','moth','batch','stk','dmg','rep','cfg'],
+    sales_operator:     ['dash','sale','cust','income','stk','rep','cfg'],
+    viewer:             ['dash','rep','cfg']
   };
 
   const allowed=access[role]||['dash'];
@@ -1199,8 +1199,11 @@ function openProfile(){
 function lCfg(){
   document.getElementById('prName').value=ME.name||'';
   document.getElementById('prEmail').value=ME.email||'';
+  // Admin-only sections দেখাও/লুকাও
+  const adminEl=document.getElementById('cfgAdminOnly');
+  if(adminEl) adminEl.style.display=ME.role==='admin'?'block':'none';
   loadCategories();
-  applyThemeFromStorage(); // ✅ Theme buttons highlight করুন
+  applyThemeFromStorage();
 }
 
 // প্রোফাইল আপডেট
