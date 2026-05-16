@@ -74,7 +74,7 @@ function toBnNum(n){
   return toBn(formatted);
 }
 
-async function api(u,o={}){const r=await fetch(API+u,{...o,headers:{'Content-Type':'application/json','Authorization':'Bearer '+TK,...(o.headers||{})}});return r.json()}
+async function api(u,o={}){const r=await fetch(API+u,{...o,cache:'no-store',headers:{'Content-Type':'application/json','Authorization':'Bearer '+TK,...(o.headers||{})}});return r.json()}
 function toast(m,e=0){const t=document.getElementById('toast');t.textContent=m;t.className='toast'+(e?' err':'');t.style.display='block';setTimeout(()=>t.style.display='none',3000)}
 function oM(id){document.getElementById(id).classList.add('open');if(['mProd','mSale','mDmg','mMoth'].includes(id))loadDD()}
 function cM(id){document.getElementById(id).classList.remove('open')}
