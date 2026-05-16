@@ -122,9 +122,10 @@
 <div class="sc"><div class="sl">বিক্রি শেষ</div><div class="sv" id="pSold">-</div></div>
 <div class="sc"><div class="sl">গড় সাফল্য</div><div class="sv" id="pAvg">-</div></div>
 </div>
-<div class="tabs"><button class="tab active" onclick="swTab(this,'pSeedF','pAsexF')">🌱 বীজ উৎপাদন</button><button class="tab" onclick="swTab(this,'pAsexF','pSeedF')">🌿 অঙ্গজ বংশবিস্তার</button></div>
+<div class="tabs"><button class="tab active" onclick="swTab3(this,'pSeedF',['pAsexF','pPurchF'])">🌱 বীজ উৎপাদন</button><button class="tab" onclick="swTab3(this,'pAsexF',['pSeedF','pPurchF'])">🌿 অঙ্গজ বংশবিস্তার</button><button class="tab" onclick="swTab3(this,'pPurchF',['pSeedF','pAsexF'])">🛒 ক্রয়</button></div>
 <div id="pSeedF"><div class="card" style="padding:0"><div class="tw"><table><thead><tr><th>ব্যাচ ID</th><th>চারা</th><th>বীজ পরিমাণ</th><th>বপন তারিখ</th><th>উৎপাদিত</th><th>ব্যর্থ</th><th>অঙ্কু.%</th><th>অবস্থা</th><th>কার্যক্রম</th></tr></thead><tbody id="pSTbl"><tr><td colspan="9" class="lt">লোড হচ্ছে...</td></tr></tbody></table></div></div></div>
 <div id="pAsexF" style="display:none"><div class="card" style="padding:0"><div class="tw"><table><thead><tr><th>ব্যাচ ID</th><th>চারা</th><th>পদ্ধতি</th><th>মাদার</th><th>তারিখ</th><th>সফল</th><th>ব্যর্থ</th><th>সাফল্য%</th><th>অবস্থা</th><th>কার্যক্রম</th></tr></thead><tbody id="pATbl"><tr><td colspan="10" class="lt">লোড হচ্ছে...</td></tr></tbody></table></div></div></div>
+<div id="pPurchF" style="display:none"><div class="card" style="padding:0"><div class="tw"><table><thead><tr><th>ব্যাচ ID</th><th>চারা</th><th>বিক্রেতা / উৎস</th><th>তারিখ</th><th>পরিমাণ</th><th>অবস্থা</th><th>কার্যক্রম</th></tr></thead><tbody id="pPTbl"><tr><td colspan="7" class="lt">লোড হচ্ছে...</td></tr></tbody></table></div></div></div>
 </div>
 
 <!-- MOTHER -->
