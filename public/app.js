@@ -483,11 +483,12 @@ return`<tr>
 <td>${src||'-'}</td>
 <td>${fmtDMY(b.propagation_date||b.created_at)}</td>
 <td><strong>${b.produced_quantity}</strong></td>
+<td>${b.failed_quantity||0}</td>
 <td><span class="b bg">${b.status}</span></td>
 <td><div style="display:flex;gap:4px">
 <button class="btn btns btne" onclick="editBatch(${JSON.stringify(b).replace(/"/g,'&quot;')})" title="সম্পাদনা"><i class="ti ti-edit"></i></button>
 <button class="btn btns btnr" onclick="delItem('production-batches',${b.id},'ব্যাচ ${b.batch_code}')" title="মুছুন"><i class="ti ti-trash"></i></button>
-</div></td></tr>`}).join(''):'<tr><td colspan="7" class="lt">ক্রয়ের রেকর্ড নেই</td></tr>';
+</div></td></tr>`}).join(''):'<tr><td colspan="8" class="lt">ক্রয়ের রেকর্ড নেই</td></tr>';
 }catch(e){}}
 
 function togP(){
