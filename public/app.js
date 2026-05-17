@@ -452,7 +452,7 @@ document.getElementById('pSTbl').innerHTML=sd.length?sd.map(b=>`<tr>
 <td>${b.seed_quantity||'-'}</td>
 <td>${fmtDMY(b.sowing_date)}</td>
 <td>${b.produced_quantity}</td>
-<td>${b.failed_quantity}</td>
+<td>${Math.max(0,(b.seed_quantity||0)-(b.produced_quantity||0))}</td>
 <td><span class="b ${(+b.germination_percent||0)>=75?'bg':'ba'}">${b.germination_percent||'-'}%</span></td>
 <td><span class="b bg">${b.status}</span></td>
 <td><div style="display:flex;gap:4px">
@@ -531,7 +531,7 @@ try{
       if(d.success){toast('ক্রয় রেকর্ড সংরক্ষিত ✅');cM('mProd');clearProdModal();await lProd();await lBatch();}
       else toast(d.error||d.message||'সমস্যা',1);
     }else if(m==='seed'){
-      const b={seedling_id:+document.getElementById('pSd').value,seed_source:document.getElementById('pSrc').value,seed_quantity:+document.getElementById('pSQ').value||0,sowing_date:document.getElementById('pSw').value,produced_quantity:+document.getElementById('pPQ').value||0,remarks:document.getElementById('pRm').value};
+      const b={seedling_id:+document.getElementById('pSd').value,seed_source:document.getElementById('pSrc').value,seed_quantity:+document.getElementById('pSQ').value||0,sowing_date:document.getElementById('pSw').value,produced_quantity:+document.getElementById('pPQ').value||0,failed_quantity:Math.max(0,(+document.getElementById('pSQ').value||0)-(+document.getElementById('pPQ').value||0)),remarks:document.getElementById('pRm').value};
       if(!b.sowing_date||!b.produced_quantity)return toast('তারিখ ও পরিমাণ দিন',1);
       const d=await api('/production/seed',{method:'POST',body:JSON.stringify(b)});
       if(d.success){toast('বীজ ব্যাচ তৈরি ✅');cM('mProd');clearProdModal();await lProd();await lBatch();}
