@@ -599,12 +599,13 @@ function renderStkTable(data){
     ? data.map(s=>`<tr>
         <td><strong>${s.name_bn}</strong>${s.variety?`<br><span style="font-size:12px;color:var(--tm)">${s.variety}</span>`:''}</td>
         <td style="color:var(--g600)">+${toBnNum(s.total_in)}</td>
-        <td style="color:var(--c400)">-${toBnNum(s.total_out)}</td>
+        <td style="color:var(--c400)">-${toBnNum(s.total_sale||0)}</td>
+        <td style="color:var(--a400)">-${toBnNum(s.total_damage||0)}</td>
         <td><strong style="${s.is_low_stock?'color:var(--c400)':''}">${toBnNum(s.current_stock)}</strong></td>
         <td>${toBnMoney(s.current_stock*s.unit_price)}</td>
         <td>${s.is_low_stock?'<span class="b br">সংকটজনক</span>':'<span class="b bg">ভালো</span>'}</td>
       </tr>`).join('')
-    : '<tr><td colspan="6" class="lt">কোনো ফলাফল নেই</td></tr>';
+    : '<tr><td colspan="7" class="lt">কোনো ফলাফল নেই</td></tr>';
 }
 
 // ===== DAMAGE =====
